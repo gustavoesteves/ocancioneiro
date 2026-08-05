@@ -19,7 +19,7 @@ function musicXml({ composer = "Novo compositor", fifths = 2 } = {}) {
 </score-partwise>`;
 }
 
-test("refreshes source metadata while preserving editorial fields", () => {
+test("refreshes source metadata while applying editorial fields", () => {
   const xml = musicXml();
   const filePath = path.join(
     process.cwd(),
@@ -40,12 +40,22 @@ test("refreshes source metadata while preserving editorial fields", () => {
     notes: "Nota editorial",
     tags: ["brasileiro"],
   };
+  const editorialManifest = {
+    "id-estavel": {
+      genre: "Samba",
+      level: "Avancado",
+      notes: "Nota do manifesto",
+      source: "Manifesto editorial",
+      tags: ["manifesto"],
+    },
+  };
 
   const generated = buildSongEntry(
     filePath,
     xml,
     existing,
     sourceHash(xml),
+    editorialManifest,
   );
 
   assert.equal(generated.id, "id-estavel");
@@ -53,9 +63,37 @@ test("refreshes source metadata while preserving editorial fields", () => {
   assert.equal(generated.composer, "Novo compositor");
   assert.equal(generated.key, "D maior");
   assert.equal(generated.instrumentation, "Piano");
+  assert.equal(generated.genre, "Samba");
+  assert.equal(generated.level, "Avancado");
+  assert.equal(generated.notes, "Nota do manifesto");
+  assert.equal(generated.source, "Manifesto editorial");
+  assert.deepEqual(generated.tags, ["manifesto"]);
+});
+
+test("falls back to existing editorial fields during migration", () => {
+  const xml = musicXml();
+  const filePath = path.join(
+    process.cwd(),
+    "public",
+    "musicxml",
+    "estudo.musicxml",
+  );
+  const existing = {
+    id: "id-estavel",
+    genre: "Choro",
+    level: "Intermediario",
+    musicxml: "/musicxml/estudo.musicxml",
+    notes: "Nota editorial",
+    source: "Fonte editorial",
+    tags: ["brasileiro"],
+  };
+
+  const generated = buildSongEntry(filePath, xml, existing, sourceHash(xml));
+
   assert.equal(generated.genre, "Choro");
   assert.equal(generated.level, "Intermediario");
   assert.equal(generated.notes, "Nota editorial");
+  assert.equal(generated.source, "Fonte editorial");
   assert.deepEqual(generated.tags, ["brasileiro"]);
 });
 

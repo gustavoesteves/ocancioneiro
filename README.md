@@ -68,7 +68,8 @@ npm run catalog:generate
 ```
 
 O script varre `public/musicxml/`, le os arquivos `.musicxml` e `.xml`, e
-atualiza `public/catalog.json`.
+combina os dados extraidos com `data/editorial.json`. A saida final e
+`public/catalog.json`.
 
 Para validar que o catalogo versionado esta sincronizado sem modifica-lo:
 
@@ -87,7 +88,7 @@ O script tenta extrair automaticamente:
 - `musicxml`: caminho publico do arquivo.
 - `id`: baseado no caminho relativo do arquivo.
 
-Campos editoriais continuam sob nosso controle:
+Campos editoriais ficam em `data/editorial.json`:
 
 - `genre`
 - `level`
@@ -95,11 +96,33 @@ Campos editoriais continuam sob nosso controle:
 - `notes`
 - `tags`
 
+O `public/catalog.json` e um artefato gerado. Evite edita-lo manualmente. Para
+alterar genero, nivel, fonte, notas ou tags, edite `data/editorial.json` e rode
+`npm run catalog:generate`.
+
 Quando uma musica ja existe no catalogo, o script atualiza os campos derivados
-do MusicXML e preserva apenas esses campos editoriais. Uma assinatura SHA-256
-interna (`sourceHash`) mantem a identidade e os metadados editoriais quando um
-arquivo sem alteracoes e movido ou renomeado. IDs, caminhos e tipos tambem sao
-validados antes de o catalogo ser substituido atomicamente.
+do MusicXML e aplica os campos editoriais do manifesto. Durante migracoes, se um
+id ainda nao existir no manifesto, o gerador consegue reaproveitar metadados
+editoriais do catalogo existente. Uma assinatura SHA-256 interna (`sourceHash`)
+mantem a identidade quando um arquivo sem alteracoes e movido ou renomeado.
+IDs, caminhos e tipos tambem sao validados antes de o catalogo ser substituido
+atomicamente.
+
+## Exemplo De Entrada Editorial
+
+```json
+{
+  "songs": {
+    "estudo-de-abertura": {
+      "genre": "Estudo",
+      "level": "Inicial",
+      "source": "Exemplo original",
+      "notes": "Pequena peca de exemplo para validar o fluxo MusicXML.",
+      "tags": ["musicxml", "exemplo", "melodia"]
+    }
+  }
+}
+```
 
 ## Exemplo De Entrada No Catalogo
 
@@ -129,8 +152,9 @@ npm run catalog:generate
 npm run dev
 ```
 
-Depois revise `public/catalog.json` para preencher os campos editoriais que o
-MusicXML nao sabe informar bem, como genero, nivel, notas pedagogicas e tags.
+Depois revise `data/editorial.json` para preencher os campos editoriais que o
+MusicXML nao sabe informar bem, como genero, nivel, notas pedagogicas e tags, e
+rode `npm run catalog:generate` novamente.
 
 ## Estrutura Principal
 
@@ -139,6 +163,8 @@ app/
   components/
     CancioneiroApp.tsx
     ScoreViewer.tsx
+data/
+  editorial.json
 public/
   catalog.json
   musicxml/
@@ -153,9 +179,10 @@ O projeto inclui o workflow `.github/workflows/pages.yml`.
 Quando houver push no branch `main`, o GitHub Actions:
 
 1. instala as dependencias;
-2. roda `npm run catalog:generate`;
-3. roda `npm run build:pages`;
-4. publica a pasta `github-pages` no GitHub Pages.
+2. roda `npm run check`;
+3. publica a pasta `github-pages` no GitHub Pages.
+
+Em pull requests, o mesmo workflow roda a validacao, mas nao publica.
 
 No GitHub, configure Pages para usar **GitHub Actions** como fonte de deploy.
 
