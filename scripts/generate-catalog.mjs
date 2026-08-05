@@ -1,5 +1,8 @@
 import { promises as fs } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { parseCatalog } from "../lib/catalog.mjs";
 
 const projectRoot = process.cwd();
 const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
@@ -31,13 +34,27 @@ const keyNames = {
   7: "C#",
 };
 
-function decodeXml(text) {
-  return text
-    .replaceAll("&amp;", "&")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&apos;", "'");
+export function decodeXml(text) {
+  const namedEntities = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    lt: "<",
+    quot: '"',
+  };
+
+  return text.replace(
+    /&(#x[0-9a-f]+|#[0-9]+|amp|apos|gt|lt|quot);/gi,
+    (entity, code) => {
+      if (code.startsWith("#x") || code.startsWith("#X")) {
+        return String.fromCodePoint(Number.parseInt(code.slice(2), 16));
+      }
+      if (code.startsWith("#")) {
+        return String.fromCodePoint(Number.parseInt(code.slice(1), 10));
+      }
+      return namedEntities[code.toLowerCase()];
+    },
+  );
 }
 
 function textFromTag(xml, tagName) {
@@ -54,14 +71,26 @@ function textFromCreator(xml, creatorType) {
   return match ? decodeXml(match[1].replace(/<[^>]+>/g, "").trim()) : "";
 }
 
-function slugifyFilename(filename) {
-  return path
-    .basename(filename, path.extname(filename))
+function slugify(value) {
+  return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+export function sourceHash(xml) {
+  return createHash("sha256").update(xml).digest("hex");
+}
+
+export function fallbackIdFromFile(filePath, hash) {
+  const relativePath = path.relative(musicXmlDirectory, filePath);
+  const withoutExtension = relativePath.slice(
+    0,
+    -path.extname(relativePath).length,
+  );
+  return slugify(withoutExtension) || `peca-${hash.slice(0, 12)}`;
 }
 
 function titleFromFilename(filename) {
@@ -119,8 +148,10 @@ async function listMusicXmlFiles(directory) {
 
 async function readExistingCatalog() {
   try {
-    const catalog = JSON.parse(await fs.readFile(catalogPath, "utf8"));
-    return Array.isArray(catalog.songs) ? catalog.songs : [];
+    const catalog = parseCatalog(
+      JSON.parse(await fs.readFile(catalogPath, "utf8")),
+    );
+    return catalog.songs;
   } catch (error) {
     if (error.code === "ENOENT") {
       return [];
@@ -135,10 +166,17 @@ function publicPathFromFile(filePath) {
   return `/${relativePath.split(path.sep).join("/")}`;
 }
 
-function buildSongEntry(filePath, xml, existingEntry) {
+function assertMusicXmlDocument(filePath, xml) {
+  const root = xml.match(/<score-(partwise|timewise)\b[^>]*>/i)?.[1];
+  if (!root || !new RegExp(`</score-${root}>\\s*$`, "i").test(xml)) {
+    throw new Error(`${filePath} nao contem um documento MusicXML completo`);
+  }
+}
+
+export function buildSongEntry(filePath, xml, existingEntry, hash) {
   const filename = path.basename(filePath);
   const publicPath = publicPathFromFile(filePath);
-  const fallbackId = slugifyFilename(filename);
+  const fallbackId = fallbackIdFromFile(filePath, hash);
   const title =
     textFromTag(xml, "work-title") ||
     textFromTag(xml, "movement-title") ||
@@ -146,56 +184,123 @@ function buildSongEntry(filePath, xml, existingEntry) {
 
   return {
     id: existingEntry?.id || fallbackId,
-    title: existingEntry?.title || title,
+    title,
     composer:
-      existingEntry?.composer ||
       textFromCreator(xml, "composer") ||
       textFromTag(xml, "creator") ||
       "Nao informado",
     genre: existingEntry?.genre || defaultEditorialFields.genre,
-    key: existingEntry?.key || keyFromMusicXml(xml),
+    key: keyFromMusicXml(xml),
     level: existingEntry?.level || defaultEditorialFields.level,
-    instrumentation:
-      existingEntry?.instrumentation || instrumentationFromMusicXml(xml),
+    instrumentation: instrumentationFromMusicXml(xml),
     source: existingEntry?.source || defaultEditorialFields.source,
     musicxml: publicPath,
     notes: existingEntry?.notes || defaultEditorialFields.notes,
     tags: Array.isArray(existingEntry?.tags)
       ? existingEntry.tags
       : defaultEditorialFields.tags,
+    sourceHash: hash,
   };
 }
 
-async function main() {
-  const existingSongs = await readExistingCatalog();
+async function writeCatalogAtomically(contents) {
+  const temporaryPath = `${catalogPath}.${process.pid}.tmp`;
+  try {
+    await fs.writeFile(temporaryPath, contents, "utf8");
+    await fs.rename(temporaryPath, catalogPath);
+  } finally {
+    await fs.rm(temporaryPath, { force: true });
+  }
+}
+
+export function matchExistingEntries(inputs, existingSongs) {
   const existingByPath = new Map(
     existingSongs.map((song) => [song.musicxml, song]),
   );
+  const existingByHash = new Map();
+  existingSongs.forEach((song) => {
+    if (!song.sourceHash) return;
+    const matches = existingByHash.get(song.sourceHash) ?? [];
+    matches.push(song);
+    existingByHash.set(song.sourceHash, matches);
+  });
+
+  const claimedExistingEntries = new Set();
+  const matchesByPath = new Map();
+
+  for (const input of inputs) {
+    const exactMatch = existingByPath.get(input.publicPath);
+    if (exactMatch) {
+      matchesByPath.set(input.publicPath, exactMatch);
+      claimedExistingEntries.add(exactMatch);
+    }
+  }
+
+  for (const input of inputs) {
+    if (matchesByPath.has(input.publicPath)) continue;
+    const hashMatches = (existingByHash.get(input.hash) ?? []).filter(
+      (song) => !claimedExistingEntries.has(song),
+    );
+    if (hashMatches.length === 1) {
+      matchesByPath.set(input.publicPath, hashMatches[0]);
+      claimedExistingEntries.add(hashMatches[0]);
+    }
+  }
+
+  return matchesByPath;
+}
+
+export async function main({ check = false } = {}) {
+  const existingSongs = await readExistingCatalog();
   const files = await listMusicXmlFiles(musicXmlDirectory);
 
-  const songs = await Promise.all(
+  const inputs = await Promise.all(
     files.map(async (filePath) => {
       const xml = await fs.readFile(filePath, "utf8");
       const publicPath = publicPathFromFile(filePath);
-
-      return buildSongEntry(filePath, xml, existingByPath.get(publicPath));
+      assertMusicXmlDocument(filePath, xml);
+      return { filePath, hash: sourceHash(xml), publicPath, xml };
     }),
+  );
+
+  const matchesByPath = matchExistingEntries(inputs, existingSongs);
+
+  const songs = inputs.map(({ filePath, hash, publicPath, xml }) =>
+    buildSongEntry(filePath, xml, matchesByPath.get(publicPath), hash),
   );
 
   songs.sort((first, second) =>
     first.title.localeCompare(second.title, "pt-BR", { sensitivity: "base" }),
   );
 
-  await fs.writeFile(
-    catalogPath,
-    `${JSON.stringify({ songs }, null, 2)}\n`,
-    "utf8",
-  );
+  const catalog = parseCatalog({ songs });
+  const contents = `${JSON.stringify(catalog, null, 2)}\n`;
 
-  console.log(`Catalogo atualizado com ${songs.length} musica(s).`);
+  if (check) {
+    const currentContents = await fs.readFile(catalogPath, "utf8");
+    if (currentContents !== contents) {
+      throw new Error(
+        "public/catalog.json esta desatualizado. Rode `npm run catalog:generate`.",
+      );
+    }
+  } else {
+    await writeCatalogAtomically(contents);
+  }
+
+  console.log(
+    check
+      ? `Catalogo validado com ${songs.length} musica(s).`
+      : `Catalogo atualizado com ${songs.length} musica(s).`,
+  );
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+const invokedModule = process.argv[1]
+  ? pathToFileURL(path.resolve(process.argv[1])).href
+  : null;
+
+if (import.meta.url === invokedModule) {
+  main({ check: process.argv.includes("--check") }).catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

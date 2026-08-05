@@ -3,20 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScoreViewer } from "./ScoreViewer";
 import { publicUrl } from "../url";
-
-type Song = {
-  id: string;
-  title: string;
-  composer: string;
-  genre: string;
-  key: string;
-  level: string;
-  instrumentation: string;
-  source: string;
-  musicxml: string;
-  notes: string;
-  tags: string[];
-};
+import {
+  filterSongs,
+  parseCatalog,
+  resolveActiveSong,
+  type Song,
+} from "../catalog";
 
 export function CancioneiroApp() {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -39,7 +31,7 @@ export function CancioneiroApp() {
           throw new Error("Catalog not found");
         }
 
-        const data = (await response.json()) as { songs: Song[] };
+        const data = parseCatalog(await response.json());
 
         if (!cancelled) {
           setSongs(data.songs);
@@ -71,32 +63,10 @@ export function CancioneiroApp() {
   );
 
   const filteredSongs = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    return songs.filter((song) => {
-      const matchesQuery =
-        normalizedQuery.length === 0 ||
-        [
-          song.title,
-          song.composer,
-          song.genre,
-          song.key,
-          song.instrumentation,
-          song.tags.join(" "),
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery);
-
-      const matchesLevel = level === "Todos" || song.level === level;
-      const matchesGenre = genre === "Todos" || song.genre === genre;
-
-      return matchesQuery && matchesLevel && matchesGenre;
-    });
+    return filterSongs(songs, query, level, genre);
   }, [genre, level, query, songs]);
 
-  const activeSong =
-    songs.find((song) => song.id === activeSongId) ?? filteredSongs[0] ?? null;
+  const activeSong = resolveActiveSong(filteredSongs, activeSongId);
 
   return (
     <main className="min-h-screen bg-[#f7f5ef] text-[#181714]">
@@ -193,6 +163,11 @@ export function CancioneiroApp() {
             {catalogState === "error" ? (
               <div className="rounded-md border border-[#c78f8f] bg-[#fff8f6] p-4 text-sm text-[#8a2f2f]">
                 Nao consegui carregar o catalogo.
+              </div>
+            ) : null}
+            {catalogState === "ready" && filteredSongs.length === 0 ? (
+              <div className="rounded-md border border-[#d8d0c1] bg-[#fdfaf3] p-4 text-sm text-[#70695e]">
+                Nenhuma peca corresponde aos filtros atuais.
               </div>
             ) : null}
             {filteredSongs.map((song) => (
