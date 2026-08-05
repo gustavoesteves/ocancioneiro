@@ -100,6 +100,11 @@ O `public/catalog.json` e um artefato gerado. Evite edita-lo manualmente. Para
 alterar genero, nivel, fonte, notas ou tags, edite `data/editorial.json` e rode
 `npm run catalog:generate`.
 
+O manifesto editorial tambem e validado. Campos desconhecidos, tags vazias ou
+valores obrigatorios vazios fazem o comando falhar. Entradas editoriais sem
+MusicXML correspondente geram aviso no terminal, o que ajuda a encontrar ids
+antigos depois de renomear ou remover arquivos.
+
 Quando uma musica ja existe no catalogo, o script atualiza os campos derivados
 do MusicXML e aplica os campos editoriais do manifesto. Durante migracoes, se um
 id ainda nao existir no manifesto, o gerador consegue reaproveitar metadados

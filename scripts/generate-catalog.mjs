@@ -17,6 +17,8 @@ const defaultEditorialFields = {
   tags: [],
 };
 
+const editorialFields = new Set(["genre", "level", "notes", "source", "tags"]);
+
 const keyNames = {
   "-7": "Cb",
   "-6": "Gb",
@@ -164,25 +166,99 @@ async function readExistingCatalog() {
 
 async function readEditorialManifest() {
   try {
-    const manifest = JSON.parse(await fs.readFile(editorialPath, "utf8"));
-    if (
-      typeof manifest !== "object" ||
-      manifest === null ||
-      Array.isArray(manifest) ||
-      typeof manifest.songs !== "object" ||
-      manifest.songs === null ||
-      Array.isArray(manifest.songs)
-    ) {
-      throw new Error("data/editorial.json deve conter um objeto songs");
-    }
-
-    return manifest.songs;
+    return validateEditorialManifest(
+      JSON.parse(await fs.readFile(editorialPath, "utf8")),
+    );
   } catch (error) {
     if (error.code === "ENOENT") {
       return {};
     }
 
     throw error;
+  }
+}
+
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function validateEditorialManifest(manifest) {
+  const issues = [];
+
+  if (!isRecord(manifest)) {
+    throw new Error("data/editorial.json deve conter um objeto");
+  }
+
+  const topLevelFields = Object.keys(manifest);
+  const invalidTopLevelFields = topLevelFields.filter((field) => field !== "songs");
+  invalidTopLevelFields.forEach((field) => {
+    issues.push(`campo desconhecido em data/editorial.json: ${field}`);
+  });
+
+  if (!isRecord(manifest.songs)) {
+    issues.push("data/editorial.json deve conter um objeto songs");
+  } else {
+    Object.entries(manifest.songs).forEach(([id, entry]) => {
+      const prefix = `songs.${id}`;
+
+      if (!id.trim()) {
+        issues.push("songs contem um id vazio");
+        return;
+      }
+
+      if (!isRecord(entry)) {
+        issues.push(`${prefix} deve ser um objeto`);
+        return;
+      }
+
+      Object.keys(entry)
+        .filter((field) => !editorialFields.has(field))
+        .forEach((field) => {
+          issues.push(`${prefix}.${field} nao e um campo editorial valido`);
+        });
+
+      ["genre", "level", "source"].forEach((field) => {
+        if (
+          entry[field] !== undefined &&
+          (typeof entry[field] !== "string" || entry[field].trim().length === 0)
+        ) {
+          issues.push(`${prefix}.${field} deve ser texto nao vazio`);
+        }
+      });
+
+      if (entry.notes !== undefined && typeof entry.notes !== "string") {
+        issues.push(`${prefix}.notes deve ser texto`);
+      }
+
+      if (
+        entry.tags !== undefined &&
+        (!Array.isArray(entry.tags) ||
+          !entry.tags.every(
+            (tag) => typeof tag === "string" && tag.trim().length > 0,
+          ))
+      ) {
+        issues.push(`${prefix}.tags deve ser um array de textos nao vazios`);
+      }
+    });
+  }
+
+  if (issues.length > 0) {
+    throw new Error(`Manifesto editorial invalido:\n- ${issues.join("\n- ")}`);
+  }
+
+  return manifest.songs;
+}
+
+function warnAboutUnusedEditorialEntries(editorialManifest, songs) {
+  const songIds = new Set(songs.map((song) => song.id));
+  const unusedIds = Object.keys(editorialManifest).filter((id) => !songIds.has(id));
+
+  if (unusedIds.length > 0) {
+    console.warn(
+      `Aviso: entradas editoriais sem MusicXML correspondente: ${unusedIds.join(
+        ", ",
+      )}`,
+    );
   }
 }
 
@@ -319,6 +395,8 @@ export async function main({ check = false } = {}) {
 
   const catalog = parseCatalog({ songs });
   const contents = `${JSON.stringify(catalog, null, 2)}\n`;
+
+  warnAboutUnusedEditorialEntries(editorialManifest, catalog.songs);
 
   if (check) {
     const currentContents = await fs.readFile(catalogPath, "utf8");
