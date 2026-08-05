@@ -11,7 +11,11 @@
       "source": "Exemplo original",
       "musicxml": "/musicxml/estudo-de-abertura.musicxml",
       "notes": "Pequena peca de exemplo para validar o fluxo MusicXML, renderizacao online e metadados do acervo.",
-      "tags": ["musicxml", "exemplo", "melodia"]
+      "tags": [
+        "musicxml",
+        "exemplo",
+        "melodia"
+      ]
     }
   ]
 }
