@@ -7,6 +7,7 @@ import { parseCatalog } from "../lib/catalog.mjs";
 const projectRoot = process.cwd();
 const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
 const catalogPath = path.join(projectRoot, "public", "catalog.json");
+const editorialPath = path.join(projectRoot, "data", "editorial.json");
 
 const defaultEditorialFields = {
   genre: "Nao classificado",
@@ -161,6 +162,30 @@ async function readExistingCatalog() {
   }
 }
 
+async function readEditorialManifest() {
+  try {
+    const manifest = JSON.parse(await fs.readFile(editorialPath, "utf8"));
+    if (
+      typeof manifest !== "object" ||
+      manifest === null ||
+      Array.isArray(manifest) ||
+      typeof manifest.songs !== "object" ||
+      manifest.songs === null ||
+      Array.isArray(manifest.songs)
+    ) {
+      throw new Error("data/editorial.json deve conter um objeto songs");
+    }
+
+    return manifest.songs;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return {};
+    }
+
+    throw error;
+  }
+}
+
 function publicPathFromFile(filePath) {
   const relativePath = path.relative(path.join(projectRoot, "public"), filePath);
   return `/${relativePath.split(path.sep).join("/")}`;
@@ -173,7 +198,17 @@ function assertMusicXmlDocument(filePath, xml) {
   }
 }
 
-export function buildSongEntry(filePath, xml, existingEntry, hash) {
+function editorialFromManifest(editorialManifest, id, existingEntry) {
+  return editorialManifest[id] ?? existingEntry ?? {};
+}
+
+export function buildSongEntry(
+  filePath,
+  xml,
+  existingEntry,
+  hash,
+  editorialManifest = {},
+) {
   const filename = path.basename(filePath);
   const publicPath = publicPathFromFile(filePath);
   const fallbackId = fallbackIdFromFile(filePath, hash);
@@ -181,23 +216,25 @@ export function buildSongEntry(filePath, xml, existingEntry, hash) {
     textFromTag(xml, "work-title") ||
     textFromTag(xml, "movement-title") ||
     titleFromFilename(filename);
+  const id = existingEntry?.id || fallbackId;
+  const editorial = editorialFromManifest(editorialManifest, id, existingEntry);
 
   return {
-    id: existingEntry?.id || fallbackId,
+    id,
     title,
     composer:
       textFromCreator(xml, "composer") ||
       textFromTag(xml, "creator") ||
       "Nao informado",
-    genre: existingEntry?.genre || defaultEditorialFields.genre,
+    genre: editorial.genre || defaultEditorialFields.genre,
     key: keyFromMusicXml(xml),
-    level: existingEntry?.level || defaultEditorialFields.level,
+    level: editorial.level || defaultEditorialFields.level,
     instrumentation: instrumentationFromMusicXml(xml),
-    source: existingEntry?.source || defaultEditorialFields.source,
+    source: editorial.source || defaultEditorialFields.source,
     musicxml: publicPath,
-    notes: existingEntry?.notes || defaultEditorialFields.notes,
-    tags: Array.isArray(existingEntry?.tags)
-      ? existingEntry.tags
+    notes: editorial.notes || defaultEditorialFields.notes,
+    tags: Array.isArray(editorial.tags)
+      ? editorial.tags
       : defaultEditorialFields.tags,
     sourceHash: hash,
   };
@@ -252,6 +289,7 @@ export function matchExistingEntries(inputs, existingSongs) {
 
 export async function main({ check = false } = {}) {
   const existingSongs = await readExistingCatalog();
+  const editorialManifest = await readEditorialManifest();
   const files = await listMusicXmlFiles(musicXmlDirectory);
 
   const inputs = await Promise.all(
@@ -266,7 +304,13 @@ export async function main({ check = false } = {}) {
   const matchesByPath = matchExistingEntries(inputs, existingSongs);
 
   const songs = inputs.map(({ filePath, hash, publicPath, xml }) =>
-    buildSongEntry(filePath, xml, matchesByPath.get(publicPath), hash),
+    buildSongEntry(
+      filePath,
+      xml,
+      matchesByPath.get(publicPath),
+      hash,
+      editorialManifest,
+    ),
   );
 
   songs.sort((first, second) =>
