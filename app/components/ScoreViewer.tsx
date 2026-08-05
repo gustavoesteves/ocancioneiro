@@ -11,9 +11,6 @@ type ViewerState = "loading" | "ready" | "error";
 
 export function ScoreViewer({ song }: { song: Song }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const osmdRef = useRef<{ zoom: number; render: () => Promise<void> } | null>(
-    null,
-  );
   const [state, setState] = useState<ViewerState>("loading");
   const [zoom, setZoom] = useState(0.82);
 
@@ -52,10 +49,10 @@ export function ScoreViewer({ song }: { song: Song }) {
 
         osmd.zoom = zoom;
         await osmd.load(xml);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
         await osmd.render();
 
         if (!cancelled) {
-          osmdRef.current = osmd;
           setState("ready");
         }
       } catch (error) {
@@ -97,20 +94,20 @@ export function ScoreViewer({ song }: { song: Song }) {
         </label>
       </div>
 
-      <div className="min-h-[520px] overflow-auto rounded-md border border-[#d8d0c1] bg-white p-4">
+      <div className="relative min-h-[520px] overflow-auto rounded-md border border-[#d8d0c1] bg-white p-4">
         {state === "loading" ? (
-          <div className="grid min-h-[460px] place-items-center text-sm text-[#70695e]">
+          <div className="absolute inset-0 z-10 grid min-h-[460px] place-items-center bg-white text-sm text-[#70695e]">
             Carregando partitura...
           </div>
         ) : null}
         {state === "error" ? (
-          <div className="grid min-h-[460px] place-items-center text-center text-sm text-[#8a2f2f]">
+          <div className="absolute inset-0 z-10 grid min-h-[460px] place-items-center bg-white text-center text-sm text-[#8a2f2f]">
             Nao consegui carregar esta partitura MusicXML.
           </div>
         ) : null}
         <div
           aria-label={`Partitura de ${song.title}`}
-          className={state === "ready" ? "block" : "hidden"}
+          className="min-h-[460px] min-w-[720px]"
           ref={containerRef}
         />
       </div>

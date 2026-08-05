@@ -92,7 +92,7 @@ export function CancioneiroApp() {
 
       return matchesQuery && matchesLevel && matchesGenre;
     });
-  }, [genre, level, query]);
+  }, [genre, level, query, songs]);
 
   const activeSong =
     songs.find((song) => song.id === activeSongId) ?? filteredSongs[0] ?? null;
