@@ -45,6 +45,12 @@ Para checar se a versao compila:
 npm run build
 ```
 
+Para gerar a versao estatica usada pelo GitHub Pages:
+
+```bash
+npm run build:pages
+```
+
 ## Como Adicionar Uma Obra
 
 1. Exporte ou salve a partitura em MusicXML.
@@ -124,6 +130,19 @@ public/
 scripts/
   generate-catalog.mjs
 ```
+
+## Publicacao No GitHub Pages
+
+O projeto inclui o workflow `.github/workflows/pages.yml`.
+
+Quando houver push no branch `main`, o GitHub Actions:
+
+1. instala as dependencias;
+2. roda `npm run catalog:generate`;
+3. roda `npm run build:pages`;
+4. publica a pasta `github-pages` no GitHub Pages.
+
+No GitHub, configure Pages para usar **GitHub Actions** como fonte de deploy.
 
 ## Observacoes Sobre Playback
 

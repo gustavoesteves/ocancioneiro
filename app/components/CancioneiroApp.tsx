@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ScoreViewer } from "./ScoreViewer";
+import { publicUrl } from "../url";
 
 type Song = {
   id: string;
@@ -32,7 +33,7 @@ export function CancioneiroApp() {
 
     async function loadCatalog() {
       try {
-        const response = await fetch("/catalog.json");
+        const response = await fetch(publicUrl("/catalog.json"));
 
         if (!response.ok) {
           throw new Error("Catalog not found");
@@ -240,7 +241,7 @@ export function CancioneiroApp() {
                 <a
                   className="rounded-md border border-[#b99f8d] bg-white px-3 py-2 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5]"
                   download
-                  href={activeSong.musicxml}
+                  href={publicUrl(activeSong.musicxml)}
                 >
                   Baixar MusicXML
                 </a>

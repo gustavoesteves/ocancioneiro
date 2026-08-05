@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { publicUrl } from "../url";
 
 type Song = {
   title: string;
@@ -203,7 +204,7 @@ export function ScoreViewer({ song }: { song: Song }) {
       try {
         const [{ OpenSheetMusicDisplay }, response] = await Promise.all([
           import("opensheetmusicdisplay"),
-          fetch(song.musicxml),
+          fetch(publicUrl(song.musicxml)),
         ]);
 
         if (!response.ok) {
