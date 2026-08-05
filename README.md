@@ -193,10 +193,19 @@ No GitHub, configure Pages para usar **GitHub Actions** como fonte de deploy.
 
 ## Observacoes Sobre Playback
 
-O playback atual e propositalmente simples. Ele le notas, pausas, duracoes,
-acordes simples e tempo basico do MusicXML, entao gera som com Web Audio no
-browser.
+O playback atual e propositalmente simples. A rotina compartilhada em
+`lib/playback.mjs` le notas, pausas, duracoes, acordes simples, mudancas de
+andamento, `backup` e `forward` do MusicXML. A interface usa esses eventos para
+gerar som com Web Audio no browser.
 
-Isso ja serve para conferir a melodia e validar a experiencia. Uma versao mais
-musical pode vir depois com MIDI real, SoundFont, cursor seguindo a partitura,
-controle de andamento e metronomo.
+Isso ja serve para conferir a melodia, acordes basicos e entradas com multiplas
+vozes simples. Ainda nao e uma interpretacao musical completa: nao aplica
+articulacoes, dinamicas, swing, pedais, instrumentos reais, repeticoes complexas
+ou ornamentos.
+
+Os casos principais do parser ficam cobertos por `tests/playback.test.mjs`.
+Quando o acervo real revelar novos limites, adicione primeiro um teste pequeno
+com o trecho MusicXML minimo e depois ajuste `lib/playback.mjs`.
+
+Uma versao mais musical pode vir depois com uma pipeline MusicXML para MIDI,
+SoundFont, cursor seguindo a partitura, controle de andamento e metronomo.
