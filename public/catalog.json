@@ -1,0 +1,17 @@
+{
+  "songs": [
+    {
+      "id": "estudo-de-abertura",
+      "title": "Estudo de abertura",
+      "composer": "O Cancioneiro",
+      "genre": "Estudo",
+      "key": "C maior",
+      "level": "Inicial",
+      "instrumentation": "Melodia",
+      "source": "Exemplo original",
+      "musicxml": "/musicxml/estudo-de-abertura.musicxml",
+      "notes": "Pequena peca de exemplo para validar o fluxo MusicXML, renderizacao online e metadados do acervo.",
+      "tags": ["musicxml", "exemplo", "melodia"]
+    }
+  ]
+}
