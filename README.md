@@ -45,6 +45,12 @@ Para checar se a versao compila:
 npm run build
 ```
 
+Para executar a verificacao completa usada no deploy:
+
+```bash
+npm run check
+```
+
 Para gerar a versao estatica usada pelo GitHub Pages:
 
 ```bash
@@ -64,6 +70,12 @@ npm run catalog:generate
 O script varre `public/musicxml/`, le os arquivos `.musicxml` e `.xml`, e
 atualiza `public/catalog.json`.
 
+Para validar que o catalogo versionado esta sincronizado sem modifica-lo:
+
+```bash
+npm run catalog:check
+```
+
 ## O Que O Script Detecta
 
 O script tenta extrair automaticamente:
@@ -73,7 +85,7 @@ O script tenta extrair automaticamente:
 - `key`: de `<fifths>` e `<mode>`.
 - `instrumentation`: de `<part-name>`.
 - `musicxml`: caminho publico do arquivo.
-- `id`: baseado no nome do arquivo.
+- `id`: baseado no caminho relativo do arquivo.
 
 Campos editoriais continuam sob nosso controle:
 
@@ -83,8 +95,11 @@ Campos editoriais continuam sob nosso controle:
 - `notes`
 - `tags`
 
-Quando uma musica ja existe no catalogo, o script preserva esses campos em vez
-de sobrescrever tudo.
+Quando uma musica ja existe no catalogo, o script atualiza os campos derivados
+do MusicXML e preserva apenas esses campos editoriais. Uma assinatura SHA-256
+interna (`sourceHash`) mantem a identidade e os metadados editoriais quando um
+arquivo sem alteracoes e movido ou renomeado. IDs, caminhos e tipos tambem sao
+validados antes de o catalogo ser substituido atomicamente.
 
 ## Exemplo De Entrada No Catalogo
 

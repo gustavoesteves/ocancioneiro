@@ -9,5 +9,5 @@ export default defineConfig({
   },
   plugins: [react()],
   publicDir: "../public",
-  root: "pages",
+  root: "github-pages-src",
 });
