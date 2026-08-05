@@ -7,6 +7,7 @@ import {
   fallbackIdFromFile,
   matchExistingEntries,
   sourceHash,
+  validateEditorialManifest,
 } from "../scripts/generate-catalog.mjs";
 
 function musicXml({ composer = "Novo compositor", fifths = 2 } = {}) {
@@ -143,4 +144,46 @@ test("keeps stable identity and editorial data when a file moves", () => {
 
   const matches = matchExistingEntries([movedInput], [existing]);
   assert.equal(matches.get(movedInput.publicPath), existing);
+});
+
+test("validates editorial manifest fields", () => {
+  const manifest = {
+    songs: {
+      estudo: {
+        genre: "Estudo",
+        level: "Inicial",
+        notes: "",
+        source: "Acervo",
+        tags: ["piano"],
+      },
+    },
+  };
+
+  assert.deepEqual(validateEditorialManifest(manifest), manifest.songs);
+
+  assert.throws(
+    () =>
+      validateEditorialManifest({
+        songs: {
+          estudo: {
+            genre: "",
+            level: "Inicial",
+            typo: "valor",
+          },
+        },
+      }),
+    /Manifesto editorial invalido/,
+  );
+
+  assert.throws(
+    () =>
+      validateEditorialManifest({
+        songs: {
+          estudo: {
+            tags: ["ok", ""],
+          },
+        },
+      }),
+    /tags deve ser um array/,
+  );
 });
