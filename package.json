@@ -22,8 +22,7 @@
     "drizzle-orm": "0.45.2",
     "opensheetmusicdisplay": "^2.1.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "soundfont-player": "^0.12.0"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.51.0",

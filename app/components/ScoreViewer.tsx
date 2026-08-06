@@ -2,39 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { OpenSheetMusicDisplay } from "opensheetmusicdisplay";
-import type { Player as SoundFontPlayer } from "soundfont-player";
 import type { Song } from "../catalog";
 import { publicUrl } from "../url";
 import { parseMusicXmlPlayback } from "../../lib/playback.mjs";
 
 type ViewerState = "loading" | "ready" | "error";
-type StoppableAudioNode = { stop: (when?: number) => void };
-type SoundFontModule = typeof import("soundfont-player");
-
-const SOUNDFONT_INSTRUMENT = "acoustic_grand_piano";
-const SOUNDFONT_LIBRARY = "FluidR3_GM";
-
-function frequencyToMidi(frequency: number) {
-  return Math.round(69 + 12 * Math.log2(frequency / 440));
-}
-
-function midiToNoteName(midi: number) {
-  const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-  const pitchClass = ((midi % 12) + 12) % 12;
-  const octave = Math.floor(midi / 12) - 1;
-  return `${names[pitchClass]}${octave}`;
-}
 
 export function ScoreViewer({ song }: { song: Song }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
-  const soundFontGainRef = useRef<GainNode | null>(null);
-  const soundFontRef = useRef<SoundFontPlayer | null>(null);
-  const soundFontPromiseRef = useRef<Promise<SoundFontPlayer> | null>(null);
   const stopTimerRef = useRef<number | null>(null);
-  const playingNodesRef = useRef<Array<StoppableAudioNode>>([]);
+  const playingNodesRef = useRef<Array<AudioScheduledSourceNode>>([]);
   const zoomRef = useRef(0.82);
   const [state, setState] = useState<ViewerState>("loading");
   const [scoreXml, setScoreXml] = useState<string | null>(null);
@@ -51,7 +31,6 @@ export function ScoreViewer({ song }: { song: Song }) {
       }
     });
     playingNodesRef.current = [];
-    soundFontGainRef.current?.disconnect();
     masterGainRef.current?.disconnect();
     masterGainRef.current = null;
 
@@ -95,132 +74,7 @@ export function ScoreViewer({ song }: { song: Song }) {
       masterGain.connect(audioContext.destination);
       masterGainRef.current = masterGain;
 
-      const noteMidiNumbers = [
-        ...new Set(
-          events.flatMap((event) =>
-            ("frequencies" in event ? event.frequencies : [event.frequency]).map(
-              frequencyToMidi,
-            ),
-          ),
-        ),
-      ];
-
-      const soundFontGain =
-        soundFontGainRef.current ?? audioContext.createGain();
-      soundFontGainRef.current = soundFontGain;
-      soundFontGain.gain.setValueAtTime(1, audioContext.currentTime);
-
-      try {
-        soundFontGain.connect(masterGain);
-      } catch {
-        // The node may already be connected from a previous playback.
-      }
-
-      let soundFont: SoundFontPlayer | null = soundFontRef.current;
-
-      if (!soundFont) {
-        setPlaybackMessage("Carregando timbre de piano...");
-        const soundFontModule = (await import(
-          "soundfont-player"
-        )) as SoundFontModule;
-        const loader = soundFontModule.instrument;
-
-        soundFontPromiseRef.current ??= loader(
-          audioContext,
-          SOUNDFONT_INSTRUMENT,
-          {
-            destination: soundFontGain,
-            gain: 1,
-            notes: noteMidiNumbers.map(midiToNoteName),
-            soundfont: SOUNDFONT_LIBRARY,
-          },
-        );
-        soundFont = await soundFontPromiseRef.current;
-        soundFontRef.current = soundFont;
-        setPlaybackMessage(null);
-      }
-
-      if (!soundFont) {
-        throw new Error("SoundFont instrument unavailable");
-      }
-
-      const activeSoundFont = soundFont;
-      const startAt = audioContext.currentTime + 0.12;
-
-      events.forEach((event) => {
-        const frequencies: number[] =
-          "frequencies" in event ? event.frequencies : [event.frequency];
-        const noteStart = startAt + event.startSeconds;
-        const playbackDuration =
-          "frequencies" in event
-            ? Math.min(event.durationSeconds, 1.6)
-            : event.durationSeconds;
-        const noteEnd =
-          noteStart +
-          playbackDuration * ("frequencies" in event ? 0.86 : 0.92);
-
-        frequencies.forEach((frequency) => {
-          const peakGain = "frequencies" in event ? 0.38 : 0.72;
-          const node = activeSoundFont.play(
-            midiToNoteName(frequencyToMidi(frequency)),
-            noteStart,
-            {
-              attack: "frequencies" in event ? 0.025 : 0.008,
-              decay: 0.08,
-              duration: Math.max(noteEnd - noteStart, 0.08),
-              gain: peakGain,
-              release: "frequencies" in event ? 0.45 : 0.18,
-              sustain: "frequencies" in event ? 0.74 : 0.9,
-            },
-          );
-
-          if (node) playingNodesRef.current.push(node);
-        });
-      });
-
-      const totalDuration = Math.max(
-        ...events.map((event) => event.startSeconds + event.durationSeconds),
-      );
-
-      setIsPlaying(true);
-      stopTimerRef.current = window.setTimeout(
-        () => stopPlayback(),
-        (totalDuration + 0.2) * 1000,
-      );
-    } catch (error) {
-      console.error(error);
-      soundFontPromiseRef.current = null;
-      soundFontRef.current = null;
-      stopPlayback();
-      setPlaybackMessage(
-        "Nao consegui carregar o timbre de piano. Usando playback simples.",
-      );
-      await playScoreWithOscillators();
-    }
-  }
-
-  async function playScoreWithOscillators() {
-    if (!scoreXml || isPlaying) {
-      return;
-    }
-
-    try {
-      const events = parseMusicXmlPlayback(scoreXml);
-      const audioContext =
-        audioContextRef.current ??
-        new window.AudioContext({ latencyHint: "playback" });
-      audioContextRef.current = audioContext;
-
-      if (audioContext.state === "suspended") {
-        await audioContext.resume();
-      }
-
       const startAt = audioContext.currentTime + 0.08;
-      const masterGain = audioContext.createGain();
-      masterGain.gain.value = 0.24;
-      masterGain.connect(audioContext.destination);
-      masterGainRef.current = masterGain;
-
       events.forEach((event) => {
         const frequencies: number[] =
           "frequencies" in event ? event.frequencies : [event.frequency];
@@ -349,11 +203,6 @@ export function ScoreViewer({ song }: { song: Song }) {
       }
       if (osmdRef.current === currentOsmd) osmdRef.current = null;
     };
-  }, [song.musicxml]);
-
-  useEffect(() => {
-    soundFontRef.current = null;
-    soundFontPromiseRef.current = null;
   }, [song.musicxml]);
 
   useEffect(() => {
