@@ -305,6 +305,74 @@ function warnAboutUnusedEditorialEntries(editorialManifest, songs) {
   }
 }
 
+export function editorialTodoReport(songs, editorialManifest) {
+  return songs
+    .map((song) => {
+      const manifestEntry = editorialManifest[song.id];
+      const defaultFields = [];
+
+      if (!manifestEntry) {
+        defaultFields.push("genre", "level", "source", "notes", "tags");
+      } else {
+        for (const field of ["genre", "level", "source"]) {
+          if (song[field] === defaultEditorialFields[field]) {
+            defaultFields.push(field);
+          }
+        }
+
+        if (song.notes === defaultEditorialFields.notes) {
+          defaultFields.push("notes");
+        }
+
+        if (song.tags.length === 0) {
+          defaultFields.push("tags");
+        }
+      }
+
+      return {
+        defaultFields,
+        hasEditorialEntry: Boolean(manifestEntry),
+        id: song.id,
+        title: song.title,
+      };
+    })
+    .filter((item) => item.defaultFields.length > 0);
+}
+
+function printEditorialTodoReport(songs, editorialManifest) {
+  const report = editorialTodoReport(songs, editorialManifest);
+
+  if (report.length === 0) {
+    console.log("Metadados editoriais completos para todas as musicas.");
+    return;
+  }
+
+  console.log("\nPendencias editoriais:");
+  report.forEach((item) => {
+    const status = item.hasEditorialEntry
+      ? `campos em aberto: ${item.defaultFields.join(", ")}`
+      : "sem entrada em data/editorial.json";
+    console.log(`- ${item.id} (${item.title}): ${status}`);
+  });
+
+  const missingEntries = report.filter((item) => !item.hasEditorialEntry);
+  if (missingEntries.length === 0) return;
+
+  console.log("\nSugestao para data/editorial.json:");
+  missingEntries.forEach((item) => {
+    const snippet = {
+      [item.id]: {
+        genre: defaultEditorialFields.genre,
+        level: defaultEditorialFields.level,
+        notes: "",
+        source: defaultEditorialFields.source,
+        tags: [],
+      },
+    };
+    console.log(JSON.stringify(snippet, null, 2));
+  });
+}
+
 function publicPathFromFile(filePath) {
   const relativePath = path.relative(path.join(projectRoot, "public"), filePath);
   return `/${relativePath.split(path.sep).join("/")}`;
@@ -441,6 +509,7 @@ export async function main({ check = false } = {}) {
   const contents = `${JSON.stringify(catalog, null, 2)}\n`;
 
   warnAboutUnusedEditorialEntries(editorialManifest, catalog.songs);
+  printEditorialTodoReport(catalog.songs, editorialManifest);
 
   if (check) {
     const currentContents = await fs.readFile(catalogPath, "utf8");

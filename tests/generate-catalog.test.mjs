@@ -5,6 +5,7 @@ import {
   buildSongEntry,
   chordsFromMusicXml,
   decodeXml,
+  editorialTodoReport,
   fallbackIdFromFile,
   matchExistingEntries,
   sourceHash,
@@ -218,4 +219,79 @@ test("validates editorial manifest fields", () => {
       }),
     /tags deve ser um array/,
   );
+});
+
+test("reports editorial metadata still using defaults", () => {
+  const songs = [
+    {
+      id: "nova-peca",
+      title: "Nova peca",
+      composer: "Compositor",
+      genre: "Nao classificado",
+      key: "C maior",
+      level: "Nao classificado",
+      instrumentation: "Melodia",
+      source: "Acervo",
+      musicxml: "/musicxml/nova-peca.musicxml",
+      notes: "",
+      chords: ["C"],
+      tags: [],
+    },
+    {
+      id: "peca-parcial",
+      title: "Peca parcial",
+      composer: "Compositor",
+      genre: "Choro",
+      key: "D maior",
+      level: "Nao classificado",
+      instrumentation: "Melodia",
+      source: "Acervo",
+      musicxml: "/musicxml/peca-parcial.musicxml",
+      notes: "",
+      chords: ["D"],
+      tags: ["brasileiro"],
+    },
+    {
+      id: "peca-completa",
+      title: "Peca completa",
+      composer: "Compositor",
+      genre: "Samba",
+      key: "F maior",
+      level: "Intermediario",
+      instrumentation: "Melodia",
+      source: "Fonte",
+      musicxml: "/musicxml/peca-completa.musicxml",
+      notes: "Revisada.",
+      chords: ["F"],
+      tags: ["samba"],
+    },
+  ];
+  const manifest = {
+    "peca-parcial": {
+      genre: "Choro",
+      tags: ["brasileiro"],
+    },
+    "peca-completa": {
+      genre: "Samba",
+      level: "Intermediario",
+      notes: "Revisada.",
+      source: "Fonte",
+      tags: ["samba"],
+    },
+  };
+
+  assert.deepEqual(editorialTodoReport(songs, manifest), [
+    {
+      defaultFields: ["genre", "level", "source", "notes", "tags"],
+      hasEditorialEntry: false,
+      id: "nova-peca",
+      title: "Nova peca",
+    },
+    {
+      defaultFields: ["level", "source", "notes"],
+      hasEditorialEntry: true,
+      id: "peca-parcial",
+      title: "Peca parcial",
+    },
+  ]);
 });

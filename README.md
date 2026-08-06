@@ -86,8 +86,13 @@ npm run build:pages
 ## Como Adicionar Uma Obra
 
 1. Exporte ou salve a partitura em MusicXML.
-2. Coloque o arquivo em `public/musicxml/`.
-3. Rode:
+2. Confira se ela segue a linha editorial do acervo:
+   - melodia principal;
+   - cifras/acordes em `<harmony>`;
+   - titulo e compositor preenchidos quando possivel;
+   - sem arranjo completo quando a melodia+cifra for suficiente.
+3. Coloque o arquivo em `public/musicxml/`.
+4. Rode:
 
 ```bash
 npm run catalog:generate
@@ -96,6 +101,10 @@ npm run catalog:generate
 O script varre `public/musicxml/`, le os arquivos `.musicxml` e `.xml`, e
 combina os dados extraidos com `data/editorial.json`. A saida final e
 `public/catalog.json`.
+
+Ao final, o comando mostra pendencias editoriais. Se uma peca nova ainda nao
+tiver entrada em `data/editorial.json`, o terminal imprime um snippet JSON que
+pode ser usado como ponto de partida dentro de `songs`.
 
 Para validar que o catalogo versionado esta sincronizado sem modifica-lo:
 
@@ -185,9 +194,18 @@ npm run catalog:generate
 npm run dev
 ```
 
-Depois revise `data/editorial.json` para preencher os campos editoriais que o
-MusicXML nao sabe informar bem, como genero, nivel, notas pedagogicas e tags, e
-rode `npm run catalog:generate` novamente.
+Depois:
+
+1. copie o snippet sugerido pelo gerador para `data/editorial.json`, dentro de
+   `songs`;
+2. preencha `genre`, `level`, `source`, `notes` e `tags`;
+3. rode `npm run catalog:generate` novamente;
+4. abra o app e confira partitura, cifras, busca e playback;
+5. rode `npm run check` antes de publicar.
+
+O `public/catalog.json` deve mudar como resultado do gerador. Ele continua sendo
+artefato gerado; revise o diff, mas prefira alterar metadados editoriais em
+`data/editorial.json`.
 
 ## Estrutura Principal
 
