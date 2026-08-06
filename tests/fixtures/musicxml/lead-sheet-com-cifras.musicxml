@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="4.0">
   <work>
-    <work-title>Miniatura para piano</work-title>
+    <work-title>Lead sheet com cifras</work-title>
   </work>
   <identification>
     <creator type="composer">O Cancioneiro</creator>
   </identification>
   <part-list>
     <score-part id="P1">
-      <part-name>Piano</part-name>
+      <part-name>Melodia</part-name>
     </score-part>
   </part-list>
   <part id="P1">
@@ -23,14 +23,9 @@
           <beats>4</beats>
           <beat-type>4</beat-type>
         </time>
-        <staves>2</staves>
-        <clef number="1">
+        <clef>
           <sign>G</sign>
           <line>2</line>
-        </clef>
-        <clef number="2">
-          <sign>F</sign>
-          <line>4</line>
         </clef>
       </attributes>
       <direction placement="above">
@@ -42,6 +37,12 @@
         </direction-type>
         <sound tempo="84"/>
       </direction>
+      <harmony>
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="C">major</kind>
+      </harmony>
       <note>
         <pitch>
           <step>C</step>
@@ -50,7 +51,6 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <staff>1</staff>
       </note>
       <note>
         <chord/>
@@ -61,15 +61,19 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <staff>1</staff>
       </note>
       <note>
         <rest/>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <staff>1</staff>
       </note>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="G7">dominant</kind>
+      </harmony>
       <note>
         <pitch>
           <step>G</step>
@@ -78,30 +82,6 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
-        <staff>1</staff>
-      </note>
-      <backup>
-        <duration>8</duration>
-      </backup>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>3</octave>
-        </pitch>
-        <duration>4</duration>
-        <voice>2</voice>
-        <type>half</type>
-        <staff>2</staff>
-      </note>
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>2</octave>
-        </pitch>
-        <duration>4</duration>
-        <voice>2</voice>
-        <type>half</type>
-        <staff>2</staff>
       </note>
     </measure>
   </part>

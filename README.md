@@ -15,6 +15,31 @@ oferecer busca, filtros, download, impressao/PDF e playback simples.
 - Impressao pelo navegador, incluindo salvar como PDF.
 - Playback simples no navegador a partir do MusicXML.
 
+## Linha Editorial
+
+O Cancioneiro segue a logica de um songbook/lead sheet, inspirado no uso
+pratico de livros como o Real Book, mas voltado ao repertorio brasileiro.
+
+O formato padrao de uma obra deve ser:
+
+- melodia principal em uma pauta;
+- cifras/acordes acima da melodia;
+- forma e marcacoes essenciais quando ajudarem a tocar a musica;
+- MusicXML limpo, legivel e facil de revisar.
+
+O objetivo nao e publicar partituras completas, arranjos fechados ou reducoes
+orquestrais. Isso deixaria o acervo mais lento de produzir e menos flexivel para
+quem quer estudar, acompanhar, improvisar ou montar seu proprio arranjo.
+
+Excecoes sao bem-vindas quando forem musicalmente necessarias:
+
+- segunda melodia ou contracanto marcante;
+- baixo, piano reduzido ou convencao ritmica indispensavel;
+- introducao, final, coda ou chamada que faca parte da identidade da musica.
+
+Mesmo nesses casos, a partitura deve continuar enxuta e tocar como material de
+consulta, nao como uma edicao completa definitiva.
+
 ## Como Rodar
 
 Requisitos:
@@ -194,14 +219,14 @@ No GitHub, configure Pages para usar **GitHub Actions** como fonte de deploy.
 ## Observacoes Sobre Playback
 
 O playback atual e propositalmente simples. A rotina compartilhada em
-`lib/playback.mjs` le notas, pausas, duracoes, acordes simples, mudancas de
-andamento, `backup` e `forward` do MusicXML. A interface usa esses eventos para
-gerar som com Web Audio no browser.
+`lib/playback.mjs` le notas, pausas, duracoes, acordes escritos na pauta,
+mudancas de andamento, `backup` e `forward` do MusicXML. A interface usa esses
+eventos para gerar som com Web Audio no browser.
 
 Isso ja serve para conferir a melodia, acordes basicos e entradas com multiplas
 vozes simples. Ainda nao e uma interpretacao musical completa: nao aplica
-articulacoes, dinamicas, swing, pedais, instrumentos reais, repeticoes complexas
-ou ornamentos.
+articulacoes, dinamicas, swing, pedais, instrumentos reais, repeticoes
+complexas, ornamentos ou acompanhamento a partir das cifras (`<harmony>`).
 
 Os casos principais do parser ficam cobertos por `tests/playback.test.mjs`.
 Quando o acervo real revelar novos limites, adicione primeiro um teste pequeno
