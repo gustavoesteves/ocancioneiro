@@ -23,41 +23,17 @@ export function CancioneiroApp() {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadLocalCatalog() {
-      const isLocalHost =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        window.location.hostname === "0.0.0.0";
-
-      if (!isLocalHost) {
-        return null;
-      }
-
-      const response = await fetch("/api/import", { cache: "no-store" });
-      if (!response.ok) {
-        return null;
-      }
-
-      return parseCatalog({
-        songs: ((await response.json()) as { songs?: unknown[] }).songs ?? [],
-      });
-    }
-
-    async function loadStaticCatalog() {
-      const response = await fetch(publicUrl("/catalog.json"), {
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        throw new Error("Catalog not found");
-      }
-
-      return parseCatalog(await response.json());
-    }
-
     async function loadCatalog() {
       try {
-        const data = (await loadLocalCatalog()) ?? (await loadStaticCatalog());
+        const response = await fetch(publicUrl("/catalog.json"), {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Catalog not found");
+        }
+
+        const data = parseCatalog(await response.json());
 
         if (!cancelled) {
           setSongs(data.songs);
