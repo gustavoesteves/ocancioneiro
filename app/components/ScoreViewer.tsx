@@ -5,6 +5,7 @@ import type { OpenSheetMusicDisplay } from "opensheetmusicdisplay";
 import type { Song } from "../catalog";
 import { publicUrl } from "../url";
 import { parseMusicXmlPlayback } from "../../lib/playback.mjs";
+import { musicXmlWithDisplayMetadata } from "../../lib/musicxml-metadata.mjs";
 
 type ViewerState = "loading" | "ready" | "error";
 
@@ -173,7 +174,10 @@ export function ScoreViewer({ song }: { song: Song }) {
           throw new Error(`Could not load ${song.musicxml}`);
         }
 
-        const xml = await response.text();
+        const xml = musicXmlWithDisplayMetadata(
+          await response.text(),
+          song.musicxml.split("/").pop() ?? "partitura.musicxml",
+        );
 
         if (cancelled || !containerRef.current) {
           return;

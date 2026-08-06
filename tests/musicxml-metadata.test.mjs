@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   metadataFromMusicXml,
+  musicXmlWithDisplayMetadata,
   slugify,
 } from "../lib/musicxml-metadata.mjs";
 
@@ -67,6 +68,33 @@ test("uses credit title and composer when exported fields are placeholders", () 
   assert.equal(metadata.composer, "Gerry Mulligan");
   assert.equal(metadata.id, "ain-t-it-the-truth");
   assert.equal(metadata.fileName, "ain-t-it-the-truth.musicxml");
+});
+
+test("rewrites display metadata for score renderers", () => {
+  const xml = `<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <work><work-title>Untitled score</work-title></work>
+  <identification><creator type="composer">Composer / arranger</creator></identification>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words>Ain&apos;t it the truth</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words>Gerry Mulligan</credit-words>
+  </credit>
+  <part-list><score-part id="P1"><part-name>Electric Guitar</part-name></score-part></part-list>
+  <part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes></measure></part>
+</score-partwise>`;
+
+  const displayXml = musicXmlWithDisplayMetadata(xml, "aint-it-the-truth.musicxml");
+
+  assert.match(displayXml, /<work-title>Ain't it the truth<\/work-title>/);
+  assert.match(
+    displayXml,
+    /<creator type="composer">Gerry Mulligan<\/creator>/,
+  );
+  assert.doesNotMatch(displayXml, /Untitled score|Composer \/ arranger/);
 });
 
 test("slugifies ids for generated import paths", () => {

@@ -5,6 +5,7 @@ import type { OpenSheetMusicDisplay } from "opensheetmusicdisplay";
 import {
   defaultEditorialFields,
   metadataFromMusicXml,
+  musicXmlWithDisplayMetadata,
   slugify,
 } from "../../lib/musicxml-metadata.mjs";
 
@@ -99,7 +100,7 @@ export function ImportTool() {
     try {
       const xml = await file.text();
       const nextMetadata = metadataFromMusicXml(xml, file.name);
-      setScoreXml(xml);
+      setScoreXml(musicXmlWithDisplayMetadata(xml, file.name));
       setMetadata(nextMetadata);
       setSuggestedId(nextMetadata.id);
       setEditorial(initialEditorial);

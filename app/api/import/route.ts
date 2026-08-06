@@ -5,6 +5,7 @@ import {
   assertMusicXmlDocument,
   defaultEditorialFields,
   metadataFromMusicXml,
+  musicXmlWithDisplayMetadata,
   slugify,
 } from "../../../lib/musicxml-metadata.mjs";
 
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
 
     assertMusicXmlDocument("import.musicxml", xml);
     const metadata = metadataFromMusicXml(xml, "import.musicxml");
+    const displayXml = musicXmlWithDisplayMetadata(xml, "import.musicxml");
     const id = slugify(payload.id || metadata.id);
 
     if (!id) {
@@ -122,7 +124,7 @@ export async function POST(request: Request) {
     }
 
     await fs.mkdir(path.dirname(musicXmlPath), { recursive: true });
-    await writeTextAtomically(musicXmlPath, xml);
+    await writeTextAtomically(musicXmlPath, displayXml);
 
     const manifest = await readEditorialManifest(editorialPath);
     const songs = {
