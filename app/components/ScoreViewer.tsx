@@ -151,9 +151,13 @@ export function ScoreViewer({ song }: { song: Song }) {
         const frequencies: number[] =
           "frequencies" in event ? event.frequencies : [event.frequency];
         const noteStart = startAt + event.startSeconds;
+        const playbackDuration =
+          "frequencies" in event
+            ? Math.min(event.durationSeconds, 1.6)
+            : event.durationSeconds;
         const noteEnd =
           noteStart +
-          event.durationSeconds * ("frequencies" in event ? 0.86 : 0.92);
+          playbackDuration * ("frequencies" in event ? 0.86 : 0.92);
 
         frequencies.forEach((frequency) => {
           const peakGain = "frequencies" in event ? 0.38 : 0.72;
@@ -221,9 +225,13 @@ export function ScoreViewer({ song }: { song: Song }) {
         const frequencies: number[] =
           "frequencies" in event ? event.frequencies : [event.frequency];
         const noteStart = startAt + event.startSeconds;
+        const playbackDuration =
+          "frequencies" in event
+            ? Math.min(event.durationSeconds, 1.6)
+            : event.durationSeconds;
         const noteEnd =
           noteStart +
-          event.durationSeconds * ("frequencies" in event ? 0.86 : 0.92);
+          playbackDuration * ("frequencies" in event ? 0.86 : 0.92);
 
         frequencies.forEach((frequency) => {
           const oscillator = audioContext.createOscillator();

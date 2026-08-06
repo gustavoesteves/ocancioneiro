@@ -98,11 +98,11 @@ test("adds harmony playback events from MusicXML chord symbols", () => {
   assert.equal(harmonyEvents[0].frequencies.length, 4);
   closeTo(harmonyEvents[0].startSeconds, 0);
   closeTo(harmonyEvents[0].durationSeconds, (60 / 90) * 2);
-  closeFrequency(harmonyEvents[0].frequencies[0], 130.81);
-  closeFrequency(harmonyEvents[0].frequencies[3], 233.08);
+  closeFrequency(harmonyEvents[0].frequencies[0], 261.63);
+  closeFrequency(harmonyEvents[0].frequencies[3], 466.16);
   closeTo(harmonyEvents[1].startSeconds, (60 / 90) * 2);
-  closeFrequency(harmonyEvents[1].frequencies[0], 174.61);
-  closeFrequency(harmonyEvents[1].frequencies[1], 207.65);
+  closeFrequency(harmonyEvents[1].frequencies[0], 349.23);
+  closeFrequency(harmonyEvents[1].frequencies[1], 415.3);
 });
 
 test("uses slash-chord bass notes below the chord voicing", () => {
@@ -121,7 +121,7 @@ test("uses slash-chord bass notes below the chord voicing", () => {
 
   assert.ok(harmony);
   closeFrequency(harmony.frequencies[0], 110);
-  closeFrequency(harmony.frequencies[1], 146.83);
+  closeFrequency(harmony.frequencies[1], 293.66);
 });
 
 test("rests advance the playback cursor without producing events", () => {
