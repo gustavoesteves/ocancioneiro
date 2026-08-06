@@ -74,6 +74,13 @@ function textFromCreator(xml, creatorType) {
   return match ? decodeXml(match[1].replace(/<[^>]+>/g, "").trim()) : "";
 }
 
+function attributeFromTag(tag, attributeName) {
+  const match = tag.match(
+    new RegExp(`${attributeName}=["']([^"']+)["']`, "i"),
+  );
+  return match ? decodeXml(match[1].trim()) : "";
+}
+
 function slugify(value) {
   return value
     .normalize("NFD")
@@ -126,6 +133,40 @@ function instrumentationFromMusicXml(xml) {
   }
 
   return [...new Set(partNames)].join(", ");
+}
+
+function alterSymbol(value) {
+  const alter = Number(value || 0);
+
+  if (!Number.isFinite(alter) || alter === 0) {
+    return "";
+  }
+
+  return alter > 0 ? "#".repeat(alter) : "b".repeat(Math.abs(alter));
+}
+
+export function chordsFromMusicXml(xml) {
+  const chords = [...xml.matchAll(/<harmony\b[^>]*>([\s\S]*?)<\/harmony>/gi)]
+    .map((match) => {
+      const harmony = match[1];
+      const rootStep = textFromTag(harmony, "root-step");
+
+      if (!rootStep) {
+        return "";
+      }
+
+      const rootAlter = alterSymbol(textFromTag(harmony, "root-alter"));
+      const bassStep = textFromTag(harmony, "bass-step");
+      const bassAlter = alterSymbol(textFromTag(harmony, "bass-alter"));
+      const kindTag = harmony.match(/<kind\b[^>]*>/i)?.[0] ?? "";
+      const kindText = attributeFromTag(kindTag, "text");
+      const chord = kindText || `${rootStep}${rootAlter}`;
+
+      return bassStep ? `${chord}/${bassStep}${bassAlter}` : chord;
+    })
+    .filter(Boolean);
+
+  return [...new Set(chords)];
 }
 
 async function listMusicXmlFiles(directory) {
@@ -309,6 +350,7 @@ export function buildSongEntry(
     source: editorial.source || defaultEditorialFields.source,
     musicxml: publicPath,
     notes: editorial.notes || defaultEditorialFields.notes,
+    chords: chordsFromMusicXml(xml),
     tags: Array.isArray(editorial.tags)
       ? editorial.tags
       : defaultEditorialFields.tags,

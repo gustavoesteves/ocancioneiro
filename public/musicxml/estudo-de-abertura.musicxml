@@ -51,6 +51,12 @@
         </direction-type>
         <sound tempo="92"/>
       </direction>
+      <harmony>
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="C">major</kind>
+      </harmony>
       <note>
         <pitch>
           <step>C</step>
@@ -85,6 +91,12 @@
       </note>
     </measure>
     <measure number="2">
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="G7">dominant</kind>
+      </harmony>
       <note>
         <pitch>
           <step>A</step>

@@ -19,6 +19,7 @@ function song(overrides = {}) {
     source: "Acervo",
     musicxml: "/musicxml/estudo.musicxml",
     notes: "",
+    chords: ["C", "G7"],
     tags: ["piano"],
     ...overrides,
   };
@@ -29,6 +30,10 @@ test("validates catalog shape, unique ids and safe MusicXML paths", () => {
 
   assert.throws(
     () => parseCatalog({ songs: [song({ tags: "piano" })] }),
+    CatalogValidationError,
+  );
+  assert.throws(
+    () => parseCatalog({ songs: [song({ chords: ["C", ""] })] }),
     CatalogValidationError,
   );
   assert.throws(

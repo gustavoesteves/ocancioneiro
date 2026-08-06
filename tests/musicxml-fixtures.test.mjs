@@ -16,6 +16,7 @@ const fixtures = [
     expected: {
       composer: "O Cancioneiro",
       eventCount: 3,
+      chords: ["C", "G7"],
       instrumentation: "Melodia",
       key: "C maior",
       title: "Lead sheet com cifras",
@@ -26,6 +27,7 @@ const fixtures = [
     expected: {
       composer: "Arquivo de teste",
       eventCount: 2,
+      chords: ["Dm6", "G7"],
       instrumentation: "Violao",
       key: "F menor",
       title: "Andamento e alteracoes",
@@ -36,6 +38,7 @@ const fixtures = [
     expected: {
       composer: "João Δ",
       eventCount: 3,
+      chords: ["D", "A7"],
       instrumentation: "Voz, Piano",
       key: "D maior",
       title: "Canção λ",
@@ -72,6 +75,7 @@ test("representative MusicXML fixtures produce catalog entries and playback even
 
     assert.equal(song.title, fixture.expected.title);
     assert.equal(song.composer, fixture.expected.composer);
+    assert.deepEqual(song.chords, fixture.expected.chords);
     assert.equal(song.key, fixture.expected.key);
     assert.equal(song.instrumentation, fixture.expected.instrumentation);
     assert.match(xml, /<harmony>/);
