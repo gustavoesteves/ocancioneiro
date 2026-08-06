@@ -10,6 +10,7 @@ oferecer busca, filtros, download, impressao/PDF e playback simples.
 - Partituras em `public/musicxml/`.
 - Renderizacao online com OpenSheetMusicDisplay.
 - Busca por titulo, compositor, genero, tom, instrumentacao e tags.
+- Extracao de cifras/acordes a partir de `<harmony>` no MusicXML.
 - Filtros por nivel e genero.
 - Download do MusicXML original.
 - Impressao pelo navegador, incluindo salvar como PDF.
@@ -110,6 +111,7 @@ O script tenta extrair automaticamente:
 - `composer`: de `<creator type="composer">`.
 - `key`: de `<fifths>` e `<mode>`.
 - `instrumentation`: de `<part-name>`.
+- `chords`: de elementos `<harmony>`.
 - `musicxml`: caminho publico do arquivo.
 - `id`: baseado no caminho relativo do arquivo.
 
@@ -168,6 +170,7 @@ atomicamente.
   "source": "Exemplo original",
   "musicxml": "/musicxml/estudo-de-abertura.musicxml",
   "notes": "Pequena peca de exemplo para validar o fluxo MusicXML.",
+  "chords": ["C", "G7"],
   "tags": ["musicxml", "exemplo", "melodia"]
 }
 ```

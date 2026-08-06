@@ -3,6 +3,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   buildSongEntry,
+  chordsFromMusicXml,
   decodeXml,
   fallbackIdFromFile,
   matchExistingEntries,
@@ -16,7 +17,7 @@ function musicXml({ composer = "Novo compositor", fifths = 2 } = {}) {
   <work><work-title>Novo titulo</work-title></work>
   <identification><creator type="composer">${composer}</creator></identification>
   <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
-  <part id="P1"><measure number="1"><attributes><divisions>1</divisions><key><fifths>${fifths}</fifths></key></attributes></measure></part>
+  <part id="P1"><measure number="1"><attributes><divisions>1</divisions><key><fifths>${fifths}</fifths></key></attributes><harmony><root><root-step>D</root-step></root><kind text="Dm7">minor-seventh</kind></harmony></measure></part>
 </score-partwise>`;
 }
 
@@ -64,6 +65,7 @@ test("refreshes source metadata while applying editorial fields", () => {
   assert.equal(generated.composer, "Novo compositor");
   assert.equal(generated.key, "D maior");
   assert.equal(generated.instrumentation, "Piano");
+  assert.deepEqual(generated.chords, ["Dm7"]);
   assert.equal(generated.genre, "Samba");
   assert.equal(generated.level, "Avancado");
   assert.equal(generated.notes, "Nota do manifesto");
@@ -96,6 +98,36 @@ test("falls back to existing editorial fields during migration", () => {
   assert.equal(generated.notes, "Nota editorial");
   assert.equal(generated.source, "Fonte editorial");
   assert.deepEqual(generated.tags, ["brasileiro"]);
+});
+
+test("extracts unique chord symbols from MusicXML harmony elements", () => {
+  const xml = `<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <part id="P1">
+    <measure number="1">
+      <harmony>
+        <root><root-step>C</root-step></root>
+        <kind text="">major</kind>
+      </harmony>
+      <harmony>
+        <root><root-step>F</root-step><root-alter>1</root-alter></root>
+        <kind text="F#m7">minor-seventh</kind>
+        <bass><bass-step>A</bass-step></bass>
+      </harmony>
+      <harmony>
+        <root><root-step>E</root-step><root-alter>-1</root-alter></root>
+        <kind text="m7">minor-seventh</kind>
+      </harmony>
+      <harmony>
+        <root><root-step>F</root-step><root-alter>1</root-alter></root>
+        <kind text="F#m7">minor-seventh</kind>
+        <bass><bass-step>A</bass-step></bass>
+      </harmony>
+    </measure>
+  </part>
+</score-partwise>`;
+
+  assert.deepEqual(chordsFromMusicXml(xml), ["C", "F#m7/A", "Ebm7"]);
 });
 
 test("derives ids from relative paths and decodes XML entities once", () => {

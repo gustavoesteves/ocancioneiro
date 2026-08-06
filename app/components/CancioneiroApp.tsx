@@ -81,9 +81,9 @@ export function CancioneiroApp() {
                 O Cancioneiro
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-[#5f5a50] md:text-lg">
-                Um acervo navegavel de partituras em MusicXML, pronto para
-                crescer como biblioteca online e gerar PDFs, estudos e recortes
-                editoriais depois.
+                O Cancioneiro segue a logica de um songbook/lead sheet,
+                inspirado no uso pratico de livros como o Real Book, mas
+                voltado ao repertorio brasileiro.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3 rounded-md border border-[#d8d0c1] bg-[#f3efe5] p-3 text-center">
@@ -230,7 +230,7 @@ export function CancioneiroApp() {
               </div>
             </div>
 
-            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
               <div>
                 <dt className="font-medium text-[#70695e]">Tom</dt>
                 <dd>{activeSong.key}</dd>
@@ -246,6 +246,14 @@ export function CancioneiroApp() {
               <div>
                 <dt className="font-medium text-[#70695e]">Instrumentacao</dt>
                 <dd>{activeSong.instrumentation}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-[#70695e]">Cifras</dt>
+                <dd>
+                  {activeSong.chords.length > 0
+                    ? activeSong.chords.join(" / ")
+                    : "Nao informado"}
+                </dd>
               </div>
             </dl>
 

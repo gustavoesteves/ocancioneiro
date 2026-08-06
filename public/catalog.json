@@ -11,12 +11,16 @@
       "source": "Exemplo original",
       "musicxml": "/musicxml/estudo-de-abertura.musicxml",
       "notes": "Pequena peca de exemplo para validar o fluxo MusicXML, renderizacao online e metadados do acervo.",
+      "chords": [
+        "C",
+        "G7"
+      ],
       "tags": [
         "musicxml",
         "exemplo",
         "melodia"
       ],
-      "sourceHash": "7044c7458952a6984fdc06cff2d4c87ab6f2ea2aa31d75065480363f1e162299"
+      "sourceHash": "7d2171f1a7a1bfd9195b81317c9ba035c60d84d402219ae046955419b8f07679"
     }
   ]
 }
