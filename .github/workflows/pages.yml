@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -11,10 +14,13 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,9 +46,7 @@ jobs:
           path: github-pages
 
   deploy:
-    concurrency:
-      group: pages
-      cancel-in-progress: false
+    if: github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
