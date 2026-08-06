@@ -3,92 +3,26 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseCatalog } from "../lib/catalog.mjs";
+import {
+  assertMusicXmlDocument,
+  chordsFromMusicXml,
+  decodeXml,
+  defaultEditorialFields,
+  instrumentationFromMusicXml,
+  keyFromMusicXml,
+  slugify,
+  textFromCreator,
+  textFromTag,
+} from "../lib/musicxml-metadata.mjs";
+
+export { chordsFromMusicXml, decodeXml };
 
 const projectRoot = process.cwd();
 const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
 const catalogPath = path.join(projectRoot, "public", "catalog.json");
 const editorialPath = path.join(projectRoot, "data", "editorial.json");
 
-const defaultEditorialFields = {
-  genre: "Nao classificado",
-  level: "Nao classificado",
-  notes: "",
-  source: "Acervo",
-  tags: [],
-};
-
 const editorialFields = new Set(["genre", "level", "notes", "source", "tags"]);
-
-const keyNames = {
-  "-7": "Cb",
-  "-6": "Gb",
-  "-5": "Db",
-  "-4": "Ab",
-  "-3": "Eb",
-  "-2": "Bb",
-  "-1": "F",
-  0: "C",
-  1: "G",
-  2: "D",
-  3: "A",
-  4: "E",
-  5: "B",
-  6: "F#",
-  7: "C#",
-};
-
-export function decodeXml(text) {
-  const namedEntities = {
-    amp: "&",
-    apos: "'",
-    gt: ">",
-    lt: "<",
-    quot: '"',
-  };
-
-  return text.replace(
-    /&(#x[0-9a-f]+|#[0-9]+|amp|apos|gt|lt|quot);/gi,
-    (entity, code) => {
-      if (code.startsWith("#x") || code.startsWith("#X")) {
-        return String.fromCodePoint(Number.parseInt(code.slice(2), 16));
-      }
-      if (code.startsWith("#")) {
-        return String.fromCodePoint(Number.parseInt(code.slice(1), 10));
-      }
-      return namedEntities[code.toLowerCase()];
-    },
-  );
-}
-
-function textFromTag(xml, tagName) {
-  const match = xml.match(new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)</${tagName}>`));
-  return match ? decodeXml(match[1].replace(/<[^>]+>/g, "").trim()) : "";
-}
-
-function textFromCreator(xml, creatorType) {
-  const creatorPattern = new RegExp(
-    `<creator[^>]*type=["']${creatorType}["'][^>]*>([\\s\\S]*?)</creator>`,
-    "i",
-  );
-  const match = xml.match(creatorPattern);
-  return match ? decodeXml(match[1].replace(/<[^>]+>/g, "").trim()) : "";
-}
-
-function attributeFromTag(tag, attributeName) {
-  const match = tag.match(
-    new RegExp(`${attributeName}=["']([^"']+)["']`, "i"),
-  );
-  return match ? decodeXml(match[1].trim()) : "";
-}
-
-function slugify(value) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 export function sourceHash(xml) {
   return createHash("sha256").update(xml).digest("hex");
@@ -110,65 +44,6 @@ function titleFromFilename(filename) {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function keyFromMusicXml(xml) {
-  const fifths = textFromTag(xml, "fifths");
-  const mode = textFromTag(xml, "mode");
-
-  if (!fifths || !(fifths in keyNames)) {
-    return "Nao informado";
-  }
-
-  return `${keyNames[fifths]} ${mode === "minor" ? "menor" : "maior"}`;
-}
-
-function instrumentationFromMusicXml(xml) {
-  const partNames = [...xml.matchAll(/<part-name[^>]*>([\s\S]*?)<\/part-name>/g)]
-    .map((match) => decodeXml(match[1].replace(/<[^>]+>/g, "").trim()))
-    .filter(Boolean);
-
-  if (partNames.length === 0) {
-    return "Nao informado";
-  }
-
-  return [...new Set(partNames)].join(", ");
-}
-
-function alterSymbol(value) {
-  const alter = Number(value || 0);
-
-  if (!Number.isFinite(alter) || alter === 0) {
-    return "";
-  }
-
-  return alter > 0 ? "#".repeat(alter) : "b".repeat(Math.abs(alter));
-}
-
-export function chordsFromMusicXml(xml) {
-  const chords = [...xml.matchAll(/<harmony\b[^>]*>([\s\S]*?)<\/harmony>/gi)]
-    .map((match) => {
-      const harmony = match[1];
-      const rootStep = textFromTag(harmony, "root-step");
-
-      if (!rootStep) {
-        return "";
-      }
-
-      const rootAlter = alterSymbol(textFromTag(harmony, "root-alter"));
-      const bassStep = textFromTag(harmony, "bass-step");
-      const bassAlter = alterSymbol(textFromTag(harmony, "bass-alter"));
-      const kindTag = harmony.match(/<kind\b[^>]*>/i)?.[0] ?? "";
-      const kindText = attributeFromTag(kindTag, "text");
-      const root = `${rootStep}${rootAlter}`;
-      const chord =
-        kindText && /^[A-G](#|b)?/.test(kindText) ? kindText : `${root}${kindText}`;
-
-      return bassStep ? `${chord}/${bassStep}${bassAlter}` : chord;
-    })
-    .filter(Boolean);
-
-  return [...new Set(chords)];
 }
 
 async function listMusicXmlFiles(directory) {
@@ -376,13 +251,6 @@ function printEditorialTodoReport(songs, editorialManifest) {
 function publicPathFromFile(filePath) {
   const relativePath = path.relative(path.join(projectRoot, "public"), filePath);
   return `/${relativePath.split(path.sep).join("/")}`;
-}
-
-function assertMusicXmlDocument(filePath, xml) {
-  const root = xml.match(/<score-(partwise|timewise)\b[^>]*>/i)?.[1];
-  if (!root || !new RegExp(`</score-${root}>\\s*$`, "i").test(xml)) {
-    throw new Error(`${filePath} nao contem um documento MusicXML completo`);
-  }
 }
 
 function editorialFromManifest(editorialManifest, id, existingEntry) {

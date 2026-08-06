@@ -85,6 +85,15 @@ npm run build:pages
 
 ## Como Adicionar Uma Obra
 
+Se estiver rodando localmente, voce pode abrir `/import` para preparar a entrada
+de uma nova peca pelo browser. A tela le um arquivo MusicXML local, mostra a
+previa da partitura, extrai metadados e gera a sugestao de entrada para
+`data/editorial.json`.
+
+Essa ferramenta nao salva arquivos automaticamente no repositorio. Ela existe
+para reduzir erro manual antes de copiar o MusicXML para `public/musicxml/` e
+rodar o gerador.
+
 1. Exporte ou salve a partitura em MusicXML.
 2. Confira se ela segue a linha editorial do acervo:
    - melodia principal;

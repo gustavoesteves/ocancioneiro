@@ -1,5 +1,5 @@
-import { CancioneiroApp } from "./components/CancioneiroApp";
+import { AppRouter } from "./components/AppRouter";
 
 export default function Home() {
-  return <CancioneiroApp />;
+  return <AppRouter />;
 }
