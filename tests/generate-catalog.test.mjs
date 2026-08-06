@@ -115,6 +115,10 @@ test("extracts unique chord symbols from MusicXML harmony elements", () => {
         <bass><bass-step>A</bass-step></bass>
       </harmony>
       <harmony>
+        <root><root-step>E</root-step><root-alter>-1</root-alter></root>
+        <kind text="m7">minor-seventh</kind>
+      </harmony>
+      <harmony>
         <root><root-step>F</root-step><root-alter>1</root-alter></root>
         <kind text="F#m7">minor-seventh</kind>
         <bass><bass-step>A</bass-step></bass>
@@ -123,7 +127,7 @@ test("extracts unique chord symbols from MusicXML harmony elements", () => {
   </part>
 </score-partwise>`;
 
-  assert.deepEqual(chordsFromMusicXml(xml), ["C", "F#m7/A"]);
+  assert.deepEqual(chordsFromMusicXml(xml), ["C", "F#m7/A", "Ebm7"]);
 });
 
 test("derives ids from relative paths and decodes XML entities once", () => {

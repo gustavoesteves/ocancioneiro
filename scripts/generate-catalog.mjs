@@ -160,7 +160,9 @@ export function chordsFromMusicXml(xml) {
       const bassAlter = alterSymbol(textFromTag(harmony, "bass-alter"));
       const kindTag = harmony.match(/<kind\b[^>]*>/i)?.[0] ?? "";
       const kindText = attributeFromTag(kindTag, "text");
-      const chord = kindText || `${rootStep}${rootAlter}`;
+      const root = `${rootStep}${rootAlter}`;
+      const chord =
+        kindText && /^[A-G](#|b)?/.test(kindText) ? kindText : `${root}${kindText}`;
 
       return bassStep ? `${chord}/${bassStep}${bassAlter}` : chord;
     })
