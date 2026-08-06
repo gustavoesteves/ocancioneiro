@@ -90,9 +90,11 @@ de uma nova peca pelo browser. A tela le um arquivo MusicXML local, mostra a
 previa da partitura, extrai metadados e gera a sugestao de entrada para
 `data/editorial.json`.
 
-Essa ferramenta nao salva arquivos automaticamente no repositorio. Ela existe
-para reduzir erro manual antes de copiar o MusicXML para `public/musicxml/` e
-rodar o gerador.
+Em ambiente local, a tela tambem pode gravar a importacao no repositorio: ela
+salva o MusicXML em `public/musicxml/<id>.musicxml`, atualiza
+`data/editorial.json` e regenera `public/catalog.json`. Essa gravacao usa a API
+local `/api/import`; no GitHub Pages ela nao deve ser considerada uma
+funcionalidade publica.
 
 1. Exporte ou salve a partitura em MusicXML.
 2. Confira se ela segue a linha editorial do acervo:
@@ -203,7 +205,7 @@ npm run catalog:generate
 npm run dev
 ```
 
-Depois:
+Se preferir fazer manualmente depois:
 
 1. copie o snippet sugerido pelo gerador para `data/editorial.json`, dentro de
    `songs`;

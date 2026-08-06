@@ -57,6 +57,10 @@ export function ImportTool() {
   const [metadata, setMetadata] = useState<ImportMetadata | null>(null);
   const [editorial, setEditorial] = useState<EditorialFields>(initialEditorial);
   const [message, setMessage] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle",
+  );
+  const [overwrite, setOverwrite] = useState(false);
   const [suggestedId, setSuggestedId] = useState("");
 
   const effectiveId = suggestedId.trim() || metadata?.id || "nova-peca";
@@ -99,11 +103,60 @@ export function ImportTool() {
       setMetadata(nextMetadata);
       setSuggestedId(nextMetadata.id);
       setEditorial(initialEditorial);
+      setOverwrite(false);
+      setSaveState("idle");
     } catch (error) {
       console.error(error);
       setScoreXml("");
       setMetadata(null);
       setMessage("Nao consegui ler este arquivo como MusicXML completo.");
+    }
+  }
+
+  async function saveImport() {
+    if (!metadata || !scoreXml) return;
+
+    setMessage(null);
+    setSaveState("saving");
+
+    try {
+      const response = await fetch("/api/import", {
+        body: JSON.stringify({
+          editorial: {
+            genre: editorial.genre,
+            level: editorial.level,
+            notes: editorial.notes,
+            source: editorial.source,
+            tags: splitTags(editorial.tags),
+          },
+          id: effectiveId,
+          overwrite,
+          xml: scoreXml,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const result = (await response.json()) as {
+        error?: string;
+        path?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Nao consegui salvar a importacao.");
+      }
+
+      setSaveState("saved");
+      setMessage(
+        `Importacao gravada em ${result.path}. Catalogo atualizado com sucesso.`,
+      );
+    } catch (error) {
+      console.error(error);
+      setSaveState("error");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Nao consegui salvar a importacao local.",
+      );
     }
   }
 
@@ -265,6 +318,25 @@ export function ImportTool() {
               <p className="mt-3 rounded border border-[#d8d0c1] bg-[#fdfaf3] p-3 font-mono text-xs">
                 {suggestedPath}
               </p>
+              <label className="mt-4 flex items-center gap-2 text-sm font-medium text-[#4d473d]">
+                <input
+                  checked={overwrite}
+                  className="accent-[#8a4c2f]"
+                  onChange={(event) => setOverwrite(event.target.checked)}
+                  type="checkbox"
+                />
+                Sobrescrever MusicXML existente
+              </label>
+              <button
+                className="mt-4 w-full rounded-md border border-[#8a4c2f] bg-[#8a4c2f] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#713b23] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={saveState === "saving"}
+                onClick={() => void saveImport()}
+                type="button"
+              >
+                {saveState === "saving"
+                  ? "Gravando..."
+                  : "Gravar no repositorio local"}
+              </button>
             </div>
           </aside>
 
