@@ -10,9 +10,8 @@ import {
   defaultEditorialFields,
   instrumentationFromMusicXml,
   keyFromMusicXml,
+  metadataFromMusicXml,
   slugify,
-  textFromCreator,
-  textFromTag,
 } from "../lib/musicxml-metadata.mjs";
 
 export { chordsFromMusicXml, decodeXml };
@@ -35,15 +34,6 @@ export function fallbackIdFromFile(filePath, hash) {
     -path.extname(relativePath).length,
   );
   return slugify(withoutExtension) || `peca-${hash.slice(0, 12)}`;
-}
-
-function titleFromFilename(filename) {
-  return path
-    .basename(filename, path.extname(filename))
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 async function listMusicXmlFiles(directory) {
@@ -267,20 +257,14 @@ export function buildSongEntry(
   const filename = path.basename(filePath);
   const publicPath = publicPathFromFile(filePath);
   const fallbackId = fallbackIdFromFile(filePath, hash);
-  const title =
-    textFromTag(xml, "work-title") ||
-    textFromTag(xml, "movement-title") ||
-    titleFromFilename(filename);
+  const sourceMetadata = metadataFromMusicXml(xml, filename);
   const id = existingEntry?.id || fallbackId;
   const editorial = editorialFromManifest(editorialManifest, id, existingEntry);
 
   return {
     id,
-    title,
-    composer:
-      textFromCreator(xml, "composer") ||
-      textFromTag(xml, "creator") ||
-      "Nao informado",
+    title: sourceMetadata.title,
+    composer: sourceMetadata.composer,
     genre: editorial.genre || defaultEditorialFields.genre,
     key: keyFromMusicXml(xml),
     level: editorial.level || defaultEditorialFields.level,

@@ -74,6 +74,36 @@ test("refreshes source metadata while applying editorial fields", () => {
   assert.deepEqual(generated.tags, ["manifesto"]);
 });
 
+test("uses MusicXML credits for catalog title and composer placeholders", () => {
+  const xml = `<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <work><work-title>Untitled score</work-title></work>
+  <identification><creator type="composer">Composer / arranger</creator></identification>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words>Ain&apos;t it the truth</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words>Gerry Mulligan</credit-words>
+  </credit>
+  <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
+  <part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes></measure></part>
+</score-partwise>`;
+  const filePath = path.join(
+    process.cwd(),
+    "public",
+    "musicxml",
+    "aint-it-the-truth.musicxml",
+  );
+
+  const generated = buildSongEntry(filePath, xml, undefined, sourceHash(xml));
+
+  assert.equal(generated.title, "Ain't it the truth");
+  assert.equal(generated.composer, "Gerry Mulligan");
+  assert.equal(generated.id, "aint-it-the-truth");
+});
+
 test("falls back to existing editorial fields during migration", () => {
   const xml = musicXml();
   const filePath = path.join(

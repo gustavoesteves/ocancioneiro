@@ -37,6 +37,38 @@ test("extracts import metadata from a MusicXML document", () => {
   });
 });
 
+test("uses credit title and composer when exported fields are placeholders", () => {
+  const xml = `<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <work><work-title>Untitled score</work-title></work>
+  <identification><creator type="composer">Composer / arranger</creator></identification>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words>Ain&apos;t it the truth</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words>Gerry Mulligan</credit-words>
+  </credit>
+  <part-list><score-part id="P1"><part-name>Electric Guitar</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>-5</fifths></key>
+      </attributes>
+    </measure>
+  </part>
+</score-partwise>`;
+
+  const metadata = metadataFromMusicXml(xml, "aint-it-the-truth.musicxml");
+
+  assert.equal(metadata.title, "Ain't it the truth");
+  assert.equal(metadata.composer, "Gerry Mulligan");
+  assert.equal(metadata.id, "ain-t-it-the-truth");
+  assert.equal(metadata.fileName, "ain-t-it-the-truth.musicxml");
+});
+
 test("slugifies ids for generated import paths", () => {
   assert.equal(slugify("Ação & Reação λ"), "acao-reacao");
 });
