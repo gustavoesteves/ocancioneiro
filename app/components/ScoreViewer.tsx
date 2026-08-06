@@ -88,25 +88,47 @@ export function ScoreViewer({ song }: { song: Song }) {
           playbackDuration * ("frequencies" in event ? 0.86 : 0.92);
 
         frequencies.forEach((frequency) => {
+          const isHarmony = "frequencies" in event;
           const oscillator = audioContext.createOscillator();
           const noteGain = audioContext.createGain();
-          const peakGain = "frequencies" in event ? 0.38 : 0.72;
-          const attackSeconds = "frequencies" in event ? 0.035 : 0.015;
+          const peakGain = isHarmony ? 0.38 : 0.62;
+          const attackSeconds = isHarmony ? 0.035 : 0.024;
+          const releaseEnd = noteEnd + (isHarmony ? 0 : 0.045);
 
-          oscillator.type = "frequencies" in event ? "sine" : "triangle";
+          oscillator.type = isHarmony ? "sine" : "triangle";
           oscillator.frequency.setValueAtTime(frequency, noteStart);
           noteGain.gain.setValueAtTime(0.0001, noteStart);
           noteGain.gain.exponentialRampToValueAtTime(
             peakGain,
             noteStart + attackSeconds,
           );
-          noteGain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, releaseEnd);
 
           oscillator.connect(noteGain);
           noteGain.connect(masterGain);
           oscillator.start(noteStart);
-          oscillator.stop(noteEnd + 0.02);
+          oscillator.stop(releaseEnd + 0.02);
           playingNodesRef.current.push(oscillator);
+
+          if (!isHarmony) {
+            const bodyOscillator = audioContext.createOscillator();
+            const bodyGain = audioContext.createGain();
+
+            bodyOscillator.type = "sine";
+            bodyOscillator.frequency.setValueAtTime(frequency, noteStart);
+            bodyGain.gain.setValueAtTime(0.0001, noteStart);
+            bodyGain.gain.exponentialRampToValueAtTime(
+              0.16,
+              noteStart + attackSeconds,
+            );
+            bodyGain.gain.exponentialRampToValueAtTime(0.0001, releaseEnd);
+
+            bodyOscillator.connect(bodyGain);
+            bodyGain.connect(masterGain);
+            bodyOscillator.start(noteStart);
+            bodyOscillator.stop(releaseEnd + 0.02);
+            playingNodesRef.current.push(bodyOscillator);
+          }
         });
       });
 
