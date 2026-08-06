@@ -90,7 +90,6 @@ export function ScoreViewer({ song }: { song: Song }) {
 
       stopPlayback();
 
-      const startAt = audioContext.currentTime + 0.08;
       const masterGain = audioContext.createGain();
       masterGain.gain.value = 0.24;
       masterGain.connect(audioContext.destination);
@@ -146,6 +145,7 @@ export function ScoreViewer({ song }: { song: Song }) {
       }
 
       const activeSoundFont = soundFont;
+      const startAt = audioContext.currentTime + 0.12;
 
       events.forEach((event) => {
         const frequencies: number[] =
@@ -156,7 +156,7 @@ export function ScoreViewer({ song }: { song: Song }) {
           event.durationSeconds * ("frequencies" in event ? 0.86 : 0.92);
 
         frequencies.forEach((frequency) => {
-          const peakGain = "frequencies" in event ? 0.18 : 0.7;
+          const peakGain = "frequencies" in event ? 0.38 : 0.72;
           const node = activeSoundFont.play(
             midiToNoteName(frequencyToMidi(frequency)),
             noteStart,
@@ -228,7 +228,7 @@ export function ScoreViewer({ song }: { song: Song }) {
         frequencies.forEach((frequency) => {
           const oscillator = audioContext.createOscillator();
           const noteGain = audioContext.createGain();
-          const peakGain = "frequencies" in event ? 0.18 : 0.7;
+          const peakGain = "frequencies" in event ? 0.38 : 0.72;
           const attackSeconds = "frequencies" in event ? 0.035 : 0.015;
 
           oscillator.type = "frequencies" in event ? "sine" : "triangle";
