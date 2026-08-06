@@ -15,7 +15,8 @@ const fixtures = [
     file: "lead-sheet-com-cifras.musicxml",
     expected: {
       composer: "O Cancioneiro",
-      eventCount: 3,
+      harmonyEventCount: 2,
+      melodyEventCount: 3,
       chords: ["C", "G7"],
       instrumentation: "Melodia",
       key: "C maior",
@@ -26,7 +27,8 @@ const fixtures = [
     file: "andamento-e-alteracoes.musicxml",
     expected: {
       composer: "Arquivo de teste",
-      eventCount: 2,
+      harmonyEventCount: 2,
+      melodyEventCount: 2,
       chords: ["Dm6", "G7"],
       instrumentation: "Violao",
       key: "F menor",
@@ -37,7 +39,8 @@ const fixtures = [
     file: path.join("subdiretorio", "Canção-λ.musicxml"),
     expected: {
       composer: "João Δ",
-      eventCount: 3,
+      harmonyEventCount: 2,
+      melodyEventCount: 3,
       chords: ["D", "A7"],
       instrumentation: "Voz, Piano",
       key: "D maior",
@@ -72,6 +75,8 @@ test("representative MusicXML fixtures produce catalog entries and playback even
       {},
     );
     const events = parseMusicXmlPlayback(xml, { DOMParser });
+    const harmonyEvents = events.filter((event) => event.type === "harmony");
+    const melodyEvents = events.filter((event) => event.type === "melody");
 
     assert.equal(song.title, fixture.expected.title);
     assert.equal(song.composer, fixture.expected.composer);
@@ -79,7 +84,8 @@ test("representative MusicXML fixtures produce catalog entries and playback even
     assert.equal(song.key, fixture.expected.key);
     assert.equal(song.instrumentation, fixture.expected.instrumentation);
     assert.match(xml, /<harmony>/);
-    assert.equal(events.length, fixture.expected.eventCount);
+    assert.equal(melodyEvents.length, fixture.expected.melodyEventCount);
+    assert.equal(harmonyEvents.length, fixture.expected.harmonyEventCount);
     assert.ok(events.every((event) => event.durationSeconds > 0));
 
     songs.push(song);

@@ -76,22 +76,34 @@ export function ScoreViewer({ song }: { song: Song }) {
       masterGainRef.current = masterGain;
 
       events.forEach((event) => {
-        const oscillator = audioContext.createOscillator();
-        const noteGain = audioContext.createGain();
+        const frequencies: number[] =
+          "frequencies" in event ? event.frequencies : [event.frequency];
         const noteStart = startAt + event.startSeconds;
-        const noteEnd = noteStart + event.durationSeconds * 0.92;
+        const noteEnd =
+          noteStart +
+          event.durationSeconds * ("frequencies" in event ? 0.86 : 0.92);
 
-        oscillator.type = "triangle";
-        oscillator.frequency.setValueAtTime(event.frequency, noteStart);
-        noteGain.gain.setValueAtTime(0.0001, noteStart);
-        noteGain.gain.exponentialRampToValueAtTime(0.7, noteStart + 0.015);
-        noteGain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+        frequencies.forEach((frequency) => {
+          const oscillator = audioContext.createOscillator();
+          const noteGain = audioContext.createGain();
+          const peakGain = "frequencies" in event ? 0.18 : 0.7;
+          const attackSeconds = "frequencies" in event ? 0.035 : 0.015;
 
-        oscillator.connect(noteGain);
-        noteGain.connect(masterGain);
-        oscillator.start(noteStart);
-        oscillator.stop(noteEnd + 0.02);
-        playingNodesRef.current.push(oscillator);
+          oscillator.type = "frequencies" in event ? "sine" : "triangle";
+          oscillator.frequency.setValueAtTime(frequency, noteStart);
+          noteGain.gain.setValueAtTime(0.0001, noteStart);
+          noteGain.gain.exponentialRampToValueAtTime(
+            peakGain,
+            noteStart + attackSeconds,
+          );
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+
+          oscillator.connect(noteGain);
+          noteGain.connect(masterGain);
+          oscillator.start(noteStart);
+          oscillator.stop(noteEnd + 0.02);
+          playingNodesRef.current.push(oscillator);
+        });
       });
 
       const totalDuration = Math.max(
