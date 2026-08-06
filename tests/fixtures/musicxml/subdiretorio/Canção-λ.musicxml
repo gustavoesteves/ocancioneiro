@@ -31,6 +31,12 @@
           <line>2</line>
         </clef>
       </attributes>
+      <harmony>
+        <root>
+          <root-step>D</root-step>
+        </root>
+        <kind text="D">major</kind>
+      </harmony>
       <note>
         <pitch>
           <step>D</step>
@@ -39,6 +45,12 @@
         <duration>1</duration>
         <type>quarter</type>
       </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="A7">dominant</kind>
+      </harmony>
       <note>
         <pitch>
           <step>E</step>

@@ -12,13 +12,13 @@ import {
 
 const fixtures = [
   {
-    file: "piano-duas-pautas.musicxml",
+    file: "lead-sheet-com-cifras.musicxml",
     expected: {
       composer: "O Cancioneiro",
-      eventCount: 5,
-      instrumentation: "Piano",
+      eventCount: 3,
+      instrumentation: "Melodia",
       key: "C maior",
-      title: "Miniatura para piano",
+      title: "Lead sheet com cifras",
     },
   },
   {
@@ -74,6 +74,7 @@ test("representative MusicXML fixtures produce catalog entries and playback even
     assert.equal(song.composer, fixture.expected.composer);
     assert.equal(song.key, fixture.expected.key);
     assert.equal(song.instrumentation, fixture.expected.instrumentation);
+    assert.match(xml, /<harmony>/);
     assert.equal(events.length, fixture.expected.eventCount);
     assert.ok(events.every((event) => event.durationSeconds > 0));
 
