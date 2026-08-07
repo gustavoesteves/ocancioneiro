@@ -407,12 +407,23 @@ Mapeamento provisório:
 
 ### Tarefas
 
-- [ ] adaptar o gerador para produzir o catálogo legado durante a transição;
+- [x] adaptar o gerador para produzir o catálogo legado durante a transição;
 - [x] impedir publicação de asset sem decisão de direitos compatível;
-- [ ] garantir equivalência do catálogo legado para dados já publicados;
+- [x] garantir equivalência do catálogo legado para dados já publicados;
 - [x] validar que obra sem asset não aparece como partitura publicável;
-- [ ] manter `public/catalog.json` como artefato gerado;
-- [ ] documentar rollback não destrutivo.
+- [x] manter `public/catalog.json` como artefato gerado;
+- [x] documentar rollback não destrutivo.
+
+### Rollback não destrutivo
+
+Durante a transição, o gerador continua lendo `public/musicxml` e
+`data/editorial.json`. Dossiês editoriais são apenas uma fonte adicional: se
+uma projeção publicável gerar o mesmo `id` ou o mesmo `musicxml` de uma entrada
+legada, a projeção substitui a entrada escaneada. Para reverter sem apagar
+dados, basta remover temporariamente o asset publicável do dossiê, mudar seu
+estado para `pendente`/`bloqueado` ou retirar uma das permissões públicas
+necessárias; o próximo `npm run catalog:generate` volta a publicar a entrada
+legada escaneada do MusicXML.
 
 ### Testes obrigatórios
 

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseCatalog } from "../lib/catalog.mjs";
+import { legacyCatalogFromDossiers } from "../lib/dossier-catalog-projection.mjs";
 import {
   assertMusicXmlDocument,
   chordsFromMusicXml,
@@ -13,6 +14,7 @@ import {
   metadataFromMusicXml,
   slugify,
 } from "../lib/musicxml-metadata.mjs";
+import { loadEditorialDossiers } from "./validate-dossiers.mjs";
 
 export { chordsFromMusicXml, decodeXml };
 
@@ -327,9 +329,27 @@ export function matchExistingEntries(inputs, existingSongs) {
   return matchesByPath;
 }
 
+export function buildCatalog(generatedSongs, dossiers = []) {
+  const projectedSongs = legacyCatalogFromDossiers(dossiers).songs;
+  const projectedIds = new Set(projectedSongs.map((song) => song.id));
+  const projectedPaths = new Set(projectedSongs.map((song) => song.musicxml));
+  const legacySongs = generatedSongs.filter(
+    (song) => !projectedIds.has(song.id) && !projectedPaths.has(song.musicxml),
+  );
+  const songs = [...projectedSongs, ...legacySongs];
+
+  songs.sort((first, second) =>
+    first.title.localeCompare(second.title, "pt-BR", { sensitivity: "base" }),
+  );
+
+  return parseCatalog({ songs });
+}
+
 export async function main({ check = false } = {}) {
   const existingSongs = await readExistingCatalog();
   const editorialManifest = await readEditorialManifest();
+  const dossierEntries = await loadEditorialDossiers();
+  const dossiers = dossierEntries.map((entry) => entry.dossier);
   const files = await listMusicXmlFiles(musicXmlDirectory);
 
   const inputs = await Promise.all(
@@ -353,11 +373,7 @@ export async function main({ check = false } = {}) {
     ),
   );
 
-  songs.sort((first, second) =>
-    first.title.localeCompare(second.title, "pt-BR", { sensitivity: "base" }),
-  );
-
-  const catalog = parseCatalog({ songs });
+  const catalog = buildCatalog(songs, dossiers);
   const contents = `${JSON.stringify(catalog, null, 2)}\n`;
 
   warnAboutUnusedEditorialEntries(editorialManifest, catalog.songs);
@@ -376,8 +392,8 @@ export async function main({ check = false } = {}) {
 
   console.log(
     check
-      ? `Catalogo validado com ${songs.length} musica(s).`
-      : `Catalogo atualizado com ${songs.length} musica(s).`,
+      ? `Catalogo validado com ${catalog.songs.length} musica(s).`
+      : `Catalogo atualizado com ${catalog.songs.length} musica(s).`,
   );
 }
 

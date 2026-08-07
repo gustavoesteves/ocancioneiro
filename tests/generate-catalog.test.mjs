@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 import {
+  buildCatalog,
   buildSongEntry,
   chordsFromMusicXml,
   decodeXml,
@@ -11,6 +12,14 @@ import {
   sourceHash,
   validateEditorialManifest,
 } from "../scripts/generate-catalog.mjs";
+
+const permittedActions = {
+  exibir_metadados: "permitida",
+  exibir_partitura: "permitida",
+  reproduzir_playback: "permitida",
+  imprimir: "permitida",
+  distribuir_musicxml: "permitida",
+};
 
 function musicXml({ composer = "Novo compositor", fifths = 2 } = {}) {
   return `<?xml version="1.0"?>
@@ -324,4 +333,116 @@ test("reports editorial metadata still using defaults", () => {
       title: "Peca parcial",
     },
   ]);
+});
+
+test("builds the legacy catalog unchanged when dossiers are not publicable", () => {
+  const generatedSongs = [
+    {
+      id: "asa-branca",
+      title: "Asa branca",
+      composer: "Luiz Gonzaga",
+      genre: "Baiao",
+      key: "C maior",
+      level: "Inicial",
+      instrumentation: "Melodia",
+      source: "Acervo",
+      musicxml: "/musicxml/asa-branca.musicxml",
+      notes: "",
+      chords: ["C"],
+      tags: ["baiao"],
+    },
+  ];
+  const catalog = buildCatalog(generatedSongs, [
+    {
+      schemaVersion: 1,
+      work: {
+        id: "obra-carinhoso",
+        preferredTitle: "Carinhoso",
+        creators: [{ name: "Pixinguinha", role: "composer" }],
+      },
+      curation: { status: "candidata" },
+      rights: {
+        status: "nao_verificado",
+        actions: { exibir_metadados: "permitida" },
+      },
+    },
+  ]);
+
+  assert.deepEqual(catalog.songs, generatedSongs);
+});
+
+test("prefers publicable dossier projections over matching generated entries", () => {
+  const generatedSongs = [
+    {
+      id: "carinhoso",
+      title: "Titulo vindo do XML",
+      composer: "Composer / arranger",
+      genre: "Nao classificado",
+      key: "C maior",
+      level: "Nao classificado",
+      instrumentation: "Piano",
+      source: "Acervo",
+      musicxml: "/musicxml/carinhoso.musicxml",
+      notes: "",
+      chords: ["C"],
+      tags: [],
+    },
+  ];
+  const catalog = buildCatalog(generatedSongs, [
+    {
+      schemaVersion: 1,
+      publicCatalogId: "carinhoso",
+      work: {
+        id: "obra-carinhoso",
+        preferredTitle: "Carinhoso",
+        creators: [{ name: "Pixinguinha", role: "composer" }],
+      },
+      curation: {
+        status: "em_revisao",
+        currentDecisionId: "decisao-aceita",
+        decisions: [
+          {
+            id: "decisao-aceita",
+            status: "aceita",
+            justification: "Obra aceita para publicacao.",
+            decidedBy: "bancada-editorial",
+            decidedAt: "2026-08-07",
+          },
+        ],
+      },
+      editions: [
+        {
+          id: "lead-sheet",
+          status: "valida",
+          title: "Carinhoso",
+          encodedKey: "F maior",
+          genre: "Choro",
+          level: "Intermediario",
+          instrumentation: "Melodia e cifras",
+          source: "Dossie editorial revisado",
+          notes: "Versao editorial.",
+          chords: ["F", "C7"],
+          tags: ["choro"],
+        },
+      ],
+      assets: [
+        {
+          id: "asset-carinhoso",
+          editionId: "lead-sheet",
+          type: "musicxml",
+          status: "valido",
+          path: "/musicxml/carinhoso.musicxml",
+        },
+      ],
+      rights: {
+        status: "liberado",
+        actions: permittedActions,
+      },
+    },
+  ]);
+
+  assert.equal(catalog.songs.length, 1);
+  assert.equal(catalog.songs[0].title, "Carinhoso");
+  assert.equal(catalog.songs[0].composer, "Pixinguinha");
+  assert.equal(catalog.songs[0].source, "Dossie editorial revisado");
 });
