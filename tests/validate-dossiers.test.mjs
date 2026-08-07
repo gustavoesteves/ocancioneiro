@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  dossierReviewReport,
   listDossierFiles,
   loadEditorialDossiers,
 } from "../scripts/validate-dossiers.mjs";
@@ -34,6 +35,28 @@ test("loads the repository editorial dossiers", async () => {
   assert.ok(
     loaded.some(({ dossier }) => dossier.work.id === "obra-carinhoso"),
   );
+});
+
+test("reports editorial review gaps without rejecting the dossier", async () => {
+  const report = dossierReviewReport([
+    {
+      dossier: dossier("obra-sem-decisao", "Obra sem decisao"),
+      filePath: "data/dossiers/obra-sem-decisao.json",
+    },
+  ]);
+  report[0].pending.sort();
+
+  assert.deepEqual(report, [
+    {
+      filePath: "data/dossiers/obra-sem-decisao.json",
+      label: "obra-sem-decisao (Obra sem decisao)",
+      pending: [
+        "sem decisao vigente",
+        "sem evidencias estruturadas",
+        "sem fontes estruturadas",
+      ],
+    },
+  ]);
 });
 
 test("treats a missing dossier directory as empty", async () => {

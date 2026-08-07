@@ -22,6 +22,19 @@ pública envolvidos.
 Contraexemplo: `publicada` não é estado de curadoria; publicação depende de
 edição, asset e direitos.
 
+### Papel autoral
+
+- `composer`;
+- `lyricist`;
+- `arranger`;
+- `editor`;
+- `translator`;
+- `attributed`;
+- `unknown`.
+
+Contraexemplo: papéis editoriais do projeto, como pesquisador ou revisor, não
+são papéis autorais da obra.
+
 ### Centralidade
 
 - `nuclear`: ausência difícil de justificar dentro do contexto.

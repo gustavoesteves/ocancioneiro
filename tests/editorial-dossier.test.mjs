@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   EditorialDossierValidationError,
+  currentCurationStatus,
   effectivePermission,
   parseEditorialDossier,
 } from "../lib/editorial-dossier.mjs";
@@ -55,6 +56,60 @@ test("rejects unknown controlled vocabulary values", () => {
         }),
       ),
     /curation.status possui valor invalido/,
+  );
+});
+
+test("rejects unknown creator roles", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          work: {
+            creators: [{ name: "Pixinguinha", role: "genius" }],
+            id: "obra-carinhoso",
+            preferredTitle: "Carinhoso",
+          },
+        }),
+      ),
+    /work\.creators\[0\]\.role possui valor invalido/,
+  );
+});
+
+test("derives curation status from the current decision", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      curation: {
+        currentDecisionId: "decisao-001",
+        decisions: [
+          {
+            decidedAt: "2026-08-07",
+            decidedBy: "bancada-editorial",
+            id: "decisao-001",
+            justification: "Fixture de decisao vigente.",
+            status: "aceita",
+          },
+        ],
+        status: "em_revisao",
+      },
+    }),
+  );
+
+  assert.equal(currentCurationStatus(dossier.curation), "aceita");
+});
+
+test("rejects a current decision id without matching decision", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            currentDecisionId: "decisao-ausente",
+            decisions: [],
+            status: "em_revisao",
+          },
+        }),
+      ),
+    /curation\.currentDecisionId referencia decisao inexistente/,
   );
 });
 

@@ -359,10 +359,10 @@ arquivo publicável.
 ### Tarefas
 
 - [x] implementar leitura e validação de dossiês mínimos;
-- [ ] derivar estado de curadoria a partir de decisão vigente quando houver;
+- [x] derivar estado de curadoria a partir de decisão vigente quando houver;
 - [x] permitir ausência explícita de edição e asset;
-- [ ] validar autoria e papéis sem supor dados ausentes;
-- [ ] gerar relatório de obras sem decisão, sem direitos ou com campos
+- [x] validar autoria e papéis sem supor dados ausentes;
+- [x] gerar relatório de obras sem decisão, sem direitos ou com campos
   legados pendentes.
 
 ### Critérios de aceite

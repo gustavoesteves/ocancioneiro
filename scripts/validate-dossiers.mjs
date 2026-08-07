@@ -1,7 +1,11 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { parseEditorialDossier } from "../lib/editorial-dossier.mjs";
+import {
+  currentCurationStatus,
+  effectivePermission,
+  parseEditorialDossier,
+} from "../lib/editorial-dossier.mjs";
 
 export const defaultDossierDirectory = path.join(
   process.cwd(),
@@ -82,8 +86,60 @@ export async function loadEditorialDossiers(
   return dossiers;
 }
 
+export function dossierReviewReport(dossiers) {
+  return dossiers.flatMap(({ dossier, filePath }) => {
+    const pending = [];
+    const label = `${dossier.work.id} (${dossier.work.preferredTitle})`;
+
+    if (!dossier.curation.currentDecisionId) {
+      pending.push("sem decisao vigente");
+    }
+
+    if (currentCurationStatus(dossier.curation) !== dossier.curation.status) {
+      pending.push(
+        `status derivado da decisao vigente: ${currentCurationStatus(dossier.curation)}`,
+      );
+    }
+
+    if (effectivePermission(dossier.rights, "exibir_metadados") !== "permitida") {
+      pending.push("metadados publicos nao permitidos");
+    }
+
+    if ((dossier.curation.canonicalClaims ?? []).some((claim) => !claim.decisionId)) {
+      pending.push("afirmacao canonica sem decisionId");
+    }
+
+    if ((dossier.sources ?? []).length === 0) {
+      pending.push("sem fontes estruturadas");
+    }
+
+    if ((dossier.evidence ?? []).length === 0) {
+      pending.push("sem evidencias estruturadas");
+    }
+
+    return pending.length > 0
+      ? [
+          {
+            filePath,
+            label,
+            pending,
+          },
+        ]
+      : [];
+  });
+}
+
 export async function main({ directory = defaultDossierDirectory } = {}) {
   const dossiers = await loadEditorialDossiers(directory);
+  const report = dossierReviewReport(dossiers);
+
+  if (report.length > 0) {
+    console.log("\nPendencias dos dossies editoriais:");
+    report.forEach((item) => {
+      console.log(`- ${item.label}: ${item.pending.join(", ")}`);
+    });
+  }
+
   console.log(`Dossies editoriais validados: ${dossiers.length}`);
 }
 
