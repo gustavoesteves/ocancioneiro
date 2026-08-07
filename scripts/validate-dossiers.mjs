@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -12,6 +13,10 @@ export const defaultDossierDirectory = path.join(
   "data",
   "dossiers",
 );
+
+function sha256(contents) {
+  return createHash("sha256").update(contents).digest("hex");
+}
 
 async function pathExists(filePath) {
   try {
@@ -129,8 +134,54 @@ export function dossierReviewReport(dossiers) {
   });
 }
 
-export async function main({ directory = defaultDossierDirectory } = {}) {
+function filePathFromPublicAssetPath(projectRoot, publicPath) {
+  return path.join(projectRoot, "public", ...publicPath.split("/").filter(Boolean));
+}
+
+export async function validateAssetChecksums(
+  dossiers,
+  { projectRoot = process.cwd() } = {},
+) {
+  const issues = [];
+
+  for (const { dossier, filePath } of dossiers) {
+    for (const asset of dossier.assets ?? []) {
+      if (
+        asset.checksumAlgorithm !== "sha256" ||
+        typeof asset.checksum !== "string" ||
+        typeof asset.path !== "string" ||
+        !asset.path.startsWith("/musicxml/")
+      ) {
+        continue;
+      }
+
+      const assetPath = filePathFromPublicAssetPath(projectRoot, asset.path);
+      try {
+        const actualChecksum = sha256(await fs.readFile(assetPath));
+        if (actualChecksum !== asset.checksum) {
+          issues.push(`${filePath}: ${asset.id} checksum divergente`);
+        }
+      } catch (error) {
+        if (error.code === "ENOENT") {
+          issues.push(`${filePath}: ${asset.id} nao encontrado em ${asset.path}`);
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new Error(`Assets editoriais invalidos:\n- ${issues.join("\n- ")}`);
+  }
+}
+
+export async function main({
+  directory = defaultDossierDirectory,
+  projectRoot = process.cwd(),
+} = {}) {
   const dossiers = await loadEditorialDossiers(directory);
+  await validateAssetChecksums(dossiers, { projectRoot });
   const report = dossierReviewReport(dossiers);
 
   if (report.length > 0) {

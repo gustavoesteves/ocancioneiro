@@ -170,3 +170,60 @@ test("collects validation issues for invalid nested entities", () => {
     },
   );
 });
+
+test("requires valid assets to be versioned and tied to an edition", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          assets: [
+            {
+              checksum: "not-a-sha",
+              checksumAlgorithm: "md5",
+              generatedAt: "hoje",
+              id: "asset-1",
+              path: "/musicxml/../segredo.musicxml",
+              status: "valido",
+              type: "musicxml",
+            },
+          ],
+          editions: [{ id: "lead-sheet", status: "valida" }],
+        }),
+      ),
+    (error) => {
+      assert.ok(error instanceof EditorialDossierValidationError);
+      assert.match(error.message, /assets\[0\]\.checksum deve ser um SHA-256/);
+      assert.match(error.message, /assets\[0\]\.checksumAlgorithm possui valor invalido/);
+      assert.match(error.message, /assets\[0\]\.generatedAt deve ser uma data ISO 8601 valida/);
+      assert.match(error.message, /assets\[0\]\.path deve apontar para caminho seguro/);
+      assert.match(error.message, /assets\[0\]\.editionId deve ser texto nao vazio/);
+      assert.match(error.message, /assets\[0\]\.generatedBy deve ser texto nao vazio/);
+      return true;
+    },
+  );
+});
+
+test("rejects assets pointing to missing editions", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          assets: [
+            {
+              checksum: "a".repeat(64),
+              checksumAlgorithm: "sha256",
+              editionId: "edicao-ausente",
+              generatedAt: "2026-08-07",
+              generatedBy: "fixture",
+              id: "asset-1",
+              path: "/musicxml/carinhoso.musicxml",
+              status: "valido",
+              type: "musicxml",
+            },
+          ],
+          editions: [{ id: "lead-sheet", status: "valida" }],
+        }),
+      ),
+    /assets\[0\]\.editionId referencia edicao inexistente/,
+  );
+});

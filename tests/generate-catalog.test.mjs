@@ -432,6 +432,10 @@ test("prefers publicable dossier projections over matching generated entries", (
           type: "musicxml",
           status: "valido",
           path: "/musicxml/carinhoso.musicxml",
+          checksum: "a".repeat(64),
+          checksumAlgorithm: "sha256",
+          generatedAt: "2026-08-07",
+          generatedBy: "fixture",
         },
       ],
       rights: {

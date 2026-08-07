@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +9,7 @@ import {
   dossierReviewReport,
   listDossierFiles,
   loadEditorialDossiers,
+  validateAssetChecksums,
 } from "../scripts/validate-dossiers.mjs";
 
 const fixtureDossierDirectory = path.join(
@@ -35,6 +37,10 @@ function dossier(id, title) {
       status: "nao_verificado",
     },
   };
+}
+
+function sha256(contents) {
+  return createHash("sha256").update(contents).digest("hex");
 }
 
 test("loads the repository editorial dossiers", async () => {
@@ -113,5 +119,69 @@ test("rejects duplicate work ids across dossier files", async () => {
   await assert.rejects(
     () => loadEditorialDossiers(directory),
     /duplica work\.id obra-duplicada/,
+  );
+});
+
+test("validates declared MusicXML asset checksums against public files", async () => {
+  const projectRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), "o-cancioneiro-assets-"),
+  );
+  const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
+  await fs.mkdir(musicXmlDirectory, { recursive: true });
+  const xml = "<score-partwise version=\"4.0\"></score-partwise>";
+  await fs.writeFile(path.join(musicXmlDirectory, "fixture.musicxml"), xml);
+
+  await validateAssetChecksums(
+    [
+      {
+        dossier: {
+          assets: [
+            {
+              checksum: sha256(xml),
+              checksumAlgorithm: "sha256",
+              id: "asset-ok",
+              path: "/musicxml/fixture.musicxml",
+            },
+          ],
+        },
+        filePath: "data/dossiers/fixture.json",
+      },
+    ],
+    { projectRoot },
+  );
+});
+
+test("rejects MusicXML assets with divergent checksums", async () => {
+  const projectRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), "o-cancioneiro-assets-"),
+  );
+  const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
+  await fs.mkdir(musicXmlDirectory, { recursive: true });
+  await fs.writeFile(
+    path.join(musicXmlDirectory, "fixture.musicxml"),
+    "<score-partwise version=\"4.0\"></score-partwise>",
+  );
+
+  await assert.rejects(
+    () =>
+      validateAssetChecksums(
+        [
+          {
+            dossier: {
+              assets: [
+                {
+                  checksum: "a".repeat(64),
+                  checksumAlgorithm: "sha256",
+                  id: "asset-divergente",
+                  path: "/musicxml/fixture.musicxml",
+                },
+              ],
+            },
+            filePath: "data/dossiers/fixture.json",
+          },
+        ],
+        { projectRoot },
+      ),
+    /asset-divergente checksum divergente/,
   );
 });
