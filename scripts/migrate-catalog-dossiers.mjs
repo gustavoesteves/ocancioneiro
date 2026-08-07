@@ -1,4 +1,5 @@
 import { promises as fs } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { migrateCatalogToDossiers } from "../lib/catalog-dossier-migration.mjs";
@@ -13,6 +14,7 @@ function parseArgs(argv) {
     check: false,
     dossierDirectory: defaultDossierDirectory,
     migratedAt: "2026-08-07",
+    projectRoot,
     write: false,
   };
 
@@ -27,6 +29,9 @@ function parseArgs(argv) {
       index += 1;
     } else if (arg === "--out") {
       options.dossierDirectory = path.resolve(argv[index + 1]);
+      index += 1;
+    } else if (arg === "--project-root") {
+      options.projectRoot = path.resolve(argv[index + 1]);
       index += 1;
     } else if (arg === "--date") {
       options.migratedAt = argv[index + 1];
@@ -45,6 +50,14 @@ function parseArgs(argv) {
 
 function dossierPathFor(directory, dossier) {
   return path.join(directory, `${dossier.work.id}.json`);
+}
+
+function sha256(contents) {
+  return createHash("sha256").update(contents).digest("hex");
+}
+
+function filePathFromPublicPath(projectRoot, publicPath) {
+  return path.join(projectRoot, "public", ...publicPath.split("/").filter(Boolean));
 }
 
 async function readExistingFile(filePath) {
@@ -71,6 +84,7 @@ export async function migrationPlan({
   catalogPath = defaultCatalogPath,
   dossierDirectory = defaultDossierDirectory,
   migratedAt = "2026-08-07",
+  projectRoot: root = projectRoot,
 } = {}) {
   const catalog = JSON.parse(await fs.readFile(catalogPath, "utf8"));
   const { dossiers, report } = migrateCatalogToDossiers(catalog, { migratedAt });
@@ -89,6 +103,30 @@ export async function migrationPlan({
       id: dossier.publicCatalogId,
       title: dossier.work.preferredTitle,
     });
+  }
+
+  const reportById = new Map(report.map((item) => [item.id, item]));
+  for (const dossier of dossiers) {
+    for (const asset of dossier.assets ?? []) {
+      if (asset.type !== "musicxml" || typeof asset.path !== "string") {
+        continue;
+      }
+
+      const item = reportById.get(dossier.publicCatalogId);
+      const assetPath = filePathFromPublicPath(root, asset.path);
+      try {
+        const actualHash = sha256(await fs.readFile(assetPath));
+        if (asset.checksum && asset.checksum !== actualHash) {
+          item.pending.push("sourceHash legado diverge do arquivo MusicXML");
+        }
+      } catch (error) {
+        if (error.code === "ENOENT") {
+          item.pending.push("arquivo MusicXML legado ausente");
+          continue;
+        }
+        throw error;
+      }
+    }
   }
 
   return {

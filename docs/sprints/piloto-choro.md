@@ -520,7 +520,11 @@ seja explicitamente habilitada.
 O comando `npm run dossiers:migrate` executa uma simulação da migração e lista
 os dossiês que seriam criados ou atualizados. `npm run dossiers:migrate --
 --check` falha se houver migração pendente. A escrita em disco só acontece com
-`npm run dossiers:migrate -- --write`.
+`npm run dossiers:migrate -- --write`. A simulação também audita o asset
+legado: se o MusicXML estiver ausente ou se `sourceHash` divergir do arquivo, a
+pendência aparece no relatório antes de qualquer gravação. Em ensaios com
+catálogos fora do workspace, `--project-root` define a raiz usada para resolver
+caminhos públicos como `/musicxml/...`.
 
 ### Testes obrigatórios
 
