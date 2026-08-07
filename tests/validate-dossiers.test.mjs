@@ -10,6 +10,7 @@ import {
   listDossierFiles,
   loadEditorialDossiers,
   validateAssetChecksums,
+  validateMusicXmlAssets,
 } from "../scripts/validate-dossiers.mjs";
 
 const fixtureDossierDirectory = path.join(
@@ -41,6 +42,65 @@ function dossier(id, title) {
 
 function sha256(contents) {
   return createHash("sha256").update(contents).digest("hex");
+}
+
+function musicXml({ fifths = 0, harmony = true, title = "Fixture" } = {}) {
+  return `<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <work><work-title>${title}</work-title></work>
+  <part-list><score-part id="P1"><part-name>Melodia</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions><key><fifths>${fifths}</fifths></key></attributes>
+      ${
+        harmony
+          ? "<harmony><root><root-step>C</root-step></root><kind text=\"C\">major</kind></harmony>"
+          : ""
+      }
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+async function writeMusicXmlFixture(xml) {
+  const projectRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), "o-cancioneiro-musicxml-assets-"),
+  );
+  const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
+  await fs.mkdir(musicXmlDirectory, { recursive: true });
+  await fs.writeFile(path.join(musicXmlDirectory, "fixture.musicxml"), xml);
+
+  return projectRoot;
+}
+
+function musicXmlDossier(editionOverrides = {}) {
+  return {
+    dossier: {
+      assets: [
+        {
+          editionId: "lead-sheet",
+          id: "asset-musicxml",
+          path: "/musicxml/fixture.musicxml",
+          type: "musicxml",
+        },
+      ],
+      editions: [
+        {
+          chords: ["C"],
+          encodedKey: "C maior",
+          id: "lead-sheet",
+          status: "valida",
+          title: "Fixture",
+          ...editionOverrides,
+        },
+      ],
+      work: {
+        preferredTitle: "Fixture",
+      },
+    },
+    filePath: "data/dossiers/fixture.json",
+  };
 }
 
 test("loads the repository editorial dossiers", async () => {
@@ -183,5 +243,39 @@ test("rejects MusicXML assets with divergent checksums", async () => {
         { projectRoot },
       ),
     /asset-divergente checksum divergente/,
+  );
+});
+
+test("validates MusicXML metadata against the declared edition", async () => {
+  const projectRoot = await writeMusicXmlFixture(
+    musicXml({ fifths: 0, harmony: true, title: "Fixture" }),
+  );
+
+  await validateMusicXmlAssets([musicXmlDossier()], { projectRoot });
+});
+
+test("rejects MusicXML assets with title or key mismatches", async () => {
+  const projectRoot = await writeMusicXmlFixture(
+    musicXml({ fifths: 1, harmony: true, title: "Outro titulo" }),
+  );
+
+  await assert.rejects(
+    () => validateMusicXmlAssets([musicXmlDossier()], { projectRoot }),
+    (error) => {
+      assert.match(error.message, /titulo MusicXML difere da edicao/);
+      assert.match(error.message, /tonalidade MusicXML difere da edicao/);
+      return true;
+    },
+  );
+});
+
+test("requires harmony elements when the edition declares chords", async () => {
+  const projectRoot = await writeMusicXmlFixture(
+    musicXml({ fifths: 0, harmony: false, title: "Fixture" }),
+  );
+
+  await assert.rejects(
+    () => validateMusicXmlAssets([musicXmlDossier()], { projectRoot }),
+    /edicao declara cifras mas MusicXML nao contem <harmony>/,
   );
 });

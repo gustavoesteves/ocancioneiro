@@ -468,8 +468,8 @@ registrando versão, checksum, validação e permissões.
 
 - [x] calcular e validar checksum;
 - [x] registrar ferramenta e data de geração;
-- [ ] validar metadados do MusicXML contra obra e edição;
-- [ ] validar presença de `<harmony>` quando a edição declara cifras;
+- [x] validar metadados do MusicXML contra obra e edição;
+- [x] validar presença de `<harmony>` quando a edição declara cifras;
 - [ ] versionar substituição de asset;
 - [ ] preservar asset anterior ou referência de auditoria conforme política;
 - [x] impedir asset não liberado em pacote público.

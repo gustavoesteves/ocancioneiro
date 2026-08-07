@@ -7,6 +7,12 @@ import {
   effectivePermission,
   parseEditorialDossier,
 } from "../lib/editorial-dossier.mjs";
+import {
+  assertMusicXmlDocument,
+  chordsFromMusicXml,
+  keyFromMusicXml,
+  metadataFromMusicXml,
+} from "../lib/musicxml-metadata.mjs";
 
 export const defaultDossierDirectory = path.join(
   process.cwd(),
@@ -138,6 +144,15 @@ function filePathFromPublicAssetPath(projectRoot, publicPath) {
   return path.join(projectRoot, "public", ...publicPath.split("/").filter(Boolean));
 }
 
+function normalizeMetadataValue(value) {
+  return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+}
+
+function editionForAsset(dossier, asset) {
+  if (!asset.editionId) return undefined;
+  return (dossier.editions ?? []).find((edition) => edition.id === asset.editionId);
+}
+
 export async function validateAssetChecksums(
   dossiers,
   { projectRoot = process.cwd() } = {},
@@ -176,12 +191,68 @@ export async function validateAssetChecksums(
   }
 }
 
+export async function validateMusicXmlAssets(
+  dossiers,
+  { projectRoot = process.cwd() } = {},
+) {
+  const issues = [];
+
+  for (const { dossier, filePath } of dossiers) {
+    for (const asset of dossier.assets ?? []) {
+      if (asset.type !== "musicxml" || typeof asset.path !== "string") {
+        continue;
+      }
+
+      const assetPath = filePathFromPublicAssetPath(projectRoot, asset.path);
+      let xml;
+      try {
+        xml = await fs.readFile(assetPath, "utf8");
+        assertMusicXmlDocument(asset.path, xml);
+      } catch (error) {
+        issues.push(
+          `${filePath}: ${asset.id} MusicXML invalido: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        continue;
+      }
+
+      const edition = editionForAsset(dossier, asset);
+      if (!edition) continue;
+
+      const metadata = metadataFromMusicXml(xml, path.basename(asset.path));
+      const expectedTitle = edition.title ?? dossier.work.preferredTitle;
+      if (
+        expectedTitle &&
+        normalizeMetadataValue(metadata.title) !== normalizeMetadataValue(expectedTitle)
+      ) {
+        issues.push(`${filePath}: ${asset.id} titulo MusicXML difere da edicao`);
+      }
+
+      if (edition.encodedKey && keyFromMusicXml(xml) !== edition.encodedKey) {
+        issues.push(`${filePath}: ${asset.id} tonalidade MusicXML difere da edicao`);
+      }
+
+      if (Array.isArray(edition.chords) && edition.chords.length > 0) {
+        if (chordsFromMusicXml(xml).length === 0) {
+          issues.push(
+            `${filePath}: ${asset.id} edicao declara cifras mas MusicXML nao contem <harmony>`,
+          );
+        }
+      }
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new Error(`Assets MusicXML invalidos:\n- ${issues.join("\n- ")}`);
+  }
+}
+
 export async function main({
   directory = defaultDossierDirectory,
   projectRoot = process.cwd(),
 } = {}) {
   const dossiers = await loadEditorialDossiers(directory);
   await validateAssetChecksums(dossiers, { projectRoot });
+  await validateMusicXmlAssets(dossiers, { projectRoot });
   const report = dossierReviewReport(dossiers);
 
   if (report.length > 0) {
