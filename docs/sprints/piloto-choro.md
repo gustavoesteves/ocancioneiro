@@ -499,13 +499,21 @@ o catálogo público e emitindo pendências de revisão humana.
 
 ### Tarefas
 
-- [ ] implementar migração repetível do formato atual;
-- [ ] gerar relatório de campos legados que exigem revisão humana;
-- [ ] preservar aliases públicos existentes;
-- [ ] migrar `source` como fonte legada não estruturada;
-- [ ] migrar `notes` com classificação pendente;
-- [ ] validar round-trip de geração do catálogo legado;
-- [ ] documentar rollback não destrutivo.
+- [x] implementar migração repetível do formato atual;
+- [x] gerar relatório de campos legados que exigem revisão humana;
+- [x] preservar aliases públicos existentes;
+- [x] migrar `source` como fonte legada não estruturada;
+- [x] migrar `notes` com classificação pendente;
+- [x] validar round-trip de geração do catálogo legado;
+- [x] documentar rollback não destrutivo.
+
+### Rollback não destrutivo
+
+A primeira etapa da migração é uma transformação pura do catálogo legado para
+dossiês editoriais em memória. Nenhum arquivo do acervo é alterado por essa
+camada. Para reverter, basta continuar usando `public/catalog.json` gerado pelo
+fluxo legado e ignorar os dossiês migrados até que a etapa de escrita em disco
+seja explicitamente habilitada.
 
 ### Testes obrigatórios
 
