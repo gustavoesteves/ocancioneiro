@@ -227,3 +227,85 @@ test("rejects assets pointing to missing editions", () => {
     /assets\[0\]\.editionId referencia edicao inexistente/,
   );
 });
+
+test("accepts explicit asset replacement chains", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      assets: [
+        {
+          checksum: "a".repeat(64),
+          checksumAlgorithm: "sha256",
+          editionId: "lead-sheet",
+          id: "asset-antigo",
+          path: "/musicxml/carinhoso-v1.musicxml",
+          replacedByAssetId: "asset-novo",
+          replacementReason: "Correcao de cifra no compasso 8.",
+          status: "substituido",
+          type: "musicxml",
+        },
+        {
+          checksum: "b".repeat(64),
+          checksumAlgorithm: "sha256",
+          editionId: "lead-sheet",
+          generatedAt: "2026-08-07",
+          generatedBy: "fixture",
+          id: "asset-novo",
+          path: "/musicxml/carinhoso-v2.musicxml",
+          replacesAssetId: "asset-antigo",
+          status: "valido",
+          type: "musicxml",
+        },
+      ],
+      editions: [{ id: "lead-sheet", status: "valida" }],
+    }),
+  );
+
+  assert.equal(dossier.assets[0].status, "substituido");
+  assert.equal(dossier.assets[1].replacesAssetId, "asset-antigo");
+});
+
+test("rejects silent or inconsistent asset replacement chains", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          assets: [
+            {
+              checksum: "a".repeat(64),
+              checksumAlgorithm: "sha256",
+              id: "asset-antigo",
+              path: "/musicxml/carinhoso-v1.musicxml",
+              replacedByAssetId: "asset-ausente",
+              status: "substituido",
+              type: "musicxml",
+            },
+            {
+              checksum: "b".repeat(64),
+              checksumAlgorithm: "sha256",
+              editionId: "lead-sheet",
+              generatedAt: "2026-08-07",
+              generatedBy: "fixture",
+              id: "asset-novo",
+              path: "/musicxml/carinhoso-v2.musicxml",
+              replacesAssetId: "asset-nao-substituido",
+              status: "valido",
+              type: "musicxml",
+            },
+            {
+              id: "asset-nao-substituido",
+              status: "pendente",
+              type: "musicxml",
+            },
+          ],
+          editions: [{ id: "lead-sheet", status: "valida" }],
+        }),
+      ),
+    (error) => {
+      assert.ok(error instanceof EditorialDossierValidationError);
+      assert.match(error.message, /assets\[0\]\.replacementReason deve ser texto nao vazio/);
+      assert.match(error.message, /assets\[0\]\.replacedByAssetId referencia asset inexistente/);
+      assert.match(error.message, /assets\[1\]\.replacesAssetId deve apontar para asset substituido/);
+      return true;
+    },
+  );
+});

@@ -470,8 +470,8 @@ registrando versão, checksum, validação e permissões.
 - [x] registrar ferramenta e data de geração;
 - [x] validar metadados do MusicXML contra obra e edição;
 - [x] validar presença de `<harmony>` quando a edição declara cifras;
-- [ ] versionar substituição de asset;
-- [ ] preservar asset anterior ou referência de auditoria conforme política;
+- [x] versionar substituição de asset;
+- [x] preservar asset anterior ou referência de auditoria conforme política;
 - [x] impedir asset não liberado em pacote público.
 
 ### Critérios de aceite
