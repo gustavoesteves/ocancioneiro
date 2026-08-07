@@ -19,11 +19,9 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit --incremental false",
     "lint": "eslint .",
-    "check": "npm run catalog:check && npm run dossiers:check && npm run lint && npm run typecheck && npm test && npm run build:pages",
-    "db:generate": "drizzle-kit generate"
+    "check": "npm run catalog:check && npm run dossiers:check && npm run lint && npm run typecheck && npm test && npm run build:pages"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.2",
     "opensheetmusicdisplay": "^2.1.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -40,7 +38,6 @@
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
     "@xmldom/xmldom": "^0.9.10",
-    "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react": "7.37.5",
