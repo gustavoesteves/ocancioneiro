@@ -83,9 +83,9 @@ export function CancioneiroApp() {
                 O Cancioneiro
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-[#5f5a50] md:text-lg">
-                O Cancioneiro segue a logica de um songbook/lead sheet,
-                inspirado no uso pratico de livros como o Real Book, mas
-                voltado ao repertorio brasileiro.
+                Um acervo vivo de melodias e cifras, no espirito dos
+                songbooks e lead sheets: pratico como um Real Book, dedicado ao
+                repertorio brasileiro.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3 rounded-md border border-[#d8d0c1] bg-[#f3efe5] p-3 text-center">

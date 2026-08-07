@@ -21,6 +21,11 @@ oferecer busca, filtros, download, impressao/PDF e playback simples.
 O Cancioneiro segue a logica de um songbook/lead sheet, inspirado no uso
 pratico de livros como o Real Book, mas voltado ao repertorio brasileiro.
 
+A politica detalhada esta em
+[`docs/especificacao-editorial-v1.md`](docs/especificacao-editorial-v1.md). O
+plano de implementacao e validacao pelo piloto de Choro esta em
+[`docs/sprints/piloto-choro.md`](docs/sprints/piloto-choro.md).
+
 O formato padrao de uma obra deve ser:
 
 - melodia principal em uma pauta;
@@ -32,14 +37,11 @@ O objetivo nao e publicar partituras completas, arranjos fechados ou reducoes
 orquestrais. Isso deixaria o acervo mais lento de produzir e menos flexivel para
 quem quer estudar, acompanhar, improvisar ou montar seu proprio arranjo.
 
-Excecoes sao bem-vindas quando forem musicalmente necessarias:
-
-- segunda melodia ou contracanto marcante;
-- baixo, piano reduzido ou convencao ritmica indispensavel;
-- introducao, final, coda ou chamada que faca parte da identidade da musica.
-
-Mesmo nesses casos, a partitura deve continuar enxuta e tocar como material de
-consulta, nao como uma edicao completa definitiva.
+Elementos alem de melodia, harmonia e forma basica so entram quando pertencem a
+identidade executavel da composicao, possuem fonte e passam por decisao
+editorial documentada. Convencoes de performance e elementos de arranjos podem
+ser registrados fora da partitura, mas nao integram automaticamente o lead
+sheet canonico.
 
 ## Como Rodar
 

@@ -1,11 +1,11 @@
 {
   "songs": {
-    "estudo-de-abertura": {
-      "genre": "Estudo",
-      "level": "Inicial",
-      "notes": "Pequena peca de exemplo para validar o fluxo MusicXML, renderizacao online e metadados do acervo.",
-      "source": "Exemplo original",
-      "tags": ["musicxml", "exemplo", "melodia"]
+    "asa-branca": {
+      "genre": "Nao classificado",
+      "level": "Nao classificado",
+      "notes": "",
+      "source": "Acervo",
+      "tags": []
     }
   }
 }

@@ -1,26 +1,25 @@
 {
   "songs": [
     {
-      "id": "estudo-de-abertura",
-      "title": "Estudo de abertura",
-      "composer": "O Cancioneiro",
-      "genre": "Estudo",
+      "id": "asa-branca",
+      "title": "Asa branca",
+      "composer": "Luiz Gonzaga",
+      "genre": "Nao classificado",
       "key": "C maior",
-      "level": "Inicial",
-      "instrumentation": "Melodia",
-      "source": "Exemplo original",
-      "musicxml": "/musicxml/estudo-de-abertura.musicxml",
-      "notes": "Pequena peca de exemplo para validar o fluxo MusicXML, renderizacao online e metadados do acervo.",
+      "level": "Nao classificado",
+      "instrumentation": "Electric Guitar",
+      "source": "Acervo",
+      "musicxml": "/musicxml/asa-branca.musicxml",
+      "notes": "",
       "chords": [
         "C",
-        "G7"
+        "F",
+        "G7",
+        "C7",
+        "G"
       ],
-      "tags": [
-        "musicxml",
-        "exemplo",
-        "melodia"
-      ],
-      "sourceHash": "7d2171f1a7a1bfd9195b81317c9ba035c60d84d402219ae046955419b8f07679"
+      "tags": [],
+      "sourceHash": "83c616dd65e4a8a59708989c5ebf25ef0a6c16ed69e62b2d9392498c166d2e86"
     }
   ]
 }
