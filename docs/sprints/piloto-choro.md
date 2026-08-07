@@ -515,6 +515,13 @@ camada. Para reverter, basta continuar usando `public/catalog.json` gerado pelo
 fluxo legado e ignorar os dossiês migrados até que a etapa de escrita em disco
 seja explicitamente habilitada.
 
+### Comando operacional
+
+O comando `npm run dossiers:migrate` executa uma simulação da migração e lista
+os dossiês que seriam criados ou atualizados. `npm run dossiers:migrate --
+--check` falha se houver migração pendente. A escrita em disco só acontece com
+`npm run dossiers:migrate -- --write`.
+
 ### Testes obrigatórios
 
 - migração repetida sem alteração adicional;
