@@ -2,6 +2,10 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parseCatalog } from "../../../lib/catalog.mjs";
 import { summarizeEditorialDossiers } from "../../../lib/editorial-dossier-summary.mjs";
+import {
+  dossierConflictMessage,
+  findDossierImportConflict,
+} from "../../../lib/import-dossier-conflicts.mjs";
 import { main as generateCatalog } from "../../../scripts/generate-catalog.mjs";
 import { loadEditorialDossiers } from "../../../scripts/validate-dossiers.mjs";
 import {
@@ -222,6 +226,17 @@ export async function POST(request: Request) {
     }
 
     const { editorialPath, musicXmlDirectory } = projectPaths();
+    const dossierConflict = findDossierImportConflict(
+      await loadEditorialDossiers(),
+      id,
+    );
+    if (dossierConflict) {
+      return Response.json(
+        { error: dossierConflictMessage(dossierConflict) },
+        { status: 409 },
+      );
+    }
+
     const musicXmlPath = path.join(
       musicXmlDirectory,
       `${id}.musicxml`,
@@ -300,6 +315,18 @@ export async function PUT(request: Request) {
     const nextId = slugify(payload.id || currentId);
     if (!nextId) {
       return Response.json({ error: "id invalido" }, { status: 400 });
+    }
+    if (nextId !== currentId) {
+      const dossierConflict = findDossierImportConflict(
+        await loadEditorialDossiers(),
+        nextId,
+      );
+      if (dossierConflict) {
+        return Response.json(
+          { error: dossierConflictMessage(dossierConflict) },
+          { status: 409 },
+        );
+      }
     }
 
     const currentMusicXmlPath = musicXmlPathFromPublicPath(
