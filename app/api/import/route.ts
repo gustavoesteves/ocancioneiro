@@ -1,7 +1,10 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parseCatalog } from "../../../lib/catalog.mjs";
-import { linkMusicXmlToDossier } from "../../../lib/dossier-musicxml-link.mjs";
+import {
+  archiveImportedMusicXmlAsset,
+  linkMusicXmlToDossier,
+} from "../../../lib/dossier-musicxml-link.mjs";
 import { summarizeEditorialDossiers } from "../../../lib/editorial-dossier-summary.mjs";
 import {
   dossierConflictMessage,
@@ -436,15 +439,42 @@ export async function DELETE(request: Request) {
     const url = new URL(request.url);
     const body =
       request.headers.get("content-type")?.includes("application/json")
-        ? ((await request.json()) as { id?: string })
+        ? ((await request.json()) as { id?: string; workId?: string })
         : {};
     const id = slugify(body.id || url.searchParams.get("id") || "");
+    const workId =
+      typeof body.workId === "string"
+        ? body.workId.trim()
+        : url.searchParams.get("workId")?.trim() || "";
 
     if (!id) {
       return Response.json({ error: "id e obrigatorio" }, { status: 400 });
     }
 
     const { catalogPath, editorialPath, projectRoot } = projectPaths();
+    if (workId) {
+      const dossierEntry = (await loadEditorialDossiers()).find(
+        (entry) => entry.dossier.work.id === workId,
+      );
+      if (!dossierEntry) {
+        return Response.json({ error: "Dossie editorial nao encontrado." }, { status: 404 });
+      }
+
+      const archivedDossier = archiveImportedMusicXmlAsset(dossierEntry.dossier, {
+        archivedAt: new Date().toISOString().slice(0, 10),
+        publicId: id,
+      });
+      await writeJsonAtomically(dossierEntry.filePath, archivedDossier);
+      await generateCatalog();
+
+      return Response.json({
+        archived: id,
+        catalog: "public/catalog.json",
+        dossier: dossierEntry.filePath,
+        workId,
+      });
+    }
+
     const catalog = await readCatalog(catalogPath);
     const existingSong = catalog.songs.find((song) => song.id === id);
 

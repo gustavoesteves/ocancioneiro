@@ -563,7 +563,7 @@ apagar histórico editorial.
 - [x] carregar obras existentes do modelo novo;
 - [x] permitir vincular MusicXML a edição existente;
 - [x] impedir que importar arquivo crie obra duplicada silenciosamente;
-- [ ] separar arquivamento editorial de remoção física do asset;
+- [x] separar arquivamento editorial de remoção física do asset;
 - [ ] testar round-trip da ferramenta local;
 - [x] bloquear operações ainda não migradas com mensagem explícita.
 

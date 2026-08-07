@@ -100,6 +100,7 @@ export function ImportTool() {
   const [managedSongs, setManagedSongs] = useState<ManagedSong[]>([]);
   const [managedDossiers, setManagedDossiers] = useState<ManagedDossier[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
   const [selectedDossierWorkId, setSelectedDossierWorkId] = useState<string | null>(
     null,
   );
@@ -172,6 +173,7 @@ export function ImportTool() {
     setOverwrite(false);
     setSuggestedId("");
     setSelectedId(null);
+    setSelectedWorkId(null);
     setSelectedDossierWorkId(null);
   }
 
@@ -189,6 +191,7 @@ export function ImportTool() {
       setSuggestedId(nextMetadata.id);
       setEditorial(initialEditorial);
       setSelectedId(null);
+      setSelectedWorkId(null);
       setSelectedDossierWorkId(null);
       setOverwrite(false);
       setSaveState("idle");
@@ -221,6 +224,10 @@ export function ImportTool() {
       setEditorial(fieldsFromSong(song));
       setOverwrite(true);
       setSelectedId(song.id);
+      setSelectedWorkId(
+        managedDossiers.find((dossier) => dossier.publicCatalogId === song.id)
+          ?.workId ?? null,
+      );
       setSelectedDossierWorkId(null);
     } catch (error) {
       console.error(error);
@@ -298,7 +305,7 @@ export function ImportTool() {
 
     try {
       const response = await fetch("/api/import", {
-        body: JSON.stringify({ id: selectedId }),
+        body: JSON.stringify({ id: selectedId, workId: selectedWorkId }),
         headers: { "Content-Type": "application/json" },
         method: "DELETE",
       });
@@ -313,7 +320,11 @@ export function ImportTool() {
 
       setDeleteState("saved");
       resetForm();
-      setMessage(`Musica ${result.deleted || selectedId} excluida do acervo local.`);
+      setMessage(
+        selectedWorkId
+          ? `Asset ${selectedId} arquivado no dossie editorial.`
+          : `Musica ${result.deleted || selectedId} excluida do acervo local.`,
+      );
       await refreshLibrary();
     } catch (error) {
       console.error(error);
@@ -488,6 +499,7 @@ export function ImportTool() {
                           current === dossier.workId ? null : dossier.workId,
                         );
                         setSelectedId(null);
+                        setSelectedWorkId(null);
                         setOverwrite(true);
                       }}
                       type="button"

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { linkMusicXmlToDossier } from "../lib/dossier-musicxml-link.mjs";
+import {
+  archiveImportedMusicXmlAsset,
+  linkMusicXmlToDossier,
+} from "../lib/dossier-musicxml-link.mjs";
 
 function dossier() {
   return {
@@ -72,4 +75,31 @@ test("updates the imported edition and asset deterministically", () => {
   assert.equal(second.editions.length, 1);
   assert.equal(second.assets.length, 1);
   assert.equal(second.editions[0].title, "Carinhoso revisado");
+});
+
+test("archives imported assets without removing file references", () => {
+  const linked = linkMusicXmlToDossier(dossier(), {
+    generatedAt: "2026-08-07",
+    publicId: "carinhoso",
+    publicPath: "/musicxml/carinhoso.musicxml",
+    xml: musicXml(),
+  });
+  const archived = archiveImportedMusicXmlAsset(linked, {
+    archivedAt: "2026-08-08",
+    publicId: "carinhoso",
+    reason: "Teste de arquivamento.",
+  });
+
+  assert.equal(archived.assets[0].status, "bloqueado");
+  assert.equal(archived.assets[0].path, "/musicxml/carinhoso.musicxml");
+  assert.equal(archived.assets[0].checksum, linked.assets[0].checksum);
+  assert.equal(archived.assets[0].archivedAt, "2026-08-08");
+  assert.equal(archived.assets[0].archiveReason, "Teste de arquivamento.");
+});
+
+test("rejects archiving when the imported asset is missing", () => {
+  assert.throws(
+    () => archiveImportedMusicXmlAsset(dossier(), { publicId: "carinhoso" }),
+    /Asset importado nao encontrado/,
+  );
 });
