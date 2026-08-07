@@ -4,6 +4,10 @@ import {
   archiveImportedMusicXmlAsset,
   linkMusicXmlToDossier,
 } from "../lib/dossier-musicxml-link.mjs";
+import {
+  legacyCatalogEntryFromDossier,
+  legacyProjectionIssues,
+} from "../lib/dossier-catalog-projection.mjs";
 
 function dossier() {
   return {
@@ -21,6 +25,35 @@ function dossier() {
         exibir_metadados: "permitida",
       },
       status: "nao_verificado",
+    },
+  };
+}
+
+function publicableDossier() {
+  return {
+    ...dossier(),
+    curation: {
+      currentDecisionId: "decisao-aceita",
+      decisions: [
+        {
+          decidedAt: "2026-08-07",
+          decidedBy: "bancada-editorial",
+          id: "decisao-aceita",
+          justification: "Fixture aceita para round-trip local.",
+          status: "aceita",
+        },
+      ],
+      status: "em_revisao",
+    },
+    rights: {
+      actions: {
+        exibir_metadados: "permitida",
+        exibir_partitura: "permitida",
+        reproduzir_playback: "permitida",
+        imprimir: "permitida",
+        distribuir_musicxml: "permitida",
+      },
+      status: "liberado",
     },
   };
 }
@@ -102,4 +135,39 @@ test("rejects archiving when the imported asset is missing", () => {
     () => archiveImportedMusicXmlAsset(dossier(), { publicId: "carinhoso" }),
     /Asset importado nao encontrado/,
   );
+});
+
+test("round-trips the local dossier import flow through public catalog projection", () => {
+  const linked = linkMusicXmlToDossier(publicableDossier(), {
+    generatedAt: "2026-08-07",
+    publicId: "carinhoso",
+    publicPath: "/musicxml/carinhoso.musicxml",
+    xml: musicXml(),
+  });
+  const projected = legacyCatalogEntryFromDossier(linked);
+
+  assert.equal(linked.work.id, "obra-carinhoso");
+  assert.equal(projected.id, "carinhoso");
+  assert.equal(projected.title, "Carinhoso");
+  assert.equal(projected.musicxml, "/musicxml/carinhoso.musicxml");
+  assert.deepEqual(projected.chords, ["F"]);
+
+  const updated = linkMusicXmlToDossier(linked, {
+    generatedAt: "2026-08-07",
+    publicId: "carinhoso",
+    publicPath: "/musicxml/carinhoso.musicxml",
+    xml: musicXml({ title: "Carinhoso revisado" }),
+  });
+  assert.equal(updated.work.id, "obra-carinhoso");
+  assert.equal(updated.editions.length, 1);
+  assert.equal(legacyCatalogEntryFromDossier(updated).title, "Carinhoso revisado");
+
+  const archived = archiveImportedMusicXmlAsset(updated, {
+    archivedAt: "2026-08-08",
+    publicId: "carinhoso",
+  });
+  assert.equal(legacyCatalogEntryFromDossier(archived), null);
+  assert.deepEqual(legacyProjectionIssues(archived), [
+    "sem asset MusicXML publico valido",
+  ]);
 });

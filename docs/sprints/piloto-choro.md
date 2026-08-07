@@ -564,7 +564,7 @@ apagar histórico editorial.
 - [x] permitir vincular MusicXML a edição existente;
 - [x] impedir que importar arquivo crie obra duplicada silenciosamente;
 - [x] separar arquivamento editorial de remoção física do asset;
-- [ ] testar round-trip da ferramenta local;
+- [x] testar round-trip da ferramenta local;
 - [x] bloquear operações ainda não migradas com mensagem explícita.
 
 ### Vinculação local
