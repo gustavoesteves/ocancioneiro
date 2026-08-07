@@ -3,11 +3,19 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { currentCurationStatus } from "../lib/editorial-dossier.mjs";
 import {
   dossierReviewReport,
   listDossierFiles,
   loadEditorialDossiers,
 } from "../scripts/validate-dossiers.mjs";
+
+const fixtureDossierDirectory = path.join(
+  process.cwd(),
+  "tests",
+  "fixtures",
+  "dossiers",
+);
 
 function dossier(id, title) {
   return {
@@ -36,6 +44,25 @@ test("loads the repository editorial dossiers", async () => {
     loaded.some(({ dossier }) => dossier.work.id === "obra-carinhoso"),
   );
 });
+
+test(
+  "loads lifecycle fixtures for candidate, accepted, rejected and inconclusive works",
+  async () => {
+    const loaded = await loadEditorialDossiers(fixtureDossierDirectory);
+    const statuses = new Map(
+      loaded.map(({ dossier }) => [
+        dossier.work.id,
+        currentCurationStatus(dossier.curation),
+      ]),
+    );
+
+    assert.equal(loaded.length, 4);
+    assert.equal(statuses.get("obra-fixture-candidata"), "candidata");
+    assert.equal(statuses.get("obra-fixture-aceita"), "aceita");
+    assert.equal(statuses.get("obra-fixture-rejeitada"), "rejeitada");
+    assert.equal(statuses.get("obra-fixture-inconclusiva"), "inconclusiva");
+  },
+);
 
 test("reports editorial review gaps without rejecting the dossier", async () => {
   const report = dossierReviewReport([

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "work": {
+    "id": "obra-fixture-aceita",
+    "preferredTitle": "Fixture aceita",
+    "creators": [
+      {
+        "name": "Autoria de teste",
+        "role": "composer"
+      }
+    ]
+  },
+  "curation": {
+    "status": "em_revisao",
+    "currentDecisionId": "decisao-aceita-001",
+    "decisions": [
+      {
+        "id": "decisao-aceita-001",
+        "status": "aceita",
+        "justification": "Fixture para validar decisao vigente aceita.",
+        "decidedBy": "bancada-editorial",
+        "decidedAt": "2026-08-07"
+      }
+    ],
+    "canonicalClaims": [
+      {
+        "context": "choro",
+        "centrality": "nuclear",
+        "reach": "comunidade",
+        "decisionId": "decisao-aceita-001",
+        "justification": "Fixture para validar afirmacao canonica aceita."
+      }
+    ]
+  },
+  "rights": {
+    "status": "nao_verificado",
+    "actions": {
+      "exibir_metadados": "permitida"
+    }
+  }
+}

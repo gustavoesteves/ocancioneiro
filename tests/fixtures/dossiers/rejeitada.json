@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "work": {
+    "id": "obra-fixture-rejeitada",
+    "preferredTitle": "Fixture rejeitada",
+    "creators": [
+      {
+        "name": "Autoria de teste",
+        "role": "composer"
+      }
+    ]
+  },
+  "curation": {
+    "status": "em_revisao",
+    "currentDecisionId": "decisao-rejeitada-001",
+    "decisions": [
+      {
+        "id": "decisao-rejeitada-001",
+        "status": "rejeitada",
+        "justification": "Fixture para validar decisao vigente rejeitada.",
+        "decidedBy": "bancada-editorial",
+        "decidedAt": "2026-08-07"
+      }
+    ]
+  },
+  "rights": {
+    "status": "nao_verificado",
+    "actions": {
+      "exibir_metadados": "bloqueada"
+    }
+  }
+}

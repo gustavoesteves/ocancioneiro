@@ -359,6 +359,7 @@ arquivo publicável.
 ### Tarefas
 
 - [x] implementar leitura e validação de dossiês mínimos;
+- [x] criar fixtures de obras candidatas, aceitas, rejeitadas e inconclusivas;
 - [x] derivar estado de curadoria a partir de decisão vigente quando houver;
 - [x] permitir ausência explícita de edição e asset;
 - [x] validar autoria e papéis sem supor dados ausentes;

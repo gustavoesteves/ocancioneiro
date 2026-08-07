@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "work": {
+    "id": "obra-fixture-candidata",
+    "preferredTitle": "Fixture candidata",
+    "creators": [
+      {
+        "name": "Autoria de teste",
+        "role": "composer"
+      }
+    ]
+  },
+  "curation": {
+    "status": "candidata"
+  },
+  "rights": {
+    "status": "nao_verificado",
+    "actions": {
+      "exibir_metadados": "permitida"
+    }
+  }
+}

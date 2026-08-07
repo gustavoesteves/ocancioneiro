@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "work": {
+    "id": "obra-fixture-inconclusiva",
+    "preferredTitle": "Fixture inconclusiva",
+    "creators": [
+      {
+        "name": "Autoria de teste",
+        "role": "composer"
+      }
+    ]
+  },
+  "curation": {
+    "status": "em_revisao",
+    "currentDecisionId": "decisao-inconclusiva-001",
+    "decisions": [
+      {
+        "id": "decisao-inconclusiva-001",
+        "status": "inconclusiva",
+        "justification": "Fixture para validar decisao vigente inconclusiva.",
+        "decidedBy": "bancada-editorial",
+        "decidedAt": "2026-08-07"
+      }
+    ]
+  },
+  "rights": {
+    "status": "nao_verificado",
+    "actions": {
+      "exibir_metadados": "permitida"
+    }
+  }
+}
