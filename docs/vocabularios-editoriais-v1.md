@@ -2,11 +2,55 @@
 
 **Status:** proposta para Sprint 1B
 **Documento normativo:** [Especificação editorial v1](especificacao-editorial-v1.md)
+**Glossário:** [Glossário editorial v1](glossario-editorial-v1.md)
 
 Este documento define os vocabulários controlados iniciais usados pelo piloto
 editorial. Tags livres podem continuar existindo para busca e anotação, mas não
 substituem estes valores quando houver decisão editorial, direitos ou projeção
 pública envolvidos.
+
+## Formato versionado
+
+Cada vocabulário controlado é identificado por:
+
+- `vocabularyId`: identificador estável do conjunto, em `snake_case`;
+- `schemaVersion`: versão do formato usado para descrever os termos;
+- `terms`: lista ordenada de termos disponíveis;
+- `status`: estágio editorial do vocabulário.
+
+Cada termo deve possuir:
+
+- `id`: valor persistido nos dossiês e validado pelo sistema;
+- `label`: forma legível exibida em documentação ou interface editorial;
+- `definition`: regra curta de uso;
+- `counterexample`: situação que parece semelhante, mas não deve usar o termo;
+- `status`: `ativo`, `proposto`, `depreciado` ou `removido`;
+- `replaces`: termos anteriores, quando houver migração;
+- `notes`: observações editoriais opcionais.
+
+Exemplo de termo:
+
+```json
+{
+  "id": "nuclear",
+  "label": "Nuclear",
+  "definition": "Ausência difícil de justificar dentro do contexto declarado.",
+  "counterexample": "Não indica ranking artístico nem sucesso comercial.",
+  "status": "ativo"
+}
+```
+
+Regras de versionamento:
+
+- `id` não deve ser renomeado depois de publicado; use `depreciado` e
+  `replaces` quando houver substituição;
+- `label`, `definition`, `counterexample` e `notes` podem ser refinados sem
+  migração quando não alterarem o significado operacional;
+- valores `proposto` podem aparecer na documentação, mas não devem ser usados
+  em dossiês publicados antes de aprovação;
+- valores `removido` permanecem documentados quando forem necessários para
+  interpretar histórico;
+- toda mudança que afete validação de dados deve ter nota de migração.
 
 ## Curadoria
 

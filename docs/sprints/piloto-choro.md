@@ -2,6 +2,7 @@
 
 **Status:** proposta executável
 **Documento normativo:** [Especificação editorial v1](../especificacao-editorial-v1.md)
+**Glossário:** [Glossário editorial v1](../glossario-editorial-v1.md)
 **Vocabulários iniciais:** [Vocabulários editoriais v1](../vocabularios-editoriais-v1.md)
 **Horizonte:** Sprint 0, Sprint 1 fatiado em 1A–1G, e Sprints 2–7
 **Resultado esperado:** provar o método editorial e a arquitetura com uma
@@ -185,7 +186,7 @@ A bancada deve selecionar casos que representem:
 ### Tarefas de desenvolvimento
 
 - [x] adicionar verificação automática de links internos da documentação;
-- [ ] definir formato do glossário e dos vocabulários versionados;
+- [x] definir formato do glossário e dos vocabulários versionados;
 - [ ] registrar decisões arquiteturais necessárias ao Sprint 1;
 - [ ] documentar mapeamento preliminar dos campos atuais para o modelo-alvo;
 - [ ] definir política para identificadores estáveis e aliases.
