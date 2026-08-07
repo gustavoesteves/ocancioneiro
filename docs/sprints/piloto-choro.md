@@ -184,7 +184,7 @@ A bancada deve selecionar casos que representem:
 
 ### Tarefas de desenvolvimento
 
-- [ ] adicionar verificação automática de links internos da documentação;
+- [x] adicionar verificação automática de links internos da documentação;
 - [ ] definir formato do glossário e dos vocabulários versionados;
 - [ ] registrar decisões arquiteturais necessárias ao Sprint 1;
 - [ ] documentar mapeamento preliminar dos campos atuais para o modelo-alvo;
