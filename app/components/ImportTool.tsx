@@ -25,6 +25,18 @@ type ManagedSong = Song & {
   path: string;
 };
 
+type ManagedDossier = {
+  assetCount: number;
+  editionCount: number;
+  filePath: string;
+  publicCatalogId: string | null;
+  publicable: boolean;
+  projectionIssues: string[];
+  status: string;
+  title: string;
+  workId: string;
+};
+
 function splitTags(value: string) {
   return value
     .split(",")
@@ -86,6 +98,7 @@ export function ImportTool() {
   const [overwrite, setOverwrite] = useState(false);
   const [suggestedId, setSuggestedId] = useState("");
   const [managedSongs, setManagedSongs] = useState<ManagedSong[]>([]);
+  const [managedDossiers, setManagedDossiers] = useState<ManagedDossier[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [libraryState, setLibraryState] = useState<SaveState>("idle");
   const [deleteState, setDeleteState] = useState<SaveState>("idle");
@@ -123,6 +136,7 @@ export function ImportTool() {
     try {
       const response = await fetch("/api/import");
       const result = (await response.json()) as {
+        dossiers?: ManagedDossier[];
         error?: string;
         songs?: ManagedSong[];
       };
@@ -132,6 +146,7 @@ export function ImportTool() {
       }
 
       setManagedSongs(result.songs || []);
+      setManagedDossiers(result.dossiers || []);
       setLibraryState("idle");
     } catch (error) {
       console.error(error);
@@ -395,7 +410,7 @@ export function ImportTool() {
                 <p className="mt-1 text-sm text-[#70695e]">
                   {libraryState === "saving"
                     ? "Carregando musicas..."
-                    : `${managedSongs.length} musica(s) no catalogo`}
+                    : `${managedSongs.length} musica(s) no catalogo, ${managedDossiers.length} dossie(s) editoriais`}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -446,6 +461,45 @@ export function ImportTool() {
                 Nenhuma musica carregada pelo catalogo local.
               </p>
             )}
+
+            {managedDossiers.length > 0 ? (
+              <div className="mt-5 border-t border-[#d8d0c1] pt-4">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8a4c2f]">
+                  Modelo editorial
+                </h3>
+                <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                  {managedDossiers.map((dossier) => (
+                    <div
+                      className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-3"
+                      key={dossier.workId}
+                    >
+                      <span className="block truncate text-sm font-semibold">
+                        {dossier.title}
+                      </span>
+                      <span className="mt-1 block truncate font-mono text-[11px] text-[#8a4c2f]">
+                        {dossier.workId}
+                      </span>
+                      <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-[#5f5a50]">
+                        <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1">
+                          {dossier.status}
+                        </span>
+                        <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1">
+                          {dossier.editionCount} ed.
+                        </span>
+                        <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1">
+                          {dossier.assetCount} asset(s)
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-[#70695e]">
+                        {dossier.publicable
+                          ? "Publicavel no catalogo legado"
+                          : dossier.projectionIssues[0] || "Pendente"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {message ? (

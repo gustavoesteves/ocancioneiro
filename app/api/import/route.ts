@@ -1,7 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parseCatalog } from "../../../lib/catalog.mjs";
+import { summarizeEditorialDossiers } from "../../../lib/editorial-dossier-summary.mjs";
 import { main as generateCatalog } from "../../../scripts/generate-catalog.mjs";
+import { loadEditorialDossiers } from "../../../scripts/validate-dossiers.mjs";
 import {
   assertMusicXmlDocument,
   defaultEditorialFields,
@@ -169,12 +171,14 @@ export async function GET(request: Request) {
 
   try {
     const { catalogPath, editorialPath } = projectPaths();
-    const [catalog, manifest] = await Promise.all([
+    const [catalog, manifest, dossierEntries] = await Promise.all([
       readCatalog(catalogPath),
       readEditorialManifest(editorialPath),
+      loadEditorialDossiers(),
     ]);
 
     return Response.json({
+      dossiers: summarizeEditorialDossiers(dossierEntries),
       songs: catalog.songs.map((song) => ({
         ...song,
         editorial: manifest.songs?.[song.id] ?? {

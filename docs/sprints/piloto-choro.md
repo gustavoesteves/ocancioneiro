@@ -560,7 +560,7 @@ apagar histórico editorial.
 
 ### Tarefas
 
-- [ ] carregar obras existentes do modelo novo;
+- [x] carregar obras existentes do modelo novo;
 - [ ] permitir vincular MusicXML a edição existente;
 - [ ] impedir que importar arquivo crie obra duplicada silenciosamente;
 - [ ] separar arquivamento editorial de remoção física do asset;
