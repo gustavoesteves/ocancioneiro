@@ -408,9 +408,9 @@ Mapeamento provisório:
 ### Tarefas
 
 - [ ] adaptar o gerador para produzir o catálogo legado durante a transição;
-- [ ] impedir publicação de asset sem decisão de direitos compatível;
+- [x] impedir publicação de asset sem decisão de direitos compatível;
 - [ ] garantir equivalência do catálogo legado para dados já publicados;
-- [ ] validar que obra sem asset não aparece como partitura publicável;
+- [x] validar que obra sem asset não aparece como partitura publicável;
 - [ ] manter `public/catalog.json` como artefato gerado;
 - [ ] documentar rollback não destrutivo.
 
