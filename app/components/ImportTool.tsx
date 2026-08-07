@@ -100,6 +100,9 @@ export function ImportTool() {
   const [managedSongs, setManagedSongs] = useState<ManagedSong[]>([]);
   const [managedDossiers, setManagedDossiers] = useState<ManagedDossier[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedDossierWorkId, setSelectedDossierWorkId] = useState<string | null>(
+    null,
+  );
   const [libraryState, setLibraryState] = useState<SaveState>("idle");
   const [deleteState, setDeleteState] = useState<SaveState>("idle");
 
@@ -169,6 +172,7 @@ export function ImportTool() {
     setOverwrite(false);
     setSuggestedId("");
     setSelectedId(null);
+    setSelectedDossierWorkId(null);
   }
 
   async function handleFile(file: File | undefined) {
@@ -185,6 +189,7 @@ export function ImportTool() {
       setSuggestedId(nextMetadata.id);
       setEditorial(initialEditorial);
       setSelectedId(null);
+      setSelectedDossierWorkId(null);
       setOverwrite(false);
       setSaveState("idle");
     } catch (error) {
@@ -216,6 +221,7 @@ export function ImportTool() {
       setEditorial(fieldsFromSong(song));
       setOverwrite(true);
       setSelectedId(song.id);
+      setSelectedDossierWorkId(null);
     } catch (error) {
       console.error(error);
       setMessage(
@@ -243,6 +249,7 @@ export function ImportTool() {
             source: editorial.source,
             tags: splitTags(editorial.tags),
           },
+          dossierWorkId: selectedDossierWorkId,
           id: effectiveId,
           overwrite,
           xml: scoreXml,
@@ -264,7 +271,7 @@ export function ImportTool() {
       setSelectedId(result.id || effectiveId);
       setOverwrite(true);
       setMessage(
-        `${selectedId ? "Edicao" : "Importacao"} gravada em ${result.path}. Catalogo atualizado com sucesso.`,
+        `${selectedId ? "Edicao" : selectedDossierWorkId ? "Vinculacao" : "Importacao"} gravada em ${result.path}. Catalogo atualizado com sucesso.`,
       );
       await refreshLibrary();
     } catch (error) {
@@ -469,9 +476,21 @@ export function ImportTool() {
                 </h3>
                 <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {managedDossiers.map((dossier) => (
-                    <div
-                      className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-3"
+                    <button
+                      className={`rounded-md border p-3 text-left transition ${
+                        selectedDossierWorkId === dossier.workId
+                          ? "border-[#8a4c2f] bg-white"
+                          : "border-[#d8d0c1] bg-[#fffdf8] hover:border-[#b99f8d]"
+                      }`}
                       key={dossier.workId}
+                      onClick={() => {
+                        setSelectedDossierWorkId((current) =>
+                          current === dossier.workId ? null : dossier.workId,
+                        );
+                        setSelectedId(null);
+                        setOverwrite(true);
+                      }}
+                      type="button"
                     >
                       <span className="block truncate text-sm font-semibold">
                         {dossier.title}
@@ -491,11 +510,13 @@ export function ImportTool() {
                         </span>
                       </div>
                       <p className="mt-2 text-xs text-[#70695e]">
-                        {dossier.publicable
-                          ? "Publicavel no catalogo legado"
-                          : dossier.projectionIssues[0] || "Pendente"}
+                        {selectedDossierWorkId === dossier.workId
+                          ? "Dossie selecionado para vincular MusicXML"
+                          : dossier.publicable
+                            ? "Publicavel no catalogo legado"
+                            : dossier.projectionIssues[0] || "Pendente"}
                       </p>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -585,6 +606,11 @@ export function ImportTool() {
                   {selectedId}
                 </p>
               ) : null}
+              {selectedDossierWorkId ? (
+                <p className="mt-2 rounded border border-[#d8d0c1] bg-[#fdfaf3] p-3 font-mono text-xs">
+                  {selectedDossierWorkId}
+                </p>
+              ) : null}
               <p className="mt-3 rounded border border-[#d8d0c1] bg-[#fdfaf3] p-3 font-mono text-xs">
                 {suggestedPath}
               </p>
@@ -609,6 +635,8 @@ export function ImportTool() {
                   ? "Gravando..."
                   : selectedId
                     ? "Salvar edicao"
+                    : selectedDossierWorkId
+                      ? "Vincular ao dossie"
                     : "Gravar no repositorio local"}
               </button>
               {selectedId ? (

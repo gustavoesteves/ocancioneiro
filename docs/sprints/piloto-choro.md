@@ -561,11 +561,18 @@ apagar histórico editorial.
 ### Tarefas
 
 - [x] carregar obras existentes do modelo novo;
-- [ ] permitir vincular MusicXML a edição existente;
+- [x] permitir vincular MusicXML a edição existente;
 - [x] impedir que importar arquivo crie obra duplicada silenciosamente;
 - [ ] separar arquivamento editorial de remoção física do asset;
 - [ ] testar round-trip da ferramenta local;
 - [x] bloquear operações ainda não migradas com mensagem explícita.
+
+### Vinculação local
+
+Quando um dossiê editorial é selecionado no `/import`, um novo MusicXML pode
+ser gravado como asset desse dossiê. A operação cria/atualiza uma edição
+importada controlada, preserva `work.id` e só usa `publicCatalogId` como alias
+público da edição/asset.
 
 ### Critérios de aceite
 

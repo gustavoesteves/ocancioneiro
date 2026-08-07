@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parseCatalog } from "../../../lib/catalog.mjs";
+import { linkMusicXmlToDossier } from "../../../lib/dossier-musicxml-link.mjs";
 import { summarizeEditorialDossiers } from "../../../lib/editorial-dossier-summary.mjs";
 import {
   dossierConflictMessage,
@@ -24,6 +25,7 @@ type ImportPayload = {
     source?: string;
     tags?: string[];
   };
+  dossierWorkId?: string;
   id?: string;
   overwrite?: boolean;
   xml?: string;
@@ -226,11 +228,22 @@ export async function POST(request: Request) {
     }
 
     const { editorialPath, musicXmlDirectory } = projectPaths();
-    const dossierConflict = findDossierImportConflict(
-      await loadEditorialDossiers(),
-      id,
-    );
-    if (dossierConflict) {
+    const dossierEntries = await loadEditorialDossiers();
+    const dossierWorkId =
+      typeof payload.dossierWorkId === "string" ? payload.dossierWorkId.trim() : "";
+    const dossierEntry = dossierWorkId
+      ? dossierEntries.find((entry) => entry.dossier.work.id === dossierWorkId)
+      : null;
+
+    if (dossierWorkId && !dossierEntry) {
+      return Response.json({ error: "Dossie editorial nao encontrado." }, { status: 404 });
+    }
+
+    const dossierConflict = findDossierImportConflict(dossierEntries, id);
+    if (
+      dossierConflict &&
+      (!dossierEntry || dossierConflict.workId !== dossierEntry.dossier.work.id)
+    ) {
       return Response.json(
         { error: dossierConflictMessage(dossierConflict) },
         { status: 409 },
@@ -260,6 +273,27 @@ export async function POST(request: Request) {
 
     await fs.mkdir(path.dirname(musicXmlPath), { recursive: true });
     await writeTextAtomically(musicXmlPath, displayXml);
+
+    if (dossierEntry) {
+      const linkedDossier = linkMusicXmlToDossier(dossierEntry.dossier, {
+        generatedAt: new Date().toISOString().slice(0, 10),
+        publicId: id,
+        publicPath: `/musicxml/${id}.musicxml`,
+        xml: displayXml,
+      });
+      await writeJsonAtomically(dossierEntry.filePath, linkedDossier);
+      await generateCatalog();
+
+      return Response.json({
+        catalog: "public/catalog.json",
+        dossier: dossierEntry.filePath,
+        id,
+        musicxml: `/musicxml/${id}.musicxml`,
+        path: `public/musicxml/${id}.musicxml`,
+        title: metadata.title,
+        workId: linkedDossier.work.id,
+      });
+    }
 
     const manifest = await readEditorialManifest(editorialPath);
     const songs = {
