@@ -21,6 +21,30 @@ oferecer busca, filtros, download, impressao/PDF e playback simples.
 O Cancioneiro segue a logica de um songbook/lead sheet, inspirado no uso
 pratico de livros como o Real Book, mas voltado ao repertorio brasileiro.
 
+Principio interno:
+
+> O Cancioneiro nao documenta hits. Documenta repertorio.
+
+Fama nao basta. Uma musica pode ter vendido milhoes e ainda assim nao ser
+canonica musicalmente para a proposta do Cancioneiro. O contrario tambem
+acontece: `Doce de Coco`, de Jacob do Bandolim, provavelmente e menos conhecida
+do publico geral do que muitos sucessos radiofonicos brasileiros, mas para quem
+toca Choro ela funciona quase como vocabulario basico.
+
+Por isso, a entrada de uma obra deve ser avaliada por criterios musicais,
+historicos e praticos, nao por popularidade isolada:
+
+| Criterio | Pergunta |
+| --- | --- |
+| Permanencia | Continua sendo tocada depois de sua epoca? |
+| Circulacao | Musicos de diferentes geracoes conhecem ou tocam? |
+| Linguagem | Tornou-se referencia de uma linguagem brasileira? |
+| Influencia | Gerou descendencia musical? |
+| Regravacao | Foi reinterpretada de maneira relevante muitas vezes? |
+| Valor instrumental | Funciona como repertorio de execucao, estudo ou improvisacao? |
+| Valor historico | E impossivel contar a historia da musica brasileira sem ela? |
+| Representatividade | E uma referencia fundamental de determinada tradicao brasileira? |
+
 A politica detalhada esta em
 [`docs/especificacao-editorial-v1.md`](docs/especificacao-editorial-v1.md). O
 plano de implementacao e validacao pelo piloto de Choro esta em
