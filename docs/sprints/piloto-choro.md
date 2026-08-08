@@ -8,6 +8,7 @@
 **Mapeamento legado:** [Mapeamento preliminar dos campos atuais](../mapeamento-campos-legados-v1.md)
 **Identificadores:** [Política de identificadores e aliases v1](../politica-identificadores-aliases-v1.md)
 **Aprovações editoriais:** [Aprovações editoriais da Sprint 0](../aprovacoes-editoriais-sprint-0.md)
+**Campos abertos:** [Campos ainda abertos para o Sprint 1B](../campos-abertos-sprint-1b.md)
 **Horizonte:** Sprint 0, Sprint 1 fatiado em 1A–1G, e Sprints 2–7
 **Resultado esperado:** provar o método editorial e a arquitetura com uma
 amostra controlada antes de ampliar o acervo
@@ -310,15 +311,15 @@ persistir o piloto sem campos genéricos de escape.
 
 ### Tarefas
 
-- [ ] definir vocabulários versionados para status, centralidade, alcance,
+- [x] definir vocabulários versionados para status, centralidade, alcance,
   linguagens, tradições, papéis, tipos de fonte, tipos de evidência, direção,
   força, direitos e ações públicas;
 - [x] escrever primeiro validador de fronteira para dossiê editorial;
 - [x] criar fixtures válidas e inválidas para o dossiê mínimo;
 - [x] garantir que enums desconhecidos falhem com mensagem útil;
-- [ ] documentar campos ainda abertos, sem improvisá-los no código;
-- [ ] adicionar verificação automática de links internos da documentação;
-- [ ] mapear os campos atuais para o modelo-alvo sem executar migração.
+- [x] documentar campos ainda abertos, sem improvisá-los no código;
+- [x] adicionar verificação automática de links internos da documentação;
+- [x] mapear os campos atuais para o modelo-alvo sem executar migração.
 
 ### Testes obrigatórios
 
