@@ -123,7 +123,7 @@ test("rejects dossiers without schema version", () => {
   );
 });
 
-test("requires evidence sources to reference declared sources", () => {
+test("requires declared evidence sources to reference declared sources", () => {
   const dossier = minimalDossier({
     evidence: [
       {
@@ -151,6 +151,28 @@ test("requires evidence sources to reference declared sources", () => {
     () => parseEditorialDossier(dossier),
     /sourceId referencia fonte inexistente/,
   );
+});
+
+test("accepts draft evidence without sources for review reporting", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      evidence: [
+        {
+          assessedAt: "2026-08-07",
+          assessedBy: "pesquisador",
+          claim: "A obra aparece em repertorio de roda.",
+          criterion: "circulacao",
+          direction: "sustenta",
+          id: "evidencia-sem-fonte",
+          justification: "Rascunho aguardando fonte estruturada.",
+          strength: "fraca",
+        },
+      ],
+    }),
+  );
+
+  assert.equal(dossier.evidence[0].id, "evidencia-sem-fonte");
+  assert.equal(dossier.evidence[0].sources, undefined);
 });
 
 test("accepts many-to-many evidence references with structured locators", () => {

@@ -128,6 +128,12 @@ export function dossierReviewReport(dossiers) {
       pending.push("sem evidencias estruturadas");
     }
 
+    (dossier.evidence ?? []).forEach((evidence) => {
+      if ((evidence.sources ?? []).length === 0) {
+        pending.push(`evidencia sem fonte: ${evidence.id}`);
+      }
+    });
+
     return pending.length > 0
       ? [
           {

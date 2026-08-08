@@ -136,6 +136,11 @@ hierarquia.
 
 A força é sempre contextual e exige justificativa.
 
+Uma evidência pode ser registrada sem `sources[]` apenas como rascunho de
+pesquisa. Nesse caso, o validador carrega o dossiê, mas o relatório de revisão
+deve apontar a lacuna como `evidencia sem fonte`. Ela não pode sustentar
+decisão editorial enquanto permanecer assim.
+
 ### Testemunho de repertório
 
 - `roda_ou_comunidade_de_pratica`;

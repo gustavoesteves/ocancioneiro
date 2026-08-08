@@ -152,6 +152,74 @@ test("reports editorial review gaps without rejecting the dossier", async () => 
   ]);
 });
 
+test("reports evidence without source as an editorial review gap", () => {
+  const report = dossierReviewReport([
+    {
+      dossier: {
+        ...dossier("obra-evidencia-sem-fonte", "Obra com evidencia sem fonte"),
+        evidence: [
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A obra aparece em repertorio de roda.",
+            criterion: "circulacao",
+            direction: "sustenta",
+            id: "evidencia-sem-fonte",
+            justification: "Rascunho aguardando fonte estruturada.",
+            strength: "fraca",
+          },
+        ],
+        sources: [
+          {
+            id: "fonte-nao-usada",
+            title: "Fonte ainda nao relacionada",
+            type: "songbook",
+          },
+        ],
+      },
+      filePath: "data/dossiers/obra-evidencia-sem-fonte.json",
+    },
+  ]);
+
+  assert.ok(report[0].pending.includes("evidencia sem fonte: evidencia-sem-fonte"));
+  assert.ok(!report[0].pending.includes("sem evidencias estruturadas"));
+});
+
+test("loads draft evidence without source for review reporting", async () => {
+  const directory = await fs.mkdtemp(
+    path.join(os.tmpdir(), "o-cancioneiro-evidence-report-"),
+  );
+
+  await fs.writeFile(
+    path.join(directory, "obra.json"),
+    JSON.stringify(
+      {
+        ...dossier("obra-evidencia-sem-fonte", "Obra com evidencia sem fonte"),
+        evidence: [
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A obra aparece em repertorio de roda.",
+            criterion: "circulacao",
+            direction: "sustenta",
+            id: "evidencia-sem-fonte",
+            justification: "Rascunho aguardando fonte estruturada.",
+            strength: "fraca",
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+
+  const loaded = await loadEditorialDossiers(directory);
+  const report = dossierReviewReport(loaded);
+
+  assert.equal(loaded[0].dossier.evidence[0].id, "evidencia-sem-fonte");
+  assert.ok(report[0].pending.includes("evidencia sem fonte: evidencia-sem-fonte"));
+});
+
 test("treats a missing dossier directory as empty", async () => {
   const missingDirectory = path.join(
     os.tmpdir(),
