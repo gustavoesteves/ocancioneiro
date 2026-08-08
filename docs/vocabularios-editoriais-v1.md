@@ -184,6 +184,24 @@ localizador; devem aparecer como fonte, não como localização da evidência.
 - `contexto_historico`;
 - `pratica_de_performance`.
 
+### Identificador persistente de fonte
+
+`sources[].persistentId` registra um identificador conferível do item citado,
+como número de catálogo, tombo, chamada, matriz, DOI, handle ou ID estável de
+acervo digital.
+
+Regras:
+
+- deve identificar o item, não apenas a instituição;
+- deve ser único dentro do dossiê;
+- pode coexistir com `sources[].url`, que registra o endereço de consulta;
+- não deve ser inventado quando a fonte só possui referência bibliográfica
+  textual.
+
+Contraexemplo: `https://ims.com.br` não é identificador persistente do item;
+uma página específica de fonograma, catálogo ou programa pode fornecer ou
+funcionar como identificador quando for estável e conferível.
+
 ## Edição musical
 
 ### Estado de edição

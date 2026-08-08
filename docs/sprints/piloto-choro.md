@@ -714,7 +714,7 @@ localizador precisa permitir a conferência do item.
 
 - [x] validar referências muitos-para-muitos;
 - [x] permitir localizadores por página, faixa, compasso e item de acervo;
-- [ ] detectar fontes duplicadas por identificador persistente;
+- [x] detectar fontes duplicadas por identificador persistente;
 - [ ] emitir relatório de evidência sem fonte;
 - [ ] impedir força sem justificativa;
 - [ ] suportar direção contraditória;

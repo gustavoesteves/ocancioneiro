@@ -266,6 +266,56 @@ test("rejects invalid structured evidence locators", () => {
   );
 });
 
+test("accepts source persistent identifiers for deduplication", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      sources: [
+        {
+          id: "fonte-discografia",
+          persistentId: "discografia-brasileira:38213",
+          title: "Carinhoso",
+          type: "fonte_digital",
+          url: "https://discografiabrasileira.com.br/fonograma/38213/-",
+        },
+        {
+          id: "fonte-radio",
+          persistentId: "ims-radio-batuta:ouve-essa-carinhoso",
+          title: "Ouve essa: Carinhoso",
+          type: "fonte_digital",
+          url: "https://radiobatuta.ims.com.br/programas/ouve-essa/carinhoso",
+        },
+      ],
+    }),
+  );
+
+  assert.equal(dossier.sources[0].persistentId, "discografia-brasileira:38213");
+});
+
+test("rejects duplicate source persistent identifiers", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          sources: [
+            {
+              id: "fonte-discografia-a",
+              persistentId: "discografia-brasileira:38213",
+              title: "Carinhoso",
+              type: "fonte_digital",
+            },
+            {
+              id: "fonte-discografia-b",
+              persistentId: "discografia-brasileira:38213",
+              title: "Carinhoso duplicado",
+              type: "fonte_digital",
+            },
+          ],
+        }),
+      ),
+    /sources\[1\]\.persistentId duplicado: discografia-brasileira:38213/,
+  );
+});
+
 test("collects validation issues for invalid nested entities", () => {
   assert.throws(
     () =>
