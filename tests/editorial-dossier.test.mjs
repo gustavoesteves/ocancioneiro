@@ -153,6 +153,119 @@ test("requires evidence sources to reference declared sources", () => {
   );
 });
 
+test("accepts many-to-many evidence references with structured locators", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      evidence: [
+        {
+          assessedAt: "2026-08-07",
+          assessedBy: "pesquisador",
+          claim: "A obra aparece em fonte impressa e fonografica.",
+          criterion: "circulacao",
+          direction: "sustenta",
+          id: "evidencia-circulacao",
+          justification: "Fontes independentes apontam para circulacao.",
+          sources: [
+            {
+              sourceId: "fonte-songbook",
+              locators: [{ type: "pagina", value: "p. 12" }],
+            },
+            {
+              sourceId: "fonte-gravacao",
+              locators: [{ type: "faixa", value: "faixa 3" }],
+            },
+          ],
+          strength: "moderada",
+        },
+        {
+          assessedAt: "2026-08-07",
+          assessedBy: "pesquisador",
+          claim: "A mesma fonte impressa registra atribuicao autoral.",
+          criterion: "representatividade",
+          direction: "contextualiza",
+          id: "evidencia-atribuicao",
+          justification: "A fonte e util para contexto, sem decidir sozinha.",
+          sources: [
+            {
+              sourceId: "fonte-songbook",
+              locators: [
+                { type: "pagina", value: "p. 2" },
+                { type: "item_acervo", value: "catalogo-123" },
+              ],
+            },
+          ],
+          strength: "fraca",
+        },
+      ],
+      sources: [
+        {
+          id: "fonte-songbook",
+          title: "Songbook de teste",
+          type: "songbook",
+        },
+        {
+          id: "fonte-gravacao",
+          title: "Gravacao de teste",
+          type: "gravacao",
+        },
+      ],
+    }),
+  );
+
+  assert.equal(dossier.evidence[0].sources.length, 2);
+  assert.equal(dossier.evidence[1].sources[0].locators[1].type, "item_acervo");
+});
+
+test("rejects invalid structured evidence locators", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          evidence: [
+            {
+              assessedAt: "2026-08-07",
+              assessedBy: "pesquisador",
+              claim: "A fonte tem localizacao imprecisa.",
+              criterion: "circulacao",
+              direction: "sustenta",
+              id: "evidencia-localizador",
+              justification: "Fixture invalida.",
+              sources: [
+                {
+                  sourceId: "fonte-songbook",
+                  locators: [
+                    { type: "capitulo", value: "cap. 1" },
+                    { type: "pagina", value: "" },
+                  ],
+                },
+              ],
+              strength: "moderada",
+            },
+          ],
+          sources: [
+            {
+              id: "fonte-songbook",
+              title: "Songbook de teste",
+              type: "songbook",
+            },
+          ],
+        }),
+      ),
+    (error) => {
+      assert.ok(error instanceof EditorialDossierValidationError);
+      assert.match(
+        error.message,
+        /evidence\[0\]\.sources\[0\]\.locators\[0\]\.type possui valor invalido/,
+      );
+      assert.match(
+        error.message,
+        /evidence\[0\]\.sources\[0\]\.locators\[1\]\.value deve ser texto nao vazio/,
+      );
+      return true;
+    },
+  );
+});
+
 test("collects validation issues for invalid nested entities", () => {
   assert.throws(
     () =>

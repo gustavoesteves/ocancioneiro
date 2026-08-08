@@ -712,8 +712,8 @@ localizador precisa permitir a conferência do item.
 
 ### Tarefas de desenvolvimento
 
-- [ ] validar referências muitos-para-muitos;
-- [ ] permitir localizadores por página, faixa, compasso e item de acervo;
+- [x] validar referências muitos-para-muitos;
+- [x] permitir localizadores por página, faixa, compasso e item de acervo;
 - [ ] detectar fontes duplicadas por identificador persistente;
 - [ ] emitir relatório de evidência sem fonte;
 - [ ] impedir força sem justificativa;

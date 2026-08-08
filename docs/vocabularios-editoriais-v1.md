@@ -145,6 +145,18 @@ A força é sempre contextual e exige justificativa.
 - `programa_festival_ou_concurso`;
 - `depoimento_qualificado`.
 
+### Tipo de localizador de evidência
+
+- `pagina`: página, fólio ou intervalo paginado.
+- `faixa`: faixa de gravação, lado de disco ou número de matriz quando
+  aplicável.
+- `compasso`: compasso, intervalo de compassos ou ponto musical localizado.
+- `item_acervo`: código, chamada, tombo ou identificador persistente de acervo.
+- `url`: endereço consultável quando a URL identifica o item exato.
+
+Contraexemplo: uma URL genérica do acervo ou o nome de um livro não bastam como
+localizador; devem aparecer como fonte, não como localização da evidência.
+
 ## Fontes
 
 ### Tipo de fonte
