@@ -3,6 +3,7 @@
 **Status:** proposta para Sprint 0
 **Documento normativo:** [Especificação editorial v1](especificacao-editorial-v1.md)
 **Decisões Sprint 1:** [Decisões arquiteturais para o Sprint 1](decisoes-arquiteturais-sprint-1.md)
+**Identificadores:** [Política de identificadores e aliases v1](politica-identificadores-aliases-v1.md)
 
 Este documento mapeia o modelo atual para o modelo-alvo de dossiês editoriais.
 Ele é preliminar: serve para guiar migração, importador e projeção pública sem

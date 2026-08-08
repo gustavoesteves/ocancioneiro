@@ -3,6 +3,7 @@
 **Status:** registro de preparação para Sprint 1
 **ADR base:** [ADR 0001 — Persistencia editorial inicial](adr/0001-persistencia-editorial.md)
 **Plano:** [Plano de desenvolvimento — piloto editorial de Choro](sprints/piloto-choro.md)
+**Identificadores:** [Política de identificadores e aliases v1](politica-identificadores-aliases-v1.md)
 
 Este documento registra as decisões arquiteturais que precisam estar explícitas
 antes de alterar schemas, migrações, importador ou projeção pública no Sprint 1.
@@ -64,14 +65,15 @@ reverter, deve virar ADR própria.
 
 ### A3 — Política de identificadores e aliases públicos
 
-- estado: pendente;
+- estado: registrada para o piloto;
 - escopo: `work.id`, `edition.id`, `asset.id`, `publicCatalogId` e aliases de
   URLs legadas;
 - critérios:
   - IDs internos são estáveis e não dependem de caminho;
   - aliases públicos preservam compatibilidade quando título ou arquivo mudam;
   - IDs removidos não são reutilizados;
-- saída esperada: política normativa antes de ampliar o acervo.
+- saída esperada: política normativa antes de ampliar o acervo;
+- referência: [Política de identificadores e aliases v1](politica-identificadores-aliases-v1.md).
 
 ### A4 — Relação entre importador local e dossiê
 

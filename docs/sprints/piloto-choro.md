@@ -6,6 +6,7 @@
 **Vocabulários iniciais:** [Vocabulários editoriais v1](../vocabularios-editoriais-v1.md)
 **Decisões Sprint 1:** [Decisões arquiteturais para o Sprint 1](../decisoes-arquiteturais-sprint-1.md)
 **Mapeamento legado:** [Mapeamento preliminar dos campos atuais](../mapeamento-campos-legados-v1.md)
+**Identificadores:** [Política de identificadores e aliases v1](../politica-identificadores-aliases-v1.md)
 **Horizonte:** Sprint 0, Sprint 1 fatiado em 1A–1G, e Sprints 2–7
 **Resultado esperado:** provar o método editorial e a arquitetura com uma
 amostra controlada antes de ampliar o acervo
@@ -191,7 +192,7 @@ A bancada deve selecionar casos que representem:
 - [x] definir formato do glossário e dos vocabulários versionados;
 - [x] registrar decisões arquiteturais necessárias ao Sprint 1;
 - [x] documentar mapeamento preliminar dos campos atuais para o modelo-alvo;
-- [ ] definir política para identificadores estáveis e aliases.
+- [x] definir política para identificadores estáveis e aliases.
 
 ### Tarefas editoriais
 
