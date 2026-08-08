@@ -11,6 +11,7 @@
 **Campos abertos:** [Campos ainda abertos para o Sprint 1B](../campos-abertos-sprint-1b.md)
 **Ficha de candidatura:** [Ficha de candidatura do piloto de Choro v1](../ficha-candidatura-choro-v1.md)
 **Amostra-semente:** [Amostra-semente de candidatos do piloto de Choro v1](../amostra-candidatos-choro-v1.md)
+**Protocolo de revisão:** [Protocolo de revisão da amostra de Choro v1](../protocolo-revisao-amostra-choro-v1.md)
 **Horizonte:** Sprint 0, Sprint 1 fatiado em 1A–1G, e Sprints 2–7
 **Resultado esperado:** provar o método editorial e a arquitetura com uma
 amostra controlada antes de ampliar o acervo
@@ -643,7 +644,7 @@ A amostra, como conjunto, deve cobrir:
 - [x] validar que nenhuma seleção depende de disponibilidade imediata do
   MusicXML;
 - [ ] revisar a amostra com pelo menos uma pessoa conhecedora da prática do
-  Choro, quando possível.
+  Choro, quando possível, usando o protocolo de revisão.
 
 ### Critérios de aceite
 

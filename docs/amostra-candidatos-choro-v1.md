@@ -3,6 +3,7 @@
 **Status:** proposta para revisão no Sprint 2
 **Ficha:** [Ficha de candidatura do piloto de Choro v1](ficha-candidatura-choro-v1.md)
 **Política de IDs:** [Política de identificadores e aliases v1](politica-identificadores-aliases-v1.md)
+**Protocolo de revisão:** [Protocolo de revisão da amostra de Choro v1](protocolo-revisao-amostra-choro-v1.md)
 
 Esta lista inicia a amostra controlada do piloto de Choro. Ela serve para
 testar o modelo editorial com casos variados; não é lista definitiva do cânone.
