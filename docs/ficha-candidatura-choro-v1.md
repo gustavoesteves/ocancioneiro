@@ -2,6 +2,7 @@
 
 **Status:** proposta para Sprint 2
 **Sprint:** [Piloto Choro](sprints/piloto-choro.md)
+**Amostra-semente:** [Amostra-semente de candidatos do piloto de Choro v1](amostra-candidatos-choro-v1.md)
 **Vocabulários:** [Vocabulários editoriais v1](vocabularios-editoriais-v1.md)
 **Política de IDs:** [Política de identificadores e aliases v1](politica-identificadores-aliases-v1.md)
 
