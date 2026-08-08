@@ -19,7 +19,8 @@
         "status": "inconclusiva",
         "justification": "Fixture para validar decisao vigente inconclusiva.",
         "decidedBy": "bancada-editorial",
-        "decidedAt": "2026-08-07"
+        "decidedAt": "2026-08-07",
+        "recordHash": "604f4c6666364eafe03c3b8169119ce58267956a77f5cfafc2c158e18cf27da0"
       }
     ]
   },

@@ -176,6 +176,11 @@ saida para revisar o conteudo editorial sem abrir o codigo da aplicacao; quando
 a revisao gerar mudancas, edite o JSON correspondente em `data/dossiers/` e
 rode novamente `npm run dossiers:check`.
 
+Decisoes editoriais podem ser seladas com `recordHash`, um SHA-256 calculado a
+partir do proprio registro da decisao. Quando o campo existe, o validador acusa
+qualquer alteracao silenciosa no conteudo da decisao. Mudancas de entendimento
+devem entrar como nova decisao, preservando o historico.
+
 ## O Que O Script Detecta
 
 O script tenta extrair automaticamente:

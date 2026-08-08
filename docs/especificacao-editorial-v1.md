@@ -184,6 +184,12 @@ Valores iniciais controlados:
 O estado atual é derivado da decisão editorial vigente. Decisões anteriores não
 são apagadas.
 
+Decisões publicadas podem receber um `recordHash` SHA-256 calculado sobre o
+registro da decisão sem o próprio campo `recordHash`. Quando presente, esse selo
+torna alterações silenciosas detectáveis pelo validador: qualquer mudança em
+status, justificativa, responsável ou data exige novo hash e deve ser tratada
+como nova decisão editorial, não como edição retroativa invisível.
+
 ### 6.2 Afirmação canônica contextualizada
 
 Canonicidade não é uma propriedade escalar única. A mesma obra pode ocupar

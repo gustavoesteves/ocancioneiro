@@ -19,7 +19,8 @@
         "status": "aceita",
         "justification": "Fixture para validar decisao vigente aceita.",
         "decidedBy": "bancada-editorial",
-        "decidedAt": "2026-08-07"
+        "decidedAt": "2026-08-07",
+        "recordHash": "c409061dfc7e2a1a2b6e1d2bf5eed446e22e3cf01adf8ffcf9ff8f396cbd4549"
       }
     ],
     "canonicalClaims": [

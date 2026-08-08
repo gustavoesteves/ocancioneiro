@@ -719,7 +719,7 @@ localizador precisa permitir a conferência do item.
 - [x] impedir força sem justificativa;
 - [x] suportar direção contraditória;
 - [x] gerar matriz de cobertura com método de contagem explícito;
-- [ ] exportar dossiê legível para revisão humana.
+- [x] exportar dossiê legível para revisão humana.
 
 ### Testes obrigatórios
 
@@ -781,7 +781,7 @@ nova revisão, sem apagar a decisão anterior
 
 ### Tarefas de desenvolvimento
 
-- [ ] implementar registro imutável de decisão;
+- [x] implementar registro imutável de decisão;
 - [ ] derivar estado atual da decisão vigente;
 - [ ] permitir múltiplas afirmações canônicas por obra;
 - [ ] exigir contexto, justificativa e evidências relacionadas;

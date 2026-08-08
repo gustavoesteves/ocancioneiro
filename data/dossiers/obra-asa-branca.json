@@ -19,6 +19,7 @@
         "decidedBy": "migracao-catalogo-legado",
         "id": "decisao-migracao-legado",
         "justification": "Entrada ja publicada no catalogo legado; aceita tecnicamente para preservar equivalencia durante a migracao.",
+        "recordHash": "a304e4566d4e39df0ca8ab80a5ed8f108106e629a813e778d06596ffcd8d088c",
         "status": "aceita"
       }
     ],

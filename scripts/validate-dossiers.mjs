@@ -280,7 +280,8 @@ export function formatDossierForReview({ dossier, filePath }, review = []) {
     dossier.curation.decisions,
     (decision) =>
       `${decision.id}: ${decision.status}, por ${decision.decidedBy} em ` +
-      `${markdownText(decision.decidedAt)}. ${decision.justification}`,
+      `${markdownText(decision.decidedAt)}. ${decision.justification} ` +
+      `Hash: ${markdownText(decision.recordHash)}`,
   );
 
   const sources = markdownList(
