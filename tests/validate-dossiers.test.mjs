@@ -222,6 +222,57 @@ test("loads draft evidence without source for review reporting", async () => {
   assert.ok(report[0].pending.includes("evidencia sem fonte: evidencia-sem-fonte"));
 });
 
+test("reports contradictory evidence directions by criterion", () => {
+  const report = dossierReviewReport([
+    {
+      dossier: {
+        ...dossier("obra-evidencia-contraditoria", "Obra com conflito"),
+        evidence: [
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A obra aparece em repertorio de roda.",
+            criterion: "circulacao",
+            direction: "sustenta",
+            id: "evidencia-circulacao-sustenta",
+            justification: "Fonte de repertorio local registra execucao.",
+            sources: [{ sourceId: "fonte-roda", locator: "p. 4" }],
+            strength: "moderada",
+            strengthJustification: "Fonte direta, mas ainda isolada.",
+          },
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A obra nao aparece no recorte de songbooks consultados.",
+            criterion: "circulacao",
+            direction: "contradiz",
+            id: "evidencia-circulacao-contradiz",
+            justification: "Ausencia recorrente em fontes comparaveis limita a afirmacao.",
+            sources: [{ sourceId: "fonte-songbook", locator: "indice" }],
+            strength: "fraca",
+            strengthJustification: "Ausencia em indice e indiciaria, nao conclusiva.",
+          },
+        ],
+        sources: [
+          {
+            id: "fonte-roda",
+            title: "Relatorio de roda",
+            type: "entrevista_ou_depoimento",
+          },
+          {
+            id: "fonte-songbook",
+            title: "Songbook consultado",
+            type: "songbook",
+          },
+        ],
+      },
+      filePath: "data/dossiers/obra-evidencia-contraditoria.json",
+    },
+  ]);
+
+  assert.ok(report[0].pending.includes("evidencias contraditorias: circulacao"));
+});
+
 test("treats a missing dossier directory as empty", async () => {
   const missingDirectory = path.join(
     os.tmpdir(),

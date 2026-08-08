@@ -134,6 +134,20 @@ export function dossierReviewReport(dossiers) {
       }
     });
 
+    const directionsByCriterion = new Map();
+    (dossier.evidence ?? []).forEach((evidence) => {
+      if (!directionsByCriterion.has(evidence.criterion)) {
+        directionsByCriterion.set(evidence.criterion, new Set());
+      }
+      directionsByCriterion.get(evidence.criterion).add(evidence.direction);
+    });
+
+    directionsByCriterion.forEach((directions, criterion) => {
+      if (directions.has("sustenta") && directions.has("contradiz")) {
+        pending.push(`evidencias contraditorias: ${criterion}`);
+      }
+    });
+
     return pending.length > 0
       ? [
           {

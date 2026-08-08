@@ -128,6 +128,10 @@ hierarquia.
 - `contradiz`: enfraquece ou limita a afirmação editorial.
 - `contextualiza`: não decide, mas qualifica o escopo da afirmação.
 
+Evidências `sustenta` e `contradiz` podem coexistir no mesmo dossiê e no mesmo
+critério. Isso não é erro de validação; o relatório de revisão deve apontar a
+contradição para decisão humana.
+
 ### Força da evidência
 
 - `forte`;
