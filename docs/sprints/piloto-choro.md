@@ -7,6 +7,7 @@
 **Decisões Sprint 1:** [Decisões arquiteturais para o Sprint 1](../decisoes-arquiteturais-sprint-1.md)
 **Mapeamento legado:** [Mapeamento preliminar dos campos atuais](../mapeamento-campos-legados-v1.md)
 **Identificadores:** [Política de identificadores e aliases v1](../politica-identificadores-aliases-v1.md)
+**Aprovações editoriais:** [Aprovações editoriais da Sprint 0](../aprovacoes-editoriais-sprint-0.md)
 **Horizonte:** Sprint 0, Sprint 1 fatiado em 1A–1G, e Sprints 2–7
 **Resultado esperado:** provar o método editorial e a arquitetura com uma
 amostra controlada antes de ampliar o acervo
@@ -196,12 +197,12 @@ A bancada deve selecionar casos que representem:
 
 ### Tarefas editoriais
 
-- [ ] aprovar definição do Cancioneiro;
-- [ ] aprovar o que entra e não entra no lead sheet;
-- [ ] decidir nomes finais dos níveis de centralidade;
-- [ ] aprovar critérios e tipos de testemunho de repertório;
-- [ ] decidir requisitos mínimos de revisão;
-- [ ] aprovar política para autoria contestada, letras e títulos alternativos.
+- [x] aprovar definição do Cancioneiro;
+- [x] aprovar o que entra e não entra no lead sheet;
+- [x] decidir nomes finais dos níveis de centralidade;
+- [x] aprovar critérios e tipos de testemunho de repertório;
+- [x] decidir requisitos mínimos de revisão;
+- [x] aprovar política para autoria contestada, letras e títulos alternativos.
 
 ### Critérios de aceite
 
