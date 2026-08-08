@@ -13,6 +13,7 @@ import {
 export function CancioneiroApp() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("Todos");
   const [genre, setGenre] = useState("Todos");
@@ -83,10 +84,17 @@ export function CancioneiroApp() {
                 O Cancioneiro
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-[#5f5a50] md:text-lg">
-                Um acervo vivo de melodias e cifras, no espirito dos
-                songbooks e lead sheets: pratico como um Real Book, dedicado ao
-                repertorio brasileiro.
+                Um songbook vivo de melodias e cifras do repertorio brasileiro:
+                feito para estudar, tocar, revisar e preservar a identidade das
+                obras em formato lead sheet.
               </p>
+              <button
+                className="mt-4 inline-flex h-10 items-center rounded-md border border-[#b99f8d] bg-white px-4 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5] focus:outline-none focus:ring-2 focus:ring-[#e6d4c8]"
+                onClick={() => setIsAboutOpen(true)}
+                type="button"
+              >
+                Sobre o projeto
+              </button>
             </div>
             <div className="grid grid-cols-3 gap-3 rounded-md border border-[#d8d0c1] bg-[#f3efe5] p-3 text-center">
               <div>
@@ -273,6 +281,64 @@ export function CancioneiroApp() {
           )}
         </article>
       </section>
+
+      {isAboutOpen ? (
+        <div
+          aria-labelledby="about-title"
+          aria-modal="true"
+          className="fixed inset-0 z-50 grid place-items-center bg-[#181714]/45 px-4 py-6"
+          role="dialog"
+        >
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8a4c2f]">
+                  Linha editorial
+                </p>
+                <h2
+                  className="mt-2 text-2xl font-semibold tracking-normal text-[#181714]"
+                  id="about-title"
+                >
+                  O Cancioneiro
+                </h2>
+              </div>
+              <button
+                aria-label="Fechar sobre o projeto"
+                className="h-9 rounded-md border border-[#b99f8d] bg-white px-3 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5] focus:outline-none focus:ring-2 focus:ring-[#e6d4c8]"
+                onClick={() => setIsAboutOpen(false)}
+                type="button"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4 text-sm leading-6 text-[#4d473d]">
+              <p>
+                O Cancioneiro e uma biblioteca editorial de lead sheets:
+                melodias, cifras e forma essencial para estudo, acompanhamento,
+                improvisacao e revisao musical.
+              </p>
+              <p>
+                A proposta nao e publicar arranjos completos nem reproduzir
+                performances especificas. Cada partitura deve preservar a
+                identidade executavel da obra e deixar espaco para quem toca
+                construir sua propria realizacao.
+              </p>
+              <p>
+                O Cancioneiro nao documenta hits. Documenta repertorio. Fama,
+                sucesso comercial ou memoria afetiva ajudam a formular
+                perguntas, mas nao bastam como criterio editorial.
+              </p>
+              <p>
+                A entrada de uma obra considera permanencia, circulacao entre
+                musicos, importancia para uma linguagem brasileira, influencia,
+                regravacoes relevantes, valor instrumental, valor historico e
+                representatividade dentro de uma tradicao.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

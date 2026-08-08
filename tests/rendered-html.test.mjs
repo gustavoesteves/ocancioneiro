@@ -31,6 +31,8 @@ test("server-renders the current Cancioneiro shell", async () => {
   assert.match(html, /<html lang="pt-BR">/i);
   assert.match(html, /<title>O Cancioneiro<\/title>/i);
   assert.match(html, /Biblioteca viva/);
+  assert.match(html, /Um songbook vivo de melodias e cifras/);
+  assert.match(html, /Sobre o projeto/);
   assert.match(html, /Carregando catalogo/);
   assert.match(html, /Nenhuma peca encontrada no catalogo/);
   assert.doesNotMatch(html, /Starter Project|Your site is taking shape/);
