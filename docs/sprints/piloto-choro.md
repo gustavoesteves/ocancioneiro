@@ -718,7 +718,7 @@ localizador precisa permitir a conferência do item.
 - [x] emitir relatório de evidência sem fonte;
 - [x] impedir força sem justificativa;
 - [x] suportar direção contraditória;
-- [ ] gerar matriz de cobertura com método de contagem explícito;
+- [x] gerar matriz de cobertura com método de contagem explícito;
 - [ ] exportar dossiê legível para revisão humana.
 
 ### Testes obrigatórios

@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   currentCurationStatus,
+  editorialVocabulary,
   effectivePermission,
   parseEditorialDossier,
 } from "../lib/editorial-dossier.mjs";
@@ -160,6 +161,53 @@ export function dossierReviewReport(dossiers) {
   });
 }
 
+export function evidenceCoverageMatrix(dossiers) {
+  const rowsByCriterion = new Map(
+    editorialVocabulary.evidenceCriteria.map((criterion) => [
+      criterion,
+      {
+        criterion,
+        contextualiza: 0,
+        contradiz: 0,
+        evidenceCount: 0,
+        sustenta: 0,
+        workCount: 0,
+        workIds: [],
+      },
+    ]),
+  );
+
+  for (const { dossier } of dossiers) {
+    const criteriaForWork = new Set();
+
+    for (const evidence of dossier.evidence ?? []) {
+      const row = rowsByCriterion.get(evidence.criterion);
+      if (!row) continue;
+
+      row.evidenceCount += 1;
+      row[evidence.direction] += 1;
+      criteriaForWork.add(evidence.criterion);
+    }
+
+    for (const criterion of criteriaForWork) {
+      const row = rowsByCriterion.get(criterion);
+      row.workCount += 1;
+      row.workIds.push(dossier.work.id);
+    }
+  }
+
+  return {
+    method: {
+      counting: "Cada evidencia conta uma vez no criterio declarado.",
+      percentages: false,
+      workCount:
+        "workCount conta obras distintas com pelo menos uma evidencia no criterio.",
+      zeroRows: "Criterios sem evidencia permanecem na matriz para revelar lacunas.",
+    },
+    rows: Array.from(rowsByCriterion.values()),
+  };
+}
+
 function filePathFromPublicAssetPath(projectRoot, publicPath) {
   return path.join(projectRoot, "public", ...publicPath.split("/").filter(Boolean));
 }
@@ -274,6 +322,7 @@ export async function main({
   await validateAssetChecksums(dossiers, { projectRoot });
   await validateMusicXmlAssets(dossiers, { projectRoot });
   const report = dossierReviewReport(dossiers);
+  const coverage = evidenceCoverageMatrix(dossiers);
 
   if (report.length > 0) {
     console.log("\nPendencias dos dossies editoriais:");
@@ -281,6 +330,16 @@ export async function main({
       console.log(`- ${item.label}: ${item.pending.join(", ")}`);
     });
   }
+
+  console.log("\nCobertura documental por criterio:");
+  coverage.rows.forEach((row) => {
+    console.log(
+      `- ${row.criterion}: ${row.evidenceCount} evidencia(s), ${row.workCount} obra(s)`,
+    );
+  });
+  console.log(
+    `Metodo: ${coverage.method.counting} Nao calcula percentuais nem score.`,
+  );
 
   console.log(`Dossies editoriais validados: ${dossiers.length}`);
 }

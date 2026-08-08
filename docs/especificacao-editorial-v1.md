@@ -575,6 +575,12 @@ Como obras podem pertencer a múltiplas categorias, toda métrica deve informar
 se usa contagem múltipla, contagem fracionada ou categoria principal. Percentuais
 sem método explícito não são publicáveis.
 
+A matriz documental inicial usa contagem simples de evidências: cada evidência
+conta uma vez no critério declarado, agrupada por direção (`sustenta`,
+`contradiz`, `contextualiza`). A contagem de obras indica quantas obras possuem
+ao menos uma evidência naquele critério. Linhas zeradas permanecem visíveis para
+mostrar lacunas. A matriz não calcula percentuais nem score.
+
 ## 16. Governança editorial
 
 Papéis mínimos, acumuláveis por uma mesma pessoa mas registrados separadamente:

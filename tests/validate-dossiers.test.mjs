@@ -7,6 +7,7 @@ import test from "node:test";
 import { currentCurationStatus } from "../lib/editorial-dossier.mjs";
 import {
   dossierReviewReport,
+  evidenceCoverageMatrix,
   listDossierFiles,
   loadEditorialDossiers,
   validateAssetChecksums,
@@ -271,6 +272,97 @@ test("reports contradictory evidence directions by criterion", () => {
   ]);
 
   assert.ok(report[0].pending.includes("evidencias contraditorias: circulacao"));
+});
+
+test("generates an explicit evidence coverage matrix without percentages", () => {
+  const matrix = evidenceCoverageMatrix([
+    {
+      dossier: {
+        ...dossier("obra-a", "Obra A"),
+        evidence: [
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A obra permanece em uso.",
+            criterion: "permanencia",
+            direction: "sustenta",
+            id: "evidencia-permanencia-a",
+            justification: "Fonte registra uso continuado.",
+            sources: [{ sourceId: "fonte-a", locator: "p. 1" }],
+            strength: "moderada",
+            strengthJustification: "Fonte direta, mas unica.",
+          },
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A circulacao e limitada no recorte consultado.",
+            criterion: "circulacao",
+            direction: "contradiz",
+            id: "evidencia-circulacao-a",
+            justification: "Fonte comparativa nao registra a obra.",
+            sources: [{ sourceId: "fonte-a", locator: "indice" }],
+            strength: "fraca",
+            strengthJustification: "Ausencia em indice nao e prova conclusiva.",
+          },
+        ],
+        sources: [
+          {
+            id: "fonte-a",
+            title: "Fonte A",
+            type: "songbook",
+          },
+        ],
+      },
+      filePath: "a.json",
+    },
+    {
+      dossier: {
+        ...dossier("obra-b", "Obra B"),
+        evidence: [
+          {
+            assessedAt: "2026-08-07",
+            assessedBy: "pesquisador",
+            claim: "A obra aparece em outra fonte.",
+            criterion: "permanencia",
+            direction: "contextualiza",
+            id: "evidencia-permanencia-b",
+            justification: "Fonte qualifica o periodo de uso.",
+            sources: [{ sourceId: "fonte-b", locator: "p. 3" }],
+            strength: "fraca",
+            strengthJustification: "Contextualiza, mas nao sustenta sozinha.",
+          },
+        ],
+        sources: [
+          {
+            id: "fonte-b",
+            title: "Fonte B",
+            type: "songbook",
+          },
+        ],
+      },
+      filePath: "b.json",
+    },
+  ]);
+
+  const permanencia = matrix.rows.find((row) => row.criterion === "permanencia");
+  const circulacao = matrix.rows.find((row) => row.criterion === "circulacao");
+  const influencia = matrix.rows.find((row) => row.criterion === "influencia");
+
+  assert.equal(matrix.method.percentages, false);
+  assert.match(matrix.method.counting, /Cada evidencia conta uma vez/);
+  assert.deepEqual(permanencia, {
+    criterion: "permanencia",
+    contextualiza: 1,
+    contradiz: 0,
+    evidenceCount: 2,
+    sustenta: 1,
+    workCount: 2,
+    workIds: ["obra-a", "obra-b"],
+  });
+  assert.equal(circulacao.contradiz, 1);
+  assert.equal(circulacao.workCount, 1);
+  assert.equal(influencia.evidenceCount, 0);
+  assert.equal(influencia.workCount, 0);
 });
 
 test("treats a missing dossier directory as empty", async () => {
