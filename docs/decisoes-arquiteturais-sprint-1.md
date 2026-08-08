@@ -42,26 +42,25 @@ reverter, deve virar ADR própria.
 
 ### A1 — Extensão e formato físico dos dossiês
 
-- estado: pendente;
-- opção preferida atual: JSON versionado, por já estar implementado e coberto
-  por testes;
+- estado: aprovado para o piloto;
+- decisão: JSON versionado;
 - alternativas: YAML ou JSON com comentários não são adotados sem necessidade
   comprovada;
 - critério de aceite: diffs continuam revisáveis e validação automática aponta
   erros localizados;
-- saída esperada: confirmar `.json` como formato do piloto ou abrir ADR de
-  mudança antes de criar novos schemas.
+- saída esperada: usar `.json` no Sprint 1 e abrir ADR apenas se o piloto
+  demonstrar necessidade de mudança.
 
 ### A2 — Layout estável de pastas
 
-- estado: pendente;
-- opção preferida atual: `data/dossiers/<workId>.json`;
+- estado: aprovado para o piloto;
+- decisão: `data/dossiers/<work.id>.json`;
 - critérios:
   - o caminho não define identidade;
   - renomear arquivo não altera `work.id`;
   - subpastas só entram se volume ou revisão humana exigirem;
-- saída esperada: regra documentada para criação, renomeação e localização dos
-  dossiês.
+- saída esperada: manter o layout no Sprint 1 e tratar subpastas como decisão
+  futura.
 
 ### A3 — Política de identificadores e aliases públicos
 

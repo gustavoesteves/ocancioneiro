@@ -1,13 +1,15 @@
 # ADR 0001 — Persistencia editorial inicial
 
-**Status:** proposta
+**Status:** aprovado para o piloto
 **Data:** 2026-08-07
+**Aprovado em:** 2026-08-08
 **Contexto:** piloto editorial de Choro
 
 ## Decisao
 
 O Cancioneiro adotara, no piloto, **um dossie por obra** como unidade primaria
-de persistencia editorial.
+de persistencia editorial. O formato inicial sera JSON versionado em
+`data/dossiers/<work.id>.json`.
 
 Cada dossie podera conter, em um unico documento estruturado:
 
@@ -84,6 +86,8 @@ Custos:
 ## Consequencias
 
 - O Sprint 1 deve comecar por schemas e fixtures de dossie, nao por banco.
+- A extensao inicial dos dossies sera `.json`.
+- O layout inicial sera `data/dossiers/<work.id>.json`.
 - IDs estaveis nao dependem do caminho do arquivo.
 - Aliases publicos podem preservar URLs ou slugs legados.
 - Fontes podem ser registradas localmente no dossie no piloto.
@@ -107,8 +111,8 @@ piloto:
 
 ## Decisoes adiadas
 
-- extensao final dos arquivos (`.json`, `.yaml` ou outro formato);
-- layout exato da pasta de dossies;
+- formato alternativo aos arquivos JSON, se o piloto demonstrar necessidade;
+- subpastas ou outro particionamento de dossies, se o volume justificar;
 - formato de indices gerados;
 - politica final de deduplicacao de fontes;
 - persistencia privada para assets ainda nao publicaveis.

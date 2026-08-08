@@ -232,6 +232,8 @@ A bancada deve selecionar casos que representem:
 
 ## Sprint 1A — Decisão arquitetural de persistência
 
+**Status:** concluído
+
 ### Objetivo
 
 Escolher o formato inicial de persistência editorial antes de escrever schemas
@@ -252,11 +254,11 @@ banco de dados apenas por antecipação.
 
 ### Entregáveis
 
-- ADR aprovada em `docs/adr/`;
-- decisão sobre extensão e formato dos arquivos editoriais;
-- política para IDs estáveis e aliases públicos;
-- regra de onde ficam artefatos gerados e fontes de verdade;
-- riscos aceitos e critérios que fariam a decisão ser revista.
+- [x] ADR aprovada em `docs/adr/`;
+- [x] decisão sobre extensão e formato dos arquivos editoriais;
+- [x] política para IDs estáveis e aliases públicos;
+- [x] regra de onde ficam artefatos gerados e fontes de verdade;
+- [x] riscos aceitos e critérios que fariam a decisão ser revista.
 
 ### Critérios de aceite
 
