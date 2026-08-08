@@ -167,6 +167,7 @@ test("reports evidence without source as an editorial review gap", () => {
             id: "evidencia-sem-fonte",
             justification: "Rascunho aguardando fonte estruturada.",
             strength: "fraca",
+            strengthJustification: "Sem fonte relacionada, portanto so pode ser fraca.",
           },
         ],
         sources: [
@@ -205,6 +206,7 @@ test("loads draft evidence without source for review reporting", async () => {
             id: "evidencia-sem-fonte",
             justification: "Rascunho aguardando fonte estruturada.",
             strength: "fraca",
+            strengthJustification: "Sem fonte relacionada, portanto so pode ser fraca.",
           },
         ],
       },

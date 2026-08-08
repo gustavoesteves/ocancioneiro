@@ -284,12 +284,13 @@ Cada evidência deve conter:
 - critério editorial relacionado;
 - direção: `sustenta`, `contradiz` ou `contextualiza`;
 - força: `forte`, `moderada` ou `fraca`;
+- justificativa específica da força atribuída;
 - fontes e localizadores;
 - responsável pela avaliação;
 - data e observações.
 
 Força não é atributo eterno da fonte. É uma avaliação contextual e precisa de
-justificativa.
+justificativa própria, separada da justificativa geral da evidência.
 
 ### 7.4 Registro de fonte
 

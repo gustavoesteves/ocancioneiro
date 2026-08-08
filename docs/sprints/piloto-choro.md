@@ -716,7 +716,7 @@ localizador precisa permitir a conferência do item.
 - [x] permitir localizadores por página, faixa, compasso e item de acervo;
 - [x] detectar fontes duplicadas por identificador persistente;
 - [x] emitir relatório de evidência sem fonte;
-- [ ] impedir força sem justificativa;
+- [x] impedir força sem justificativa;
 - [ ] suportar direção contraditória;
 - [ ] gerar matriz de cobertura com método de contagem explícito;
 - [ ] exportar dossiê legível para revisão humana.

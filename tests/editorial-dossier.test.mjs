@@ -136,6 +136,7 @@ test("requires declared evidence sources to reference declared sources", () => {
         justification: "Testemunho usado como fixture.",
         sources: [{ sourceId: "fonte-ausente", locator: "p. 12" }],
         strength: "moderada",
+        strengthJustification: "Fonte secundaria, mas util para testar referencia.",
       },
     ],
     sources: [
@@ -166,6 +167,7 @@ test("accepts draft evidence without sources for review reporting", () => {
           id: "evidencia-sem-fonte",
           justification: "Rascunho aguardando fonte estruturada.",
           strength: "fraca",
+          strengthJustification: "Sem fonte relacionada, portanto so pode ser fraca.",
         },
       ],
     }),
@@ -198,6 +200,7 @@ test("accepts many-to-many evidence references with structured locators", () => 
             },
           ],
           strength: "moderada",
+          strengthJustification: "Duas fontes independentes, mas ainda sem revisao externa.",
         },
         {
           assessedAt: "2026-08-07",
@@ -217,6 +220,7 @@ test("accepts many-to-many evidence references with structured locators", () => 
             },
           ],
           strength: "fraca",
+          strengthJustification: "Uma unica fonte contextual nao decide atribuicao.",
         },
       ],
       sources: [
@@ -262,6 +266,7 @@ test("rejects invalid structured evidence locators", () => {
                 },
               ],
               strength: "moderada",
+              strengthJustification: "Localizadores invalidos devem impedir uso da forca.",
             },
           ],
           sources: [
@@ -335,6 +340,29 @@ test("rejects duplicate source persistent identifiers", () => {
         }),
       ),
     /sources\[1\]\.persistentId duplicado: discografia-brasileira:38213/,
+  );
+});
+
+test("rejects evidence strength without specific justification", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          evidence: [
+            {
+              assessedAt: "2026-08-07",
+              assessedBy: "pesquisador",
+              claim: "A obra aparece em repertorio de roda.",
+              criterion: "circulacao",
+              direction: "sustenta",
+              id: "evidencia-sem-justificativa-de-forca",
+              justification: "A afirmacao geral esta descrita.",
+              strength: "forte",
+            },
+          ],
+        }),
+      ),
+    /evidence\[0\]\.strengthJustification deve ser texto nao vazio/,
   );
 });
 

@@ -134,7 +134,10 @@ hierarquia.
 - `moderada`;
 - `fraca`.
 
-A força é sempre contextual e exige justificativa.
+A força é sempre contextual e exige justificativa própria em
+`evidence[].strengthJustification`. A justificativa geral da evidência explica
+a afirmação; a justificativa de força explica por que ela foi classificada como
+`forte`, `moderada` ou `fraca`.
 
 Uma evidência pode ser registrada sem `sources[]` apenas como rascunho de
 pesquisa. Nesse caso, o validador carrega o dossiê, mas o relatório de revisão
