@@ -8,10 +8,12 @@ import { currentCurationStatus } from "../lib/editorial-dossier.mjs";
 import {
   dossierReviewReport,
   evidenceCoverageMatrix,
+  formatDossierForReview,
   listDossierFiles,
   loadEditorialDossiers,
   validateAssetChecksums,
   validateMusicXmlAssets,
+  writeDossierReviewFiles,
 } from "../scripts/validate-dossiers.mjs";
 
 const fixtureDossierDirectory = path.join(
@@ -363,6 +365,100 @@ test("generates an explicit evidence coverage matrix without percentages", () =>
   assert.equal(circulacao.workCount, 1);
   assert.equal(influencia.evidenceCount, 0);
   assert.equal(influencia.workCount, 0);
+});
+
+test("formats a readable dossier for human review", () => {
+  const formatted = formatDossierForReview(
+    {
+      dossier: {
+        ...dossier("obra-revisao", "Obra para revisao"),
+        curation: {
+          canonicalClaims: [
+            {
+              centrality: "nuclear",
+              context: "choro",
+              decisionId: "decisao-revisao",
+              justification: "Caso usado para revisar o formato.",
+              reach: "comunidade",
+            },
+          ],
+          currentDecisionId: "decisao-revisao",
+          decisions: [
+            {
+              decidedAt: "2026-08-08",
+              decidedBy: "bancada",
+              id: "decisao-revisao",
+              justification: "Entrada em revisao documental.",
+              status: "em_revisao",
+            },
+          ],
+          status: "em_revisao",
+        },
+        evidence: [
+          {
+            assessedAt: "2026-08-08",
+            assessedBy: "pesquisador",
+            claim: "A obra aparece em fonte conferivel.",
+            criterion: "circulacao",
+            direction: "sustenta",
+            id: "evidencia-revisao",
+            justification: "Fonte lista a obra no repertorio.",
+            sources: [
+              {
+                locators: [{ note: "indice alfabetico", type: "pagina", value: "12" }],
+                sourceId: "fonte-revisao",
+              },
+            ],
+            strength: "moderada",
+            strengthJustification: "Fonte direta, mas ainda isolada.",
+          },
+        ],
+        sources: [
+          {
+            id: "fonte-revisao",
+            persistentId: "acervo:123",
+            title: "Fonte de revisao",
+            type: "catalogo_ou_acervo",
+          },
+        ],
+      },
+      filePath: "data/dossiers/obra-revisao.json",
+    },
+    ["conferir segunda fonte independente"],
+  );
+
+  assert.match(formatted, /^# Obra para revisao/m);
+  assert.match(formatted, /## Pendencias Para Revisao/);
+  assert.match(formatted, /conferir segunda fonte independente/);
+  assert.match(formatted, /Fonte de revisao \(fonte-revisao\) \[pagina: 12/);
+  assert.match(formatted, /evidencia-revisao: circulacao \/ sustenta \/ moderada/);
+});
+
+test("writes review dossiers as markdown files", async () => {
+  const outputDirectory = await fs.mkdtemp(
+    path.join(os.tmpdir(), "o-cancioneiro-review-"),
+  );
+  const entry = {
+    dossier: dossier("obra-arquivo-revisao", "Obra Arquivo Revisao"),
+    filePath: "data/dossiers/obra-arquivo-revisao.json",
+  };
+
+  const written = await writeDossierReviewFiles([entry], {
+    outputDirectory,
+    reviewReport: [
+      {
+        filePath: entry.filePath,
+        label: "obra-arquivo-revisao (Obra Arquivo Revisao)",
+        pending: ["sem fonte independente"],
+      },
+    ],
+  });
+
+  assert.deepEqual(written, [path.join(outputDirectory, "obra-arquivo-revisao.md")]);
+  assert.match(
+    await fs.readFile(written[0], "utf8"),
+    /# Obra Arquivo Revisao[\s\S]*sem fonte independente/,
+  );
 });
 
 test("treats a missing dossier directory as empty", async () => {

@@ -208,6 +208,214 @@ export function evidenceCoverageMatrix(dossiers) {
   };
 }
 
+function markdownText(value) {
+  return String(value ?? "").trim().replaceAll("|", "\\|") || "Nao informado";
+}
+
+function markdownList(items, formatter) {
+  if (!Array.isArray(items) || items.length === 0) return "- Nenhum registro.";
+  return items.map((item) => `- ${formatter(item)}`).join("\n");
+}
+
+function markdownTable(headers, rows) {
+  const headerLine = `| ${headers.join(" | ")} |`;
+  const separatorLine = `| ${headers.map(() => "---").join(" | ")} |`;
+  const rowLines = rows.map(
+    (row) => `| ${row.map((cell) => markdownText(cell).replace(/\n/g, " ")).join(" | ")} |`,
+  );
+
+  return [headerLine, separatorLine, ...rowLines].join("\n");
+}
+
+function sourceLabelById(dossier) {
+  return new Map(
+    (dossier.sources ?? []).map((source) => [
+      source.id,
+      `${source.title} (${source.id})`,
+    ]),
+  );
+}
+
+function formatEvidenceSource(sourceUse, sourceLabels) {
+  const label = sourceLabels.get(sourceUse.sourceId) ?? sourceUse.sourceId;
+  const locators = [];
+
+  if (sourceUse.locator) locators.push(sourceUse.locator);
+  for (const locator of sourceUse.locators ?? []) {
+    const note = locator.note ? `, ${locator.note}` : "";
+    locators.push(`${locator.type}: ${locator.value}${note}`);
+  }
+
+  return locators.length > 0 ? `${label} [${locators.join("; ")}]` : label;
+}
+
+function formatPublicActions(actions = {}) {
+  const rows = editorialVocabulary.publicActions.map((action) => [
+    action,
+    actions[action] ?? "nao_informada",
+  ]);
+
+  return markdownTable(["Acao", "Permissao"], rows);
+}
+
+export function formatDossierForReview({ dossier, filePath }, review = []) {
+  const sourceLabels = sourceLabelById(dossier);
+  const currentStatus = currentCurationStatus(dossier.curation);
+  const sourceFilePath = path.isAbsolute(filePath)
+    ? path.relative(process.cwd(), filePath)
+    : filePath;
+  const creators = (dossier.work.creators ?? [])
+    .map((creator) => `${creator.name} (${creator.role})`)
+    .join(", ");
+
+  const canonicalClaims = markdownList(
+    dossier.curation.canonicalClaims,
+    (claim) =>
+      `${claim.context}: ${claim.centrality}, alcance ${claim.reach}. ` +
+      `Justificativa: ${markdownText(claim.justification)} ` +
+      `Decisao: ${markdownText(claim.decisionId)}`,
+  );
+
+  const decisions = markdownList(
+    dossier.curation.decisions,
+    (decision) =>
+      `${decision.id}: ${decision.status}, por ${decision.decidedBy} em ` +
+      `${markdownText(decision.decidedAt)}. ${decision.justification}`,
+  );
+
+  const sources = markdownList(
+    dossier.sources,
+    (source) =>
+      `${source.id}: ${source.title} (${source.type}). ` +
+      `Responsavel: ${markdownText(source.responsible)}. ` +
+      `Identificador: ${markdownText(source.persistentId)}. ` +
+      `Referencia: ${markdownText(source.reference)}. ` +
+      `URL: ${markdownText(source.url)}.`,
+  );
+
+  const evidence = markdownList(
+    dossier.evidence,
+    (item) => {
+      const evidenceSources = markdownList(item.sources, (sourceUse) =>
+        formatEvidenceSource(sourceUse, sourceLabels),
+      ).replaceAll("\n", " ");
+
+      return (
+        `${item.id}: ${item.criterion} / ${item.direction} / ${item.strength}. ` +
+        `Afirmacao: ${item.claim}. Justificativa: ${item.justification}. ` +
+        `Forca: ${item.strengthJustification}. ` +
+        `Avaliado por ${item.assessedBy} em ${markdownText(item.assessedAt)}. ` +
+        `Fontes: ${evidenceSources}`
+      );
+    },
+  );
+
+  const editions = markdownList(
+    dossier.editions,
+    (edition) =>
+      `${edition.id}: ${edition.title} (${edition.status}). ` +
+      `Tom: ${markdownText(edition.encodedKey)}. ` +
+      `Cifras: ${Array.isArray(edition.chords) ? edition.chords.join(", ") : "Nao informado"}.`,
+  );
+
+  const assets = markdownList(
+    dossier.assets,
+    (asset) =>
+      `${asset.id}: ${asset.type} / ${asset.status}. ` +
+      `Caminho: ${markdownText(asset.path)}. Edicao: ${markdownText(asset.editionId)}.`,
+  );
+
+  const pending = markdownList(review, (item) => item);
+
+  return `# ${dossier.work.preferredTitle}
+
+## Identificacao
+
+${markdownTable(
+  ["Campo", "Valor"],
+  [
+    ["ID da obra", dossier.work.id],
+    ["Arquivo-fonte", sourceFilePath],
+    ["Titulo preferencial", dossier.work.preferredTitle],
+    ["Titulos alternativos", (dossier.work.alternateTitles ?? []).join(", ")],
+    ["Criadores", creators],
+    ["Notas de identidade", dossier.work.identityNotes],
+  ],
+)}
+
+## Estado Editorial
+
+${markdownTable(
+  ["Campo", "Valor"],
+  [
+    ["Status declarado", dossier.curation.status],
+    ["Status derivado", currentStatus],
+    ["Decisao vigente", dossier.curation.currentDecisionId],
+  ],
+)}
+
+## Pendencias Para Revisao
+
+${pending}
+
+## Afirmacoes Canonicas
+
+${canonicalClaims}
+
+## Decisoes
+
+${decisions}
+
+## Fontes
+
+${sources}
+
+## Evidencias
+
+${evidence}
+
+## Edicoes
+
+${editions}
+
+## Assets
+
+${assets}
+
+## Direitos
+
+Status: ${dossier.rights.status}
+
+${formatPublicActions(dossier.rights.actions)}
+`;
+}
+
+function safeReviewFileName(dossier) {
+  return `${dossier.work.id}.md`;
+}
+
+export async function writeDossierReviewFiles(
+  dossiers,
+  { outputDirectory, reviewReport = dossierReviewReport(dossiers) },
+) {
+  const reviewByFilePath = new Map(
+    reviewReport.map((item) => [item.filePath, item.pending]),
+  );
+  await fs.mkdir(outputDirectory, { recursive: true });
+
+  const written = [];
+  for (const entry of dossiers) {
+    const outputPath = path.join(outputDirectory, safeReviewFileName(entry.dossier));
+    await fs.writeFile(
+      outputPath,
+      formatDossierForReview(entry, reviewByFilePath.get(entry.filePath) ?? []),
+    );
+    written.push(outputPath);
+  }
+
+  return written.sort();
+}
+
 function filePathFromPublicAssetPath(projectRoot, publicPath) {
   return path.join(projectRoot, "public", ...publicPath.split("/").filter(Boolean));
 }
@@ -316,6 +524,7 @@ export async function validateMusicXmlAssets(
 
 export async function main({
   directory = defaultDossierDirectory,
+  reviewDirectory,
   projectRoot = process.cwd(),
 } = {}) {
   const dossiers = await loadEditorialDossiers(directory);
@@ -341,7 +550,45 @@ export async function main({
     `Metodo: ${coverage.method.counting} Nao calcula percentuais nem score.`,
   );
 
+  if (reviewDirectory) {
+    const written = await writeDossierReviewFiles(dossiers, {
+      outputDirectory: reviewDirectory,
+      reviewReport: report,
+    });
+    console.log(`Dossies para revisao exportados: ${written.length}`);
+    written.forEach((filePath) => {
+      console.log(`- ${path.relative(projectRoot, filePath)}`);
+    });
+  }
+
   console.log(`Dossies editoriais validados: ${dossiers.length}`);
+}
+
+function parseCliArgs(args) {
+  const options = {};
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--review-dir") {
+      const directory = args[index + 1];
+      if (!directory) {
+        throw new Error("--review-dir requer um diretorio de saida");
+      }
+      options.reviewDirectory = path.resolve(directory);
+      index += 1;
+    } else if (arg === "--dossier-dir") {
+      const directory = args[index + 1];
+      if (!directory) {
+        throw new Error("--dossier-dir requer um diretorio de entrada");
+      }
+      options.directory = path.resolve(directory);
+      index += 1;
+    } else {
+      throw new Error(`Opcao desconhecida: ${arg}`);
+    }
+  }
+
+  return options;
 }
 
 const invokedModule = process.argv[1]
@@ -349,8 +596,18 @@ const invokedModule = process.argv[1]
   : null;
 
 if (import.meta.url === invokedModule) {
-  main().catch((error) => {
+  let options;
+  try {
+    options = parseCliArgs(process.argv.slice(2));
+  } catch (error) {
     console.error(error);
     process.exitCode = 1;
-  });
+  }
+
+  if (options) {
+    main(options).catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+  }
 }

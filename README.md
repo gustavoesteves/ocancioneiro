@@ -149,6 +149,33 @@ Para validar que o catalogo versionado esta sincronizado sem modifica-lo:
 npm run catalog:check
 ```
 
+## Dossies Editoriais
+
+Os dossies estruturados vivem em `data/dossiers/`. Eles registram identidade da
+obra, decisoes de curadoria, fontes, evidencias, edicoes, assets e direitos. O
+JSON e a fonte editorial versionada; relatorios derivados devem ser gerados pelo
+script para evitar divergencia.
+
+Para validar os dossies:
+
+```bash
+npm run dossiers:check
+```
+
+Para gerar uma versao em Markdown, legivel no GitHub e adequada para revisao
+humana:
+
+```bash
+npm run dossiers:review
+```
+
+Esse comando grava arquivos em `outputs/dossiers-review/`, pasta ignorada pelo
+Git. Cada relatorio inclui pendencias, afirmacoes canonicas, decisoes, fontes,
+evidencias com localizadores, edicoes, assets e permissao por acao. Use essa
+saida para revisar o conteudo editorial sem abrir o codigo da aplicacao; quando
+a revisao gerar mudancas, edite o JSON correspondente em `data/dossiers/` e
+rode novamente `npm run dossiers:check`.
+
 ## O Que O Script Detecta
 
 O script tenta extrair automaticamente:
