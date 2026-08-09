@@ -29,10 +29,42 @@
         "centrality": "nuclear",
         "reach": "comunidade",
         "decisionId": "decisao-aceita-001",
+        "evidenceIds": ["evidencia-aceita-001"],
         "justification": "Fixture para validar afirmacao canonica aceita."
       }
     ]
   },
+  "sources": [
+    {
+      "id": "fonte-aceita-001",
+      "title": "Fonte de teste da decisao aceita",
+      "type": "songbook"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidencia-aceita-001",
+      "claim": "A obra ocupa posicao nuclear no repertorio de Choro da fixture.",
+      "criterion": "representatividade",
+      "direction": "sustenta",
+      "strength": "moderada",
+      "justification": "Fonte de teste sustenta a afirmacao canonica da fixture.",
+      "strengthJustification": "Fixture direta, suficiente para validar a relacao.",
+      "assessedBy": "pesquisador-fixture",
+      "assessedAt": "2026-08-07",
+      "sources": [
+        {
+          "sourceId": "fonte-aceita-001",
+          "locators": [
+            {
+              "type": "pagina",
+              "value": "p. 1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "rights": {
     "status": "nao_verificado",
     "actions": {

@@ -784,7 +784,7 @@ nova revisão, sem apagar a decisão anterior
 - [x] implementar registro imutável de decisão;
 - [x] derivar estado atual da decisão vigente;
 - [x] permitir múltiplas afirmações canônicas por obra;
-- [ ] exigir contexto, justificativa e evidências relacionadas;
+- [x] exigir contexto, justificativa e evidências relacionadas;
 - [ ] registrar revisores e conflitos de interesse;
 - [ ] impedir alteração retroativa de decisão publicada;
 - [ ] gerar diff legível entre revisões;

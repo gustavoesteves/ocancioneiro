@@ -203,7 +203,12 @@ Cada afirmação deve registrar:
 - alcance;
 - período considerado, quando relevante;
 - decisão e justificativa;
-- evidências que a sustentam ou contradizem.
+- `evidenceIds`: evidências que a sustentam, contradizem ou contextualizam.
+
+Afirmações ainda hipotéticas podem existir durante pesquisa, mas uma afirmação
+ligada a uma decisão editorial deve possuir justificativa e ao menos uma
+evidência relacionada por ID. O vínculo aponta para evidências do próprio
+dossiê; referências quebradas invalidam o registro.
 
 Centralidade inicial:
 
@@ -527,7 +532,9 @@ arquivos:
         "context": "choro",
         "centrality": "nuclear",
         "reach": "comunidade",
-        "decisionId": "decisao-001"
+        "decisionId": "decisao-001",
+        "evidenceIds": ["evidencia-001"],
+        "justification": "Fontes e testemunhos estruturados sustentam a posicao no contexto."
       }
     ]
   },

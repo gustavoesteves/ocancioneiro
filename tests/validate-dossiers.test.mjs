@@ -189,6 +189,32 @@ test("reports evidence without source as an editorial review gap", () => {
   assert.ok(!report[0].pending.includes("sem evidencias estruturadas"));
 });
 
+test("reports canonical claims without related evidence", () => {
+  const report = dossierReviewReport([
+    {
+      dossier: {
+        ...dossier("obra-afirmacao-sem-evidencia", "Obra com afirmacao"),
+        curation: {
+          canonicalClaims: [
+            {
+              centrality: "nuclear",
+              context: "choro",
+              justification: "Hipotese ainda sem evidencia relacionada.",
+              reach: "comunidade",
+            },
+          ],
+          status: "candidata",
+        },
+      },
+      filePath: "data/dossiers/obra-afirmacao-sem-evidencia.json",
+    },
+  ]);
+
+  assert.ok(
+    report[0].pending.includes("afirmacao canonica sem evidencias relacionadas"),
+  );
+});
+
 test("loads draft evidence without source for review reporting", async () => {
   const directory = await fs.mkdtemp(
     path.join(os.tmpdir(), "o-cancioneiro-evidence-report-"),

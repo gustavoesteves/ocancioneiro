@@ -121,6 +121,14 @@ export function dossierReviewReport(dossiers) {
       pending.push("afirmacao canonica sem decisionId");
     }
 
+    if (
+      (dossier.curation.canonicalClaims ?? []).some(
+        (claim) => (claim.evidenceIds ?? []).length === 0,
+      )
+    ) {
+      pending.push("afirmacao canonica sem evidencias relacionadas");
+    }
+
     if ((dossier.sources ?? []).length === 0) {
       pending.push("sem fontes estruturadas");
     }
@@ -273,7 +281,8 @@ export function formatDossierForReview({ dossier, filePath }, review = []) {
     (claim) =>
       `${claim.context}: ${claim.centrality}, alcance ${claim.reach}. ` +
       `Justificativa: ${markdownText(claim.justification)} ` +
-      `Decisao: ${markdownText(claim.decisionId)}`,
+      `Decisao: ${markdownText(claim.decisionId)}. ` +
+      `Evidencias: ${markdownText((claim.evidenceIds ?? []).join(", "))}`,
   );
 
   const decisions = markdownList(

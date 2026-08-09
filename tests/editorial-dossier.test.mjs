@@ -134,6 +134,62 @@ test("accepts multiple contextual canonical claims for the same work", () => {
   );
 });
 
+test("requires decided canonical claims to reference evidence", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            canonicalClaims: [
+              {
+                centrality: "nuclear",
+                context: "choro",
+                decisionId: "decisao-001",
+                justification: "Afirmacao decidida precisa apontar evidencias.",
+                reach: "comunidade",
+              },
+            ],
+            currentDecisionId: "decisao-001",
+            decisions: [
+              {
+                decidedAt: "2026-08-07",
+                decidedBy: "bancada-editorial",
+                id: "decisao-001",
+                justification: "Fixture de decisao vigente.",
+                status: "aceita",
+              },
+            ],
+            status: "em_revisao",
+          },
+        }),
+      ),
+    /canonicalClaims\[0\]\.evidenceIds deve conter ao menos uma evidencia relacionada/,
+  );
+});
+
+test("rejects canonical claims referencing missing evidence", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            canonicalClaims: [
+              {
+                centrality: "nuclear",
+                context: "choro",
+                evidenceIds: ["evidencia-ausente"],
+                justification: "Afirmacao com referencia quebrada.",
+                reach: "comunidade",
+              },
+            ],
+            status: "candidata",
+          },
+        }),
+      ),
+    /canonicalClaims\[0\]\.evidenceIds\[0\] referencia evidencia inexistente/,
+  );
+});
+
 test("accepts immutable decision records with a matching hash", () => {
   const decision = {
     decidedAt: "2026-08-07",
