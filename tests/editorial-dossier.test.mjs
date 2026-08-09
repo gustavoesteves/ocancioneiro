@@ -98,6 +98,42 @@ test("derives curation status from the current decision", () => {
   assert.equal(currentCurationStatus(dossier.curation), "aceita");
 });
 
+test("accepts multiple contextual canonical claims for the same work", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      curation: {
+        canonicalClaims: [
+          {
+            centrality: "nuclear",
+            context: "choro",
+            justification: "Ausencia dificil de justificar no repertorio de choro.",
+            reach: "comunidade",
+          },
+          {
+            centrality: "consolidada",
+            context: "musica_brasileira",
+            justification: "Circulacao ampla em repertorio brasileiro documentado.",
+            reach: "nacional",
+          },
+        ],
+        status: "candidata",
+      },
+    }),
+  );
+
+  assert.deepEqual(
+    dossier.curation.canonicalClaims.map((claim) => [
+      claim.context,
+      claim.centrality,
+      claim.reach,
+    ]),
+    [
+      ["choro", "nuclear", "comunidade"],
+      ["musica_brasileira", "consolidada", "nacional"],
+    ],
+  );
+});
+
 test("accepts immutable decision records with a matching hash", () => {
   const decision = {
     decidedAt: "2026-08-07",

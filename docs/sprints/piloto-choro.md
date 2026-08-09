@@ -782,8 +782,8 @@ nova revisão, sem apagar a decisão anterior
 ### Tarefas de desenvolvimento
 
 - [x] implementar registro imutável de decisão;
-- [ ] derivar estado atual da decisão vigente;
-- [ ] permitir múltiplas afirmações canônicas por obra;
+- [x] derivar estado atual da decisão vigente;
+- [x] permitir múltiplas afirmações canônicas por obra;
 - [ ] exigir contexto, justificativa e evidências relacionadas;
 - [ ] registrar revisores e conflitos de interesse;
 - [ ] impedir alteração retroativa de decisão publicada;
