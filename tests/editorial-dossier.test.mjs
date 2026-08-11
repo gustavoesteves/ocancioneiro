@@ -87,6 +87,15 @@ test("derives curation status from the current decision", () => {
             decidedBy: "bancada-editorial",
             id: "decisao-001",
             justification: "Fixture de decisao vigente.",
+            reviews: [
+              {
+                conflictOfInterest: false,
+                reviewedAt: "2026-08-07",
+                reviewedBy: "revisor-independente",
+                role: "membro-da-bancada",
+                summary: "Revisao independente da decisao.",
+              },
+            ],
             status: "aceita",
           },
         ],
@@ -196,6 +205,15 @@ test("accepts immutable decision records with a matching hash", () => {
     decidedBy: "bancada-editorial",
     id: "decisao-001",
     justification: "Fixture de decisao vigente.",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-independente",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao.",
+      },
+    ],
     status: "aceita",
   };
   const dossier = parseEditorialDossier(
@@ -216,12 +234,78 @@ test("accepts immutable decision records with a matching hash", () => {
   assert.equal(dossier.curation.decisions[0].recordHash, decisionRecordHash(decision));
 });
 
+test("requires accepted decisions to include review records", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            currentDecisionId: "decisao-001",
+            decisions: [
+              {
+                decidedAt: "2026-08-07",
+                decidedBy: "bancada-editorial",
+                id: "decisao-001",
+                justification: "Fixture de decisao aceita sem revisao.",
+                status: "aceita",
+              },
+            ],
+            status: "em_revisao",
+          },
+        }),
+      ),
+    /decisions\[0\]\.reviews deve conter ao menos uma revisao/,
+  );
+});
+
+test("requires conflict descriptions when a decision review declares conflict", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            currentDecisionId: "decisao-001",
+            decisions: [
+              {
+                decidedAt: "2026-08-07",
+                decidedBy: "bancada-editorial",
+                id: "decisao-001",
+                justification: "Fixture de decisao aceita.",
+                reviews: [
+                  {
+                    conflictOfInterest: true,
+                    reviewedAt: "2026-08-07",
+                    reviewedBy: "revisor-com-vinculo",
+                    role: "membro-da-bancada",
+                    summary: "Revisao com conflito declarado.",
+                  },
+                ],
+                status: "aceita",
+              },
+            ],
+            status: "em_revisao",
+          },
+        }),
+      ),
+    /reviews\[0\]\.conflictDescription deve ser texto nao vazio/,
+  );
+});
+
 test("rejects changed decision records with stale hashes", () => {
   const decision = {
     decidedAt: "2026-08-07",
     decidedBy: "bancada-editorial",
     id: "decisao-001",
     justification: "Fixture de decisao vigente.",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-independente",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao.",
+      },
+    ],
     status: "aceita",
   };
 

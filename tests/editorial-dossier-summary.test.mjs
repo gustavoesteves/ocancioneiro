@@ -22,6 +22,15 @@ function dossier(overrides = {}) {
           decidedBy: "bancada-editorial",
           id: "decisao-aceita",
           justification: "Fixture aceita.",
+          reviews: [
+            {
+              conflictOfInterest: false,
+              reviewedAt: "2026-08-07",
+              reviewedBy: "revisor-fixture",
+              role: "membro-da-bancada",
+              summary: "Revisao independente da decisao aceita.",
+            },
+          ],
           status: "aceita",
         },
       ],

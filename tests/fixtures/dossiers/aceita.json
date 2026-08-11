@@ -20,7 +20,16 @@
         "justification": "Fixture para validar decisao vigente aceita.",
         "decidedBy": "bancada-editorial",
         "decidedAt": "2026-08-07",
-        "recordHash": "c409061dfc7e2a1a2b6e1d2bf5eed446e22e3cf01adf8ffcf9ff8f396cbd4549"
+        "reviews": [
+          {
+            "conflictOfInterest": false,
+            "reviewedAt": "2026-08-07",
+            "reviewedBy": "revisor-fixture",
+            "role": "membro-da-bancada",
+            "summary": "Revisao independente da decisao aceita da fixture."
+          }
+        ],
+        "recordHash": "15ef5fc55b5224e46a8172f1ed06adc1b56e2475d8e9ef2d4920b29ae361c717"
       }
     ],
     "canonicalClaims": [

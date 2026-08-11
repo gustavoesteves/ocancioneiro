@@ -609,6 +609,12 @@ Uma decisão de aceitação precisa de revisor diferente do autor do dossiê qua
 a equipe permitir. Divergências são registradas, não apagadas. Conflitos de
 interesse devem ser declarados.
 
+O registro da decisão usa `reviews[]` para preservar revisão e conflito de
+interesse. Cada revisão informa `reviewedBy`, `reviewedAt`, `role`, `summary` e
+`conflictOfInterest`. Quando `conflictOfInterest` for verdadeiro,
+`conflictDescription` é obrigatório. Decisões com status `aceita` precisam de
+pelo menos uma revisão registrada.
+
 ## 17. Critérios de aprovação desta especificação
 
 A versão 1 pode ser aprovada quando:

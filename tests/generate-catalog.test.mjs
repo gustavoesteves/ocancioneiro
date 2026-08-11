@@ -407,6 +407,15 @@ test("prefers publicable dossier projections over matching generated entries", (
             justification: "Obra aceita para publicacao.",
             decidedBy: "bancada-editorial",
             decidedAt: "2026-08-07",
+            reviews: [
+              {
+                conflictOfInterest: false,
+                reviewedAt: "2026-08-07",
+                reviewedBy: "revisor-fixture",
+                role: "membro-da-bancada",
+                summary: "Revisao independente da decisao aceita.",
+              },
+            ],
           },
         ],
       },

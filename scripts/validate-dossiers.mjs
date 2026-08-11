@@ -287,10 +287,22 @@ export function formatDossierForReview({ dossier, filePath }, review = []) {
 
   const decisions = markdownList(
     dossier.curation.decisions,
-    (decision) =>
-      `${decision.id}: ${decision.status}, por ${decision.decidedBy} em ` +
-      `${markdownText(decision.decidedAt)}. ${decision.justification} ` +
-      `Hash: ${markdownText(decision.recordHash)}`,
+    (decision) => {
+      const reviews = markdownList(
+        decision.reviews,
+        (review) =>
+          `${review.reviewedBy} (${review.role}) em ${markdownText(
+            review.reviewedAt,
+          )}; conflito: ${review.conflictOfInterest ? "sim" : "nao"}; ` +
+          `${review.summary}`,
+      ).replaceAll("\n", " ");
+
+      return (
+        `${decision.id}: ${decision.status}, por ${decision.decidedBy} em ` +
+        `${markdownText(decision.decidedAt)}. ${decision.justification} ` +
+        `Revisoes: ${reviews}. Hash: ${markdownText(decision.recordHash)}`
+      );
+    },
   );
 
   const sources = markdownList(
