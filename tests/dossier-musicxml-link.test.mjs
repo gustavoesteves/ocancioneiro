@@ -8,6 +8,7 @@ import {
   legacyCatalogEntryFromDossier,
   legacyProjectionIssues,
 } from "../lib/dossier-catalog-projection.mjs";
+import { decisionRecordHash } from "../lib/editorial-dossier.mjs";
 
 function dossier() {
   return {
@@ -30,26 +31,31 @@ function dossier() {
 }
 
 function publicableDossier() {
+  const decision = {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-aceita",
+    justification: "Fixture aceita para round-trip local.",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-fixture",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao aceita.",
+      },
+    ],
+    status: "aceita",
+  };
+
   return {
     ...dossier(),
     curation: {
       currentDecisionId: "decisao-aceita",
       decisions: [
         {
-          decidedAt: "2026-08-07",
-          decidedBy: "bancada-editorial",
-          id: "decisao-aceita",
-          justification: "Fixture aceita para round-trip local.",
-          reviews: [
-            {
-              conflictOfInterest: false,
-              reviewedAt: "2026-08-07",
-              reviewedBy: "revisor-fixture",
-              role: "membro-da-bancada",
-              summary: "Revisao independente da decisao aceita.",
-            },
-          ],
-          status: "aceita",
+          ...decision,
+          recordHash: decisionRecordHash(decision),
         },
       ],
       status: "em_revisao",

@@ -6,6 +6,7 @@ import {
   legacyComposerFromWork,
   legacyProjectionIssues,
 } from "../lib/dossier-catalog-projection.mjs";
+import { decisionRecordHash } from "../lib/editorial-dossier.mjs";
 
 const permittedActions = {
   exibir_metadados: "permitida",
@@ -16,6 +17,23 @@ const permittedActions = {
 };
 
 function acceptedDossier(overrides = {}) {
+  const decision = {
+    id: "decisao-aceita",
+    status: "aceita",
+    justification: "Obra aceita para o piloto.",
+    decidedBy: "bancada-editorial",
+    decidedAt: "2026-08-07",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-fixture",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao aceita.",
+      },
+    ],
+  };
+
   return {
     schemaVersion: 1,
     publicCatalogId: "carinhoso",
@@ -33,20 +51,8 @@ function acceptedDossier(overrides = {}) {
       currentDecisionId: "decisao-aceita",
       decisions: [
         {
-          id: "decisao-aceita",
-          status: "aceita",
-          justification: "Obra aceita para o piloto.",
-          decidedBy: "bancada-editorial",
-          decidedAt: "2026-08-07",
-          reviews: [
-            {
-              conflictOfInterest: false,
-              reviewedAt: "2026-08-07",
-              reviewedBy: "revisor-fixture",
-              role: "membro-da-bancada",
-              summary: "Revisao independente da decisao aceita.",
-            },
-          ],
+          ...decision,
+          recordHash: decisionRecordHash(decision),
         },
       ],
     },

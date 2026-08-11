@@ -12,6 +12,7 @@ import {
   sourceHash,
   validateEditorialManifest,
 } from "../scripts/generate-catalog.mjs";
+import { decisionRecordHash } from "../lib/editorial-dossier.mjs";
 
 const permittedActions = {
   exibir_metadados: "permitida",
@@ -372,6 +373,22 @@ test("builds the legacy catalog unchanged when dossiers are not publicable", () 
 });
 
 test("prefers publicable dossier projections over matching generated entries", () => {
+  const decision = {
+    id: "decisao-aceita",
+    status: "aceita",
+    justification: "Obra aceita para publicacao.",
+    decidedBy: "bancada-editorial",
+    decidedAt: "2026-08-07",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-fixture",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao aceita.",
+      },
+    ],
+  };
   const generatedSongs = [
     {
       id: "carinhoso",
@@ -402,20 +419,8 @@ test("prefers publicable dossier projections over matching generated entries", (
         currentDecisionId: "decisao-aceita",
         decisions: [
           {
-            id: "decisao-aceita",
-            status: "aceita",
-            justification: "Obra aceita para publicacao.",
-            decidedBy: "bancada-editorial",
-            decidedAt: "2026-08-07",
-            reviews: [
-              {
-                conflictOfInterest: false,
-                reviewedAt: "2026-08-07",
-                reviewedBy: "revisor-fixture",
-                role: "membro-da-bancada",
-                summary: "Revisao independente da decisao aceita.",
-              },
-            ],
+            ...decision,
+            recordHash: decisionRecordHash(decision),
           },
         ],
       },

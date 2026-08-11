@@ -786,7 +786,7 @@ nova revisão, sem apagar a decisão anterior
 - [x] permitir múltiplas afirmações canônicas por obra;
 - [x] exigir contexto, justificativa e evidências relacionadas;
 - [x] registrar revisores e conflitos de interesse;
-- [ ] impedir alteração retroativa de decisão publicada;
+- [x] impedir alteração retroativa de decisão publicada;
 - [ ] gerar diff legível entre revisões;
 - [ ] criar relatório de decisões sem revisão independente.
 

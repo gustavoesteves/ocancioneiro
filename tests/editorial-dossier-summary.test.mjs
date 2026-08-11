@@ -4,8 +4,26 @@ import {
   summarizeEditorialDossier,
   summarizeEditorialDossiers,
 } from "../lib/editorial-dossier-summary.mjs";
+import { decisionRecordHash } from "../lib/editorial-dossier.mjs";
 
 function dossier(overrides = {}) {
+  const decision = {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-aceita",
+    justification: "Fixture aceita.",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-fixture",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao aceita.",
+      },
+    ],
+    status: "aceita",
+  };
+
   return {
     schemaVersion: 1,
     publicCatalogId: "carinhoso",
@@ -18,20 +36,8 @@ function dossier(overrides = {}) {
       currentDecisionId: "decisao-aceita",
       decisions: [
         {
-          decidedAt: "2026-08-07",
-          decidedBy: "bancada-editorial",
-          id: "decisao-aceita",
-          justification: "Fixture aceita.",
-          reviews: [
-            {
-              conflictOfInterest: false,
-              reviewedAt: "2026-08-07",
-              reviewedBy: "revisor-fixture",
-              role: "membro-da-bancada",
-              summary: "Revisao independente da decisao aceita.",
-            },
-          ],
-          status: "aceita",
+          ...decision,
+          recordHash: decisionRecordHash(decision),
         },
       ],
       status: "em_revisao",

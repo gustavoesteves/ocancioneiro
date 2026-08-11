@@ -77,26 +77,30 @@ test("rejects unknown creator roles", () => {
 });
 
 test("derives curation status from the current decision", () => {
+  const decision = {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-001",
+    justification: "Fixture de decisao vigente.",
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-independente",
+        role: "membro-da-bancada",
+        summary: "Revisao independente da decisao.",
+      },
+    ],
+    status: "aceita",
+  };
   const dossier = parseEditorialDossier(
     minimalDossier({
       curation: {
-        currentDecisionId: "decisao-001",
+        currentDecisionId: decision.id,
         decisions: [
           {
-            decidedAt: "2026-08-07",
-            decidedBy: "bancada-editorial",
-            id: "decisao-001",
-            justification: "Fixture de decisao vigente.",
-            reviews: [
-              {
-                conflictOfInterest: false,
-                reviewedAt: "2026-08-07",
-                reviewedBy: "revisor-independente",
-                role: "membro-da-bancada",
-                summary: "Revisao independente da decisao.",
-              },
-            ],
-            status: "aceita",
+            ...decision,
+            recordHash: decisionRecordHash(decision),
           },
         ],
         status: "em_revisao",
@@ -235,6 +239,35 @@ test("accepts immutable decision records with a matching hash", () => {
 });
 
 test("requires accepted decisions to include review records", () => {
+  const decision = {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-001",
+    justification: "Fixture de decisao aceita sem revisao.",
+    status: "aceita",
+  };
+
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            currentDecisionId: "decisao-001",
+            decisions: [
+              {
+                ...decision,
+                recordHash: decisionRecordHash(decision),
+              },
+            ],
+            status: "em_revisao",
+          },
+        }),
+      ),
+    /decisions\[0\]\.reviews deve conter ao menos uma revisao/,
+  );
+});
+
+test("requires final decisions to be sealed with a record hash", () => {
   assert.throws(
     () =>
       parseEditorialDossier(
@@ -246,15 +279,15 @@ test("requires accepted decisions to include review records", () => {
                 decidedAt: "2026-08-07",
                 decidedBy: "bancada-editorial",
                 id: "decisao-001",
-                justification: "Fixture de decisao aceita sem revisao.",
-                status: "aceita",
+                justification: "Fixture de decisao rejeitada sem selo.",
+                status: "rejeitada",
               },
             ],
             status: "em_revisao",
           },
         }),
       ),
-    /decisions\[0\]\.reviews deve conter ao menos uma revisao/,
+    /decisions\[0\]\.recordHash deve selar decisao final publicada/,
   );
 });
 
