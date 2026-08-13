@@ -556,6 +556,101 @@ function editionForAsset(dossier, asset) {
   return (dossier.editions ?? []).find((edition) => edition.id === asset.editionId);
 }
 
+function countMatches(xml, pattern) {
+  return [...xml.matchAll(pattern)].length;
+}
+
+function uniqueTagTexts(xml, tagName) {
+  return [
+    ...new Set(
+      [
+        ...xml.matchAll(
+          new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)</${tagName}>`, "gi"),
+        ),
+      ]
+        .map((match) => match[1].replace(/<[^>]+>/g, "").trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+export function leadSheetScopeFindings(xml) {
+  const findings = [];
+  const partCount = countMatches(xml, /<score-part\b/gi);
+  const voices = uniqueTagTexts(xml, "voice");
+  const chordNoteCount = countMatches(xml, /<chord\s*\/>/gi);
+  const directionCount = countMatches(xml, /<direction(?:\s|>)/gi);
+  const lyricCount = countMatches(xml, /<lyric\b/gi);
+  const figuredBassCount = countMatches(xml, /<figured-bass\b/gi);
+
+  if (partCount > 1) {
+    findings.push(`mais de uma pauta/parte (${partCount})`);
+  }
+
+  if (voices.length > 1) {
+    findings.push(`multiplas vozes (${voices.join(", ")})`);
+  }
+
+  if (chordNoteCount > 0) {
+    findings.push(`notas simultaneas escritas (${chordNoteCount})`);
+  }
+
+  if (directionCount > 0) {
+    findings.push(`direcoes interpretativas ou de arranjo (${directionCount})`);
+  }
+
+  if (lyricCount > 0) {
+    findings.push(`letra no MusicXML (${lyricCount})`);
+  }
+
+  if (figuredBassCount > 0) {
+    findings.push(`baixo cifrado ou realizacao harmonica (${figuredBassCount})`);
+  }
+
+  return findings;
+}
+
+export async function leadSheetScopeReport(
+  dossiers,
+  { projectRoot = process.cwd() } = {},
+) {
+  const report = [];
+
+  for (const { dossier, filePath } of dossiers) {
+    for (const asset of dossier.assets ?? []) {
+      if (
+        asset.type !== "musicxml" ||
+        asset.status !== "valido" ||
+        typeof asset.path !== "string"
+      ) {
+        continue;
+      }
+
+      const assetPath = filePathFromPublicAssetPath(projectRoot, asset.path);
+      let xml;
+      try {
+        xml = await fs.readFile(assetPath, "utf8");
+      } catch (error) {
+        if (error.code === "ENOENT") continue;
+        throw error;
+      }
+
+      const findings = leadSheetScopeFindings(xml);
+      if (findings.length > 0) {
+        report.push({
+          assetId: asset.id,
+          filePath,
+          findings,
+          label: `${dossier.work.id} (${dossier.work.preferredTitle})`,
+          path: asset.path,
+        });
+      }
+    }
+  }
+
+  return report;
+}
+
 export async function validateAssetChecksums(
   dossiers,
   { projectRoot = process.cwd() } = {},
@@ -658,12 +753,22 @@ export async function main({
   await validateAssetChecksums(dossiers, { projectRoot });
   await validateMusicXmlAssets(dossiers, { projectRoot });
   const report = dossierReviewReport(dossiers);
+  const scopeReport = await leadSheetScopeReport(dossiers, { projectRoot });
   const coverage = evidenceCoverageMatrix(dossiers);
 
   if (report.length > 0) {
     console.log("\nPendencias dos dossies editoriais:");
     report.forEach((item) => {
       console.log(`- ${item.label}: ${item.pending.join(", ")}`);
+    });
+  }
+
+  if (scopeReport.length > 0) {
+    console.log("\nConteudo potencialmente fora do escopo de lead sheet:");
+    scopeReport.forEach((item) => {
+      console.log(
+        `- ${item.label}: ${item.assetId} (${item.path}): ${item.findings.join(", ")}`,
+      );
     });
   }
 

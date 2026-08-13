@@ -10,6 +10,8 @@ import {
   dossierReviewReport,
   evidenceCoverageMatrix,
   formatDossierForReview,
+  leadSheetScopeFindings,
+  leadSheetScopeReport,
   listDossierFiles,
   loadEditorialDossiers,
   validateAssetChecksums,
@@ -775,4 +777,73 @@ test("requires harmony elements when the edition declares chords", async () => {
     () => validateMusicXmlAssets([musicXmlDossier()], { projectRoot }),
     /edicao declara cifras mas MusicXML nao contem <harmony>/,
   );
+});
+
+test("reports MusicXML content potentially outside lead sheet scope", () => {
+  const findings = leadSheetScopeFindings(`<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Melodia</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <direction><direction-type><words>Intro livre</words></direction-type></direction>
+      <note><pitch><step>C</step><octave>4</octave></pitch><voice>1</voice><duration>1</duration></note>
+      <note><chord/><pitch><step>E</step><octave>4</octave></pitch><voice>2</voice><duration>1</duration></note>
+      <note><rest/><lyric><text>la</text></lyric><duration>1</duration></note>
+      <figured-bass><figure><figure-number>6</figure-number></figure></figured-bass>
+    </measure>
+  </part>
+</score-partwise>`);
+
+  assert.deepEqual(findings, [
+    "mais de uma pauta/parte (2)",
+    "multiplas vozes (1, 2)",
+    "notas simultaneas escritas (1)",
+    "direcoes interpretativas ou de arranjo (1)",
+    "letra no MusicXML (1)",
+    "baixo cifrado ou realizacao harmonica (1)",
+  ]);
+});
+
+test("builds a lead sheet scope report for valid MusicXML assets", async () => {
+  const projectRoot = await writeMusicXmlFixture(`<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Melodia</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1"><measure number="1"><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note></measure></part>
+</score-partwise>`);
+
+  const report = await leadSheetScopeReport(
+    [
+      {
+        dossier: {
+          ...dossier("obra-arranjo", "Obra com arranjo"),
+          assets: [
+            {
+              id: "asset-arranjo",
+              path: "/musicxml/fixture.musicxml",
+              status: "valido",
+              type: "musicxml",
+            },
+          ],
+        },
+        filePath: "data/dossiers/obra-arranjo.json",
+      },
+    ],
+    { projectRoot },
+  );
+
+  assert.deepEqual(report, [
+    {
+      assetId: "asset-arranjo",
+      filePath: "data/dossiers/obra-arranjo.json",
+      findings: ["mais de uma pauta/parte (2)"],
+      label: "obra-arranjo (Obra com arranjo)",
+      path: "/musicxml/fixture.musicxml",
+    },
+  ]);
 });

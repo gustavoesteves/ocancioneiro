@@ -849,7 +849,7 @@ O conjunto deve incluir:
 - [x] calcular checksum com algoritmo identificado;
 - [x] versionar substituição de asset;
 - [x] preservar arquivo anterior ou referência de auditoria conforme política;
-- [ ] gerar relatório de conteúdo potencialmente fora do escopo do lead sheet.
+- [x] gerar relatório de conteúdo potencialmente fora do escopo do lead sheet.
 
 ### Checklist musical
 
