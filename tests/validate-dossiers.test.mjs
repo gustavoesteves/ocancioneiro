@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { currentCurationStatus } from "../lib/editorial-dossier.mjs";
 import {
+  decisionRevisionDiffs,
   dossierReviewReport,
   evidenceCoverageMatrix,
   formatDossierForReview,
@@ -393,6 +394,60 @@ test("generates an explicit evidence coverage matrix without percentages", () =>
   assert.equal(influencia.workCount, 0);
 });
 
+test("generates readable diffs between decision revisions", () => {
+  const diffs = decisionRevisionDiffs({
+    curation: {
+      decisions: [
+        {
+          decidedAt: "2026-08-07",
+          decidedBy: "pesquisador",
+          id: "decisao-rascunho",
+          justification: "Evidencia ainda insuficiente.",
+          status: "em_revisao",
+        },
+        {
+          decidedAt: "2026-08-08",
+          decidedBy: "bancada",
+          id: "decisao-aceita",
+          justification: "Evidencias sustentam a entrada no recorte.",
+          reviews: [
+            {
+              conflictOfInterest: false,
+              reviewedAt: "2026-08-08",
+              reviewedBy: "revisor",
+              role: "membro-da-bancada",
+              summary: "Revisao favoravel.",
+            },
+          ],
+          status: "aceita",
+        },
+      ],
+    },
+  });
+
+  assert.deepEqual(diffs, [
+    {
+      changes: [
+        { after: "aceita", before: "em_revisao", field: "status" },
+        {
+          after: "Evidencias sustentam a entrada no recorte.",
+          before: "Evidencia ainda insuficiente.",
+          field: "justificativa",
+        },
+        { after: "bancada", before: "pesquisador", field: "responsavel" },
+        { after: "2026-08-08", before: "2026-08-07", field: "data" },
+        {
+          after: "revisor (membro-da-bancada, conflito: nao)",
+          before: "Nenhuma revisao",
+          field: "revisoes",
+        },
+      ],
+      from: "decisao-rascunho",
+      to: "decisao-aceita",
+    },
+  ]);
+});
+
 test("formats a readable dossier for human review", () => {
   const formatted = formatDossierForReview(
     {
@@ -410,6 +465,13 @@ test("formats a readable dossier for human review", () => {
           ],
           currentDecisionId: "decisao-revisao",
           decisions: [
+            {
+              decidedAt: "2026-08-07",
+              decidedBy: "pesquisador",
+              id: "decisao-rascunho",
+              justification: "Entrada ainda em revisao.",
+              status: "em_revisao",
+            },
             {
               decidedAt: "2026-08-08",
               decidedBy: "bancada",
@@ -456,6 +518,8 @@ test("formats a readable dossier for human review", () => {
   assert.match(formatted, /^# Obra para revisao/m);
   assert.match(formatted, /## Pendencias Para Revisao/);
   assert.match(formatted, /conferir segunda fonte independente/);
+  assert.match(formatted, /## Diff Entre Decisoes/);
+  assert.match(formatted, /decisao-rascunho -> decisao-revisao/);
   assert.match(formatted, /Fonte de revisao \(fonte-revisao\) \[pagina: 12/);
   assert.match(formatted, /evidencia-revisao: circulacao \/ sustenta \/ moderada/);
 });

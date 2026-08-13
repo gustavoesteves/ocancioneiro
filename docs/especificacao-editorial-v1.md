@@ -191,6 +191,11 @@ qualquer mudança em status, justificativa, responsável, revisão ou data exige
 novo hash e deve ser tratada como nova decisão editorial, não como edição
 retroativa invisível.
 
+Relatórios de revisão podem gerar um diff legível entre decisões consecutivas
+do mesmo dossiê. O diff é derivado de `curation.decisions[]` e compara status,
+justificativa, responsável, data e revisões. Ele não cria outra fonte de
+verdade; serve apenas para leitura humana do histórico.
+
 ### 6.2 Afirmação canônica contextualizada
 
 Canonicidade não é uma propriedade escalar única. A mesma obra pode ocupar

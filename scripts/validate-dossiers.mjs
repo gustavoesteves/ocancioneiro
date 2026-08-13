@@ -266,6 +266,64 @@ function formatPublicActions(actions = {}) {
   return markdownTable(["Acao", "Permissao"], rows);
 }
 
+function decisionReviewSummary(decision) {
+  if (!Array.isArray(decision.reviews) || decision.reviews.length === 0) {
+    return "Nenhuma revisao";
+  }
+
+  return decision.reviews
+    .map((review) => {
+      const conflict = review.conflictOfInterest
+        ? `sim: ${markdownText(review.conflictDescription)}`
+        : "nao";
+      return `${review.reviewedBy} (${review.role}, conflito: ${conflict})`;
+    })
+    .join("; ");
+}
+
+export function decisionRevisionDiffs(dossier) {
+  const decisions = dossier.curation.decisions ?? [];
+  if (decisions.length < 2) return [];
+
+  const comparableFields = [
+    ["status", (decision) => decision.status],
+    ["justificativa", (decision) => decision.justification],
+    ["responsavel", (decision) => decision.decidedBy],
+    ["data", (decision) => decision.decidedAt],
+    ["revisoes", decisionReviewSummary],
+  ];
+
+  return decisions.slice(1).map((decision, index) => {
+    const previous = decisions[index];
+    return {
+      changes: comparableFields
+        .map(([field, valueFor]) => ({
+          after: markdownText(valueFor(decision)),
+          before: markdownText(valueFor(previous)),
+          field,
+        }))
+        .filter((change) => change.before !== change.after),
+      from: previous.id,
+      to: decision.id,
+    };
+  });
+}
+
+function formatDecisionRevisionDiffs(dossier) {
+  const diffs = decisionRevisionDiffs(dossier);
+  return markdownList(diffs, (diff) => {
+    if (diff.changes.length === 0) {
+      return `${diff.from} -> ${diff.to}: sem mudancas editoriais detectadas.`;
+    }
+
+    const changes = diff.changes
+      .map((change) => `${change.field}: ${change.before} -> ${change.after}`)
+      .join("; ");
+
+    return `${diff.from} -> ${diff.to}: ${changes}`;
+  });
+}
+
 export function formatDossierForReview({ dossier, filePath }, review = []) {
   const sourceLabels = sourceLabelById(dossier);
   const currentStatus = currentCurationStatus(dossier.curation);
@@ -348,6 +406,7 @@ export function formatDossierForReview({ dossier, filePath }, review = []) {
   );
 
   const pending = markdownList(review, (item) => item);
+  const revisionDiffs = formatDecisionRevisionDiffs(dossier);
 
   return `# ${dossier.work.preferredTitle}
 
@@ -387,6 +446,10 @@ ${canonicalClaims}
 ## Decisoes
 
 ${decisions}
+
+## Diff Entre Decisoes
+
+${revisionDiffs}
 
 ## Fontes
 
