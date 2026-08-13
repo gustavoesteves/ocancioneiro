@@ -137,6 +137,15 @@ export function dossierReviewReport(dossiers) {
       pending.push("sem evidencias estruturadas");
     }
 
+    for (const decision of dossier.curation.decisions ?? []) {
+      if (
+        ["aceita", "rejeitada", "inconclusiva"].includes(decision.status) &&
+        !hasIndependentReview(decision)
+      ) {
+        pending.push(`decisao sem revisao independente: ${decision.id}`);
+      }
+    }
+
     (dossier.evidence ?? []).forEach((evidence) => {
       if ((evidence.sources ?? []).length === 0) {
         pending.push(`evidencia sem fonte: ${evidence.id}`);
@@ -167,6 +176,14 @@ export function dossierReviewReport(dossiers) {
         ]
       : [];
   });
+}
+
+function hasIndependentReview(decision) {
+  return (decision.reviews ?? []).some(
+    (review) =>
+      review.reviewedBy !== decision.decidedBy &&
+      review.conflictOfInterest === false,
+  );
 }
 
 export function evidenceCoverageMatrix(dossiers) {

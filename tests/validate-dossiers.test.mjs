@@ -216,6 +216,84 @@ test("reports canonical claims without related evidence", () => {
   );
 });
 
+test("reports final decisions without independent review", () => {
+  const report = dossierReviewReport([
+    {
+      dossier: {
+        ...dossier("obra-sem-revisao-independente", "Obra sem revisao independente"),
+        curation: {
+          currentDecisionId: "decisao-sem-independente",
+          decisions: [
+            {
+              decidedAt: "2026-08-13",
+              decidedBy: "bancada-editorial",
+              id: "decisao-sem-independente",
+              rationale: "Decisao final ainda sem uma revisao independente.",
+              reviews: [
+                {
+                  conflictOfInterest: false,
+                  reviewedAt: "2026-08-13",
+                  reviewedBy: "bancada-editorial",
+                  role: "revisao-editorial",
+                  summary: "Revisao registrada pela mesma pessoa da decisao.",
+                },
+              ],
+              status: "aceita",
+            },
+          ],
+          status: "aceita",
+        },
+      },
+      filePath: "data/dossiers/obra-sem-revisao-independente.json",
+    },
+  ]);
+
+  assert.ok(
+    report[0].pending.includes(
+      "decisao sem revisao independente: decisao-sem-independente",
+    ),
+  );
+});
+
+test("does not report final decisions with independent review", () => {
+  const report = dossierReviewReport([
+    {
+      dossier: {
+        ...dossier("obra-com-revisao-independente", "Obra com revisao independente"),
+        curation: {
+          currentDecisionId: "decisao-com-independente",
+          decisions: [
+            {
+              decidedAt: "2026-08-13",
+              decidedBy: "bancada-editorial",
+              id: "decisao-com-independente",
+              rationale: "Decisao final com revisao independente registrada.",
+              reviews: [
+                {
+                  conflictOfInterest: false,
+                  reviewedAt: "2026-08-13",
+                  reviewedBy: "revisor-independente",
+                  role: "revisao-editorial",
+                  summary: "Revisao independente registrada.",
+                },
+              ],
+              status: "aceita",
+            },
+          ],
+          status: "aceita",
+        },
+      },
+      filePath: "data/dossiers/obra-com-revisao-independente.json",
+    },
+  ]);
+
+  assert.ok(
+    !report[0].pending.includes(
+      "decisao sem revisao independente: decisao-com-independente",
+    ),
+  );
+});
+
 test("loads draft evidence without source for review reporting", async () => {
   const directory = await fs.mkdtemp(
     path.join(os.tmpdir(), "o-cancioneiro-evidence-report-"),

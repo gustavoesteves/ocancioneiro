@@ -788,7 +788,7 @@ nova revisão, sem apagar a decisão anterior
 - [x] registrar revisores e conflitos de interesse;
 - [x] impedir alteração retroativa de decisão publicada;
 - [x] gerar diff legível entre revisões;
-- [ ] criar relatório de decisões sem revisão independente.
+- [x] criar relatório de decisões sem revisão independente.
 
 ### Critérios de aceite
 

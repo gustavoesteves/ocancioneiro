@@ -621,6 +621,10 @@ interesse. Cada revisão informa `reviewedBy`, `reviewedAt`, `role`, `summary` e
 `conflictDescription` é obrigatório. Decisões com status `aceita` precisam de
 pelo menos uma revisão registrada.
 
+O relatório editorial sinaliza decisões finais sem revisão independente. Para
+esse relatório, uma revisão independente exige `reviewedBy` diferente de
+`decidedBy` e `conflictOfInterest` igual a `false`.
+
 ## 17. Critérios de aprovação desta especificação
 
 A versão 1 pode ser aprovada quando:
