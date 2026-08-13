@@ -119,10 +119,22 @@ test("updates the imported edition and asset deterministically", () => {
     publicPath: "/musicxml/carinhoso.musicxml",
     xml: musicXml({ title: "Carinhoso revisado" }),
   });
+  const third = linkMusicXmlToDossier(second, {
+    generatedAt: "2026-08-07",
+    publicId: "carinhoso",
+    publicPath: "/musicxml/carinhoso.musicxml",
+    xml: musicXml({ title: "Carinhoso revisado" }),
+  });
 
   assert.equal(second.editions.length, 1);
-  assert.equal(second.assets.length, 1);
+  assert.equal(second.assets.length, 2);
   assert.equal(second.editions[0].title, "Carinhoso revisado");
+  assert.equal(second.assets[0].status, "substituido");
+  assert.equal(second.assets[0].replacedByAssetId, second.assets[1].id);
+  assert.equal(second.assets[1].status, "valido");
+  assert.equal(second.assets[1].replacesAssetId, second.assets[0].id);
+  assert.equal(third.assets.length, 2);
+  assert.deepEqual(third.assets, second.assets);
 });
 
 test("archives imported assets without removing file references", () => {
@@ -175,6 +187,7 @@ test("round-trips the local dossier import flow through public catalog projectio
   });
   assert.equal(updated.work.id, "obra-carinhoso");
   assert.equal(updated.editions.length, 1);
+  assert.equal(updated.assets.length, 2);
   assert.equal(legacyCatalogEntryFromDossier(updated).title, "Carinhoso revisado");
 
   const archived = archiveImportedMusicXmlAsset(updated, {

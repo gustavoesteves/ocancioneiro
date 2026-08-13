@@ -847,8 +847,8 @@ O conjunto deve incluir:
 - [x] validar presença e forma dos elementos `<harmony>`;
 - [x] permitir localizador musical em decisões;
 - [x] calcular checksum com algoritmo identificado;
-- [ ] versionar substituição de asset;
-- [ ] preservar arquivo anterior ou referência de auditoria conforme política;
+- [x] versionar substituição de asset;
+- [x] preservar arquivo anterior ou referência de auditoria conforme política;
 - [ ] gerar relatório de conteúdo potencialmente fora do escopo do lead sheet.
 
 ### Checklist musical
