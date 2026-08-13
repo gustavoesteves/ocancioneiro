@@ -193,8 +193,13 @@ retroativa invisível.
 
 Relatórios de revisão podem gerar um diff legível entre decisões consecutivas
 do mesmo dossiê. O diff é derivado de `curation.decisions[]` e compara status,
-justificativa, responsável, data e revisões. Ele não cria outra fonte de
-verdade; serve apenas para leitura humana do histórico.
+justificativa, responsável, data, localizadores musicais e revisões. Ele não
+cria outra fonte de verdade; serve apenas para leitura humana do histórico.
+
+Quando uma decisão se referir a um trecho musical específico, ela pode usar
+`locators[]`. Cada localizador registra `measure` como compasso inicial
+obrigatório e pode registrar `endMeasure`, `beat`, `voice` e `note`. Intervalos
+devem manter `endMeasure` maior ou igual a `measure`.
 
 ### 6.2 Afirmação canônica contextualizada
 

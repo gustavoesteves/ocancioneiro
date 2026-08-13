@@ -845,7 +845,7 @@ O conjunto deve incluir:
 - [x] exibir fontes e decisões relevantes durante revisão;
 - [x] validar metadados do MusicXML contra obra e edição;
 - [x] validar presença e forma dos elementos `<harmony>`;
-- [ ] permitir localizador musical em decisões;
+- [x] permitir localizador musical em decisões;
 - [x] calcular checksum com algoritmo identificado;
 - [ ] versionar substituição de asset;
 - [ ] preservar arquivo anterior ou referência de auditoria conforme política;

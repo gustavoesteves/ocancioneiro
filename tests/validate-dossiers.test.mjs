@@ -488,6 +488,13 @@ test("generates readable diffs between decision revisions", () => {
           decidedBy: "bancada",
           id: "decisao-aceita",
           justification: "Evidencias sustentam a entrada no recorte.",
+          locators: [
+            {
+              beat: "2",
+              measure: 8,
+              note: "emenda de cifra",
+            },
+          ],
           reviews: [
             {
               conflictOfInterest: false,
@@ -514,6 +521,11 @@ test("generates readable diffs between decision revisions", () => {
         },
         { after: "bancada", before: "pesquisador", field: "responsavel" },
         { after: "2026-08-08", before: "2026-08-07", field: "data" },
+        {
+          after: "compasso 8, tempo 2, emenda de cifra",
+          before: "Nenhum localizador",
+          field: "localizadores",
+        },
         {
           after: "revisor (membro-da-bancada, conflito: nao)",
           before: "Nenhuma revisao",
@@ -555,6 +567,13 @@ test("formats a readable dossier for human review", () => {
               decidedBy: "bancada",
               id: "decisao-revisao",
               justification: "Entrada em revisao documental.",
+              locators: [
+                {
+                  endMeasure: 4,
+                  measure: 3,
+                  voice: "melodia",
+                },
+              ],
               status: "em_revisao",
             },
           ],
@@ -598,6 +617,7 @@ test("formats a readable dossier for human review", () => {
   assert.match(formatted, /conferir segunda fonte independente/);
   assert.match(formatted, /## Diff Entre Decisoes/);
   assert.match(formatted, /decisao-rascunho -> decisao-revisao/);
+  assert.match(formatted, /Localizadores: compassos 3-4, voz melodia/);
   assert.match(formatted, /Fonte de revisao \(fonte-revisao\) \[pagina: 12/);
   assert.match(formatted, /evidencia-revisao: circulacao \/ sustenta \/ moderada/);
 });

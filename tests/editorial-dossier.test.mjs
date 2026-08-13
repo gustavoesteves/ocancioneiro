@@ -238,6 +238,88 @@ test("accepts immutable decision records with a matching hash", () => {
   assert.equal(dossier.curation.decisions[0].recordHash, decisionRecordHash(decision));
 });
 
+test("accepts musical locators on curation decisions", () => {
+  const decision = {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-com-localizador",
+    justification: "Emenda localizada em trecho ambíguo da lead sheet.",
+    locators: [
+      {
+        beat: "2",
+        endMeasure: 9,
+        measure: 8,
+        note: "cifra alternativa no segundo tempo",
+        voice: "melodia",
+      },
+    ],
+    reviews: [
+      {
+        conflictOfInterest: false,
+        reviewedAt: "2026-08-07",
+        reviewedBy: "revisor-independente",
+        role: "membro-da-bancada",
+        summary: "Localizador confere com o trecho revisado.",
+      },
+    ],
+    status: "aceita",
+  };
+
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      curation: {
+        currentDecisionId: decision.id,
+        decisions: [
+          {
+            ...decision,
+            recordHash: decisionRecordHash(decision),
+          },
+        ],
+        status: "em_revisao",
+      },
+    }),
+  );
+
+  assert.equal(dossier.curation.decisions[0].locators[0].measure, 8);
+  assert.equal(dossier.curation.decisions[0].locators[0].endMeasure, 9);
+});
+
+test("rejects invalid musical locators on curation decisions", () => {
+  const decision = {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-localizador-invalido",
+    justification: "Decisao com localizadores invalidos.",
+    locators: [
+      { measure: 0 },
+      { endMeasure: 3, measure: 4 },
+      { measure: 5, voice: 2 },
+    ],
+    status: "em_revisao",
+  };
+
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          curation: {
+            decisions: [decision],
+            status: "em_revisao",
+          },
+        }),
+      ),
+    (error) => {
+      assert.match(error.message, /decisions\[0\]\.locators\[0\]\.measure/);
+      assert.match(
+        error.message,
+        /decisions\[0\]\.locators\[1\]\.endMeasure deve ser maior ou igual/,
+      );
+      assert.match(error.message, /decisions\[0\]\.locators\[2\]\.voice deve ser texto/);
+      return true;
+    },
+  );
+});
+
 test("requires accepted decisions to include review records", () => {
   const decision = {
     decidedAt: "2026-08-07",

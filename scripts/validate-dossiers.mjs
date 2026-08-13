@@ -298,6 +298,28 @@ function decisionReviewSummary(decision) {
     .join("; ");
 }
 
+function decisionLocatorSummary(decision) {
+  if (!Array.isArray(decision.locators) || decision.locators.length === 0) {
+    return "Nenhum localizador";
+  }
+
+  return decision.locators
+    .map((locator) => {
+      const measure =
+        locator.endMeasure && locator.endMeasure !== locator.measure
+          ? `compassos ${locator.measure}-${locator.endMeasure}`
+          : `compasso ${locator.measure}`;
+      const details = [
+        locator.beat ? `tempo ${locator.beat}` : null,
+        locator.voice ? `voz ${locator.voice}` : null,
+        locator.note ? locator.note : null,
+      ].filter(Boolean);
+
+      return details.length > 0 ? `${measure}, ${details.join(", ")}` : measure;
+    })
+    .join("; ");
+}
+
 export function decisionRevisionDiffs(dossier) {
   const decisions = dossier.curation.decisions ?? [];
   if (decisions.length < 2) return [];
@@ -307,6 +329,7 @@ export function decisionRevisionDiffs(dossier) {
     ["justificativa", (decision) => decision.justification],
     ["responsavel", (decision) => decision.decidedBy],
     ["data", (decision) => decision.decidedAt],
+    ["localizadores", decisionLocatorSummary],
     ["revisoes", decisionReviewSummary],
   ];
 
@@ -363,6 +386,7 @@ export function formatDossierForReview({ dossier, filePath }, review = []) {
   const decisions = markdownList(
     dossier.curation.decisions,
     (decision) => {
+      const locators = decisionLocatorSummary(decision);
       const reviews = markdownList(
         decision.reviews,
         (review) =>
@@ -375,6 +399,7 @@ export function formatDossierForReview({ dossier, filePath }, review = []) {
       return (
         `${decision.id}: ${decision.status}, por ${decision.decidedBy} em ` +
         `${markdownText(decision.decidedAt)}. ${decision.justification} ` +
+        `Localizadores: ${locators}. ` +
         `Revisoes: ${reviews}. Hash: ${markdownText(decision.recordHash)}`
       );
     },
