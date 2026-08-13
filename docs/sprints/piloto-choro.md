@@ -840,13 +840,13 @@ O conjunto deve incluir:
 
 ### Tarefas de desenvolvimento
 
-- [ ] estender o fluxo local para vincular MusicXML a uma edição existente;
-- [ ] impedir que importar arquivo crie silenciosamente uma obra duplicada;
-- [ ] exibir fontes e decisões relevantes durante revisão;
-- [ ] validar metadados do MusicXML contra obra e edição;
-- [ ] validar presença e forma dos elementos `<harmony>`;
+- [x] estender o fluxo local para vincular MusicXML a uma edição existente;
+- [x] impedir que importar arquivo crie silenciosamente uma obra duplicada;
+- [x] exibir fontes e decisões relevantes durante revisão;
+- [x] validar metadados do MusicXML contra obra e edição;
+- [x] validar presença e forma dos elementos `<harmony>`;
 - [ ] permitir localizador musical em decisões;
-- [ ] calcular checksum com algoritmo identificado;
+- [x] calcular checksum com algoritmo identificado;
 - [ ] versionar substituição de asset;
 - [ ] preservar arquivo anterior ou referência de auditoria conforme política;
 - [ ] gerar relatório de conteúdo potencialmente fora do escopo do lead sheet.

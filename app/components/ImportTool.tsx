@@ -27,11 +27,24 @@ type ManagedSong = Song & {
 
 type ManagedDossier = {
   assetCount: number;
+  currentDecision: {
+    decidedAt: string;
+    decidedBy: string;
+    id: string;
+    justification: string;
+    status: string;
+  } | null;
   editionCount: number;
   filePath: string;
   publicCatalogId: string | null;
   publicable: boolean;
   projectionIssues: string[];
+  sources: {
+    id: string;
+    reference: string | null;
+    title: string;
+    type: string;
+  }[];
   status: string;
   title: string;
   workId: string;
@@ -110,6 +123,12 @@ export function ImportTool() {
   const effectiveId = suggestedId.trim() || metadata?.id || "nova-peca";
   const suggestedFileName = `${effectiveId}.musicxml`;
   const suggestedPath = `public/musicxml/${suggestedFileName}`;
+  const selectedDossier = useMemo(
+    () =>
+      managedDossiers.find((dossier) => dossier.workId === selectedDossierWorkId) ??
+      null,
+    [managedDossiers, selectedDossierWorkId],
+  );
 
   const catalogPreview = useMemo(() => {
     if (!metadata) return "";
@@ -531,6 +550,72 @@ export function ImportTool() {
                     </button>
                   ))}
                 </div>
+                {selectedDossier ? (
+                  <div className="mt-4 rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-4 text-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-semibold">{selectedDossier.title}</h4>
+                        <p className="mt-1 font-mono text-[11px] text-[#8a4c2f]">
+                          {selectedDossier.filePath}
+                        </p>
+                      </div>
+                      <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1 text-xs text-[#5f5a50]">
+                        {selectedDossier.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <h5 className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a4c2f]">
+                          Fontes
+                        </h5>
+                        {selectedDossier.sources.length > 0 ? (
+                          <ul className="mt-2 space-y-2">
+                            {selectedDossier.sources.map((source) => (
+                              <li className="text-[#5f5a50]" key={source.id}>
+                                <span className="block font-medium text-[#1f1e1b]">
+                                  {source.title}
+                                </span>
+                                <span className="text-xs">
+                                  {source.type}
+                                  {source.reference ? ` - ${source.reference}` : ""}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="mt-2 text-xs text-[#70695e]">
+                            Nenhuma fonte estruturada registrada.
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <h5 className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a4c2f]">
+                          Decisao vigente
+                        </h5>
+                        {selectedDossier.currentDecision ? (
+                          <div className="mt-2 text-[#5f5a50]">
+                            <p className="font-medium text-[#1f1e1b]">
+                              {selectedDossier.currentDecision.status}
+                            </p>
+                            <p className="mt-1 text-xs">
+                              {selectedDossier.currentDecision.decidedAt} -{" "}
+                              {selectedDossier.currentDecision.decidedBy}
+                            </p>
+                            <p className="mt-2 text-xs leading-relaxed">
+                              {selectedDossier.currentDecision.justification}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-xs text-[#70695e]">
+                            Nenhuma decisao vigente registrada.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

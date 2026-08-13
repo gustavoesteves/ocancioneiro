@@ -49,6 +49,14 @@ function dossier(overrides = {}) {
       },
       status: "nao_verificado",
     },
+    sources: [
+      {
+        id: "fonte-principal",
+        reference: "p. 12",
+        title: "Songbook fixture",
+        type: "songbook",
+      },
+    ],
     ...overrides,
   };
 }
@@ -64,6 +72,21 @@ test("summarizes editorial dossier state for the import tool", () => {
   assert.equal(summary.status, "aceita");
   assert.equal(summary.editionCount, 1);
   assert.equal(summary.assetCount, 0);
+  assert.deepEqual(summary.currentDecision, {
+    decidedAt: "2026-08-07",
+    decidedBy: "bancada-editorial",
+    id: "decisao-aceita",
+    justification: "Fixture aceita.",
+    status: "aceita",
+  });
+  assert.deepEqual(summary.sources, [
+    {
+      id: "fonte-principal",
+      reference: "p. 12",
+      title: "Songbook fixture",
+      type: "songbook",
+    },
+  ]);
   assert.equal(summary.publicable, false);
   assert.ok(summary.projectionIssues.includes("sem asset MusicXML publico valido"));
 });
