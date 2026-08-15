@@ -1,0 +1,15 @@
+{
+  "protocol": "cancioneiro.musescore.capture/2",
+  "messageType": "STATUS",
+  "messageId": "msg_status_event_002",
+  "sentAt": "2026-08-13T12:00:02.000Z",
+  "payload": {
+    "sessionId": "session_bridge_0001",
+    "pluginSessionId": "plugin_session_0001",
+    "requestId": null,
+    "bridgeState": "online",
+    "pluginState": "absent",
+    "captureState": "idle",
+    "observedAt": "2026-08-13T12:00:02.000Z"
+  }
+}

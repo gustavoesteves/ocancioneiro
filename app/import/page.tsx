@@ -1,5 +1,5 @@
-import { ImportTool } from "../components/ImportTool";
+import { EditorialDashboard } from "../components/EditorialDashboard";
 
 export default function ImportPage() {
-  return <ImportTool />;
+  return <EditorialDashboard />;
 }

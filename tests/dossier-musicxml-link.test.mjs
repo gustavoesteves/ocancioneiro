@@ -100,6 +100,7 @@ test("links MusicXML to an existing editorial dossier without changing work iden
   assert.equal(linked.publicCatalogId, "carinhoso");
   assert.equal(linked.editions[0].id, "edicao-importada-carinhoso");
   assert.equal(linked.editions[0].encodedKey, "F maior");
+  assert.equal(linked.editions[0].status, "em_revisao");
   assert.deepEqual(linked.editions[0].chords, ["F"]);
   assert.equal(linked.assets[0].editionId, "edicao-importada-carinhoso");
   assert.equal(linked.assets[0].path, "/musicxml/carinhoso.musicxml");
@@ -164,22 +165,31 @@ test("rejects archiving when the imported asset is missing", () => {
   );
 });
 
-test("round-trips the local dossier import flow through public catalog projection", () => {
+test("keeps a local import private until its edition is explicitly reviewed", () => {
   const linked = linkMusicXmlToDossier(publicableDossier(), {
     generatedAt: "2026-08-07",
     publicId: "carinhoso",
     publicPath: "/musicxml/carinhoso.musicxml",
     xml: musicXml(),
   });
-  const projected = legacyCatalogEntryFromDossier(linked);
 
   assert.equal(linked.work.id, "obra-carinhoso");
+  assert.equal(legacyCatalogEntryFromDossier(linked), null);
+
+  const reviewed = {
+    ...linked,
+    editions: linked.editions.map((edition) => ({
+      ...edition,
+      status: "valida",
+    })),
+  };
+  const projected = legacyCatalogEntryFromDossier(reviewed);
   assert.equal(projected.id, "carinhoso");
   assert.equal(projected.title, "Carinhoso");
   assert.equal(projected.musicxml, "/musicxml/carinhoso.musicxml");
   assert.deepEqual(projected.chords, ["F"]);
 
-  const updated = linkMusicXmlToDossier(linked, {
+  const updated = linkMusicXmlToDossier(reviewed, {
     generatedAt: "2026-08-07",
     publicId: "carinhoso",
     publicPath: "/musicxml/carinhoso.musicxml",
@@ -187,10 +197,23 @@ test("round-trips the local dossier import flow through public catalog projectio
   });
   assert.equal(updated.work.id, "obra-carinhoso");
   assert.equal(updated.editions.length, 1);
+  assert.equal(updated.editions[0].status, "em_revisao");
   assert.equal(updated.assets.length, 2);
-  assert.equal(legacyCatalogEntryFromDossier(updated).title, "Carinhoso revisado");
+  assert.equal(legacyCatalogEntryFromDossier(updated), null);
 
-  const archived = archiveImportedMusicXmlAsset(updated, {
+  const reviewedUpdate = {
+    ...updated,
+    editions: updated.editions.map((edition) => ({
+      ...edition,
+      status: "valida",
+    })),
+  };
+  assert.equal(
+    legacyCatalogEntryFromDossier(reviewedUpdate).title,
+    "Carinhoso revisado",
+  );
+
+  const archived = archiveImportedMusicXmlAsset(reviewedUpdate, {
     archivedAt: "2026-08-08",
     publicId: "carinhoso",
   });

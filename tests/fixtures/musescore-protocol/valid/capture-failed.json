@@ -1,0 +1,17 @@
+{
+  "protocol": "cancioneiro.musescore.capture/1",
+  "messageType": "CAPTURE_FAILED",
+  "messageId": "msg_capture_fail_001",
+  "sentAt": "2026-08-13T12:00:02.000Z",
+  "payload": {
+    "sessionId": "session_bridge_0001",
+    "pluginSessionId": "plugin_session_0001",
+    "requestId": "capture_request_0001",
+    "failedAt": "2026-08-13T12:00:02.000Z",
+    "error": {
+      "code": "NO_ACTIVE_SCORE",
+      "message": "Nenhuma partitura ativa.",
+      "retryable": true
+    }
+  }
+}

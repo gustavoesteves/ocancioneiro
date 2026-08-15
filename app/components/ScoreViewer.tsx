@@ -10,6 +10,11 @@ import { musicXmlWithDisplayMetadata } from "../../lib/musicxml-metadata.mjs";
 type ViewerState = "loading" | "ready" | "error";
 
 export function ScoreViewer({ song }: { song: Song }) {
+  if (!song.musicxml) {
+    throw new Error("ScoreViewer requer MusicXML publico");
+  }
+  const musicXmlPath = song.musicxml;
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -167,16 +172,16 @@ export function ScoreViewer({ song }: { song: Song }) {
       try {
         const [{ OpenSheetMusicDisplay }, response] = await Promise.all([
           import("opensheetmusicdisplay"),
-          fetch(publicUrl(song.musicxml), { signal: abortController.signal }),
+          fetch(publicUrl(musicXmlPath), { signal: abortController.signal }),
         ]);
 
         if (!response.ok) {
-          throw new Error(`Could not load ${song.musicxml}`);
+          throw new Error(`Could not load ${musicXmlPath}`);
         }
 
         const xml = musicXmlWithDisplayMetadata(
           await response.text(),
-          song.musicxml.split("/").pop() ?? "partitura.musicxml",
+          musicXmlPath.split("/").pop() ?? "partitura.musicxml",
         );
 
         if (cancelled || !containerRef.current) {
@@ -229,7 +234,7 @@ export function ScoreViewer({ song }: { song: Song }) {
       }
       if (osmdRef.current === currentOsmd) osmdRef.current = null;
     };
-  }, [song.musicxml]);
+  }, [musicXmlPath]);
 
   useEffect(() => {
     zoomRef.current = zoom;

@@ -1,0 +1,10 @@
+{
+  "protocol": "cancioneiro.musescore.capture/1",
+  "messageType": "MUTATION",
+  "messageId": "msg_mutation_cmd_001",
+  "sentAt": "2026-08-13T12:00:00.000Z",
+  "payload": {
+    "action": "INSERT_CHORD",
+    "chordSymbol": "C7"
+  }
+}
