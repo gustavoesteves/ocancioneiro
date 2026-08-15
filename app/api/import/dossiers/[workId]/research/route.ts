@@ -6,6 +6,7 @@ import {
   addEditorialResearch,
   EditorialResearchError,
   editorialResearchSnapshot,
+  recordEditorialResearchEvent,
 } from "../../../../../../lib/editorial-research.mjs";
 import { editionFileFingerprint } from "../../../../../../lib/editorial-edition-metadata.mjs";
 import { resolveLocalProjectRoot } from "../../../../../../lib/local-project-root.mjs";
@@ -68,6 +69,8 @@ function responseBody(dossier: ResearchDossier, contents: string, updated = fals
       evidenceCriteria: editorialVocabulary.evidenceCriteria,
       evidenceDirections: editorialVocabulary.evidenceDirections,
       evidenceStrengths: editorialVocabulary.evidenceStrengths,
+      researchEventTargetTypes: editorialVocabulary.researchEventTargetTypes,
+      researchEventTypes: editorialVocabulary.researchEventTypes,
       sourceTypes: editorialVocabulary.sourceTypes,
     },
     work: {
@@ -184,6 +187,55 @@ export async function POST(request: Request, context: RouteContext) {
       existingSourceId: body.existingSourceId,
       source: body.source ?? {},
       sourceId: `fonte-${randomUUID()}`,
+    });
+    const contents = `${JSON.stringify(updated.dossier, null, 2)}\n`;
+    await writeTextAtomically(entry.filePath, contents);
+    return Response.json(responseBody(updated.dossier, contents, true));
+  } catch (error) {
+    return errorResponse(error);
+  } finally {
+    if (releaseLock) await releaseLock();
+  }
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const localError = requireLocalRequest(request);
+  if (localError) return localError;
+  let releaseLock: (() => Promise<void>) | null = null;
+  try {
+    const projectRoot = await resolveLocalProjectRoot();
+    const { workId } = await context.params;
+    const body = (await request.json()) as {
+      expectedFingerprint?: string;
+      reason?: string;
+      recordedBy?: string;
+      replacementId?: string;
+      targetId?: string;
+      targetType?: string;
+      type?: string;
+    };
+    if (!/^[a-f0-9]{64}$/.test(body.expectedFingerprint ?? "")) {
+      throw new EditorialResearchError("INVALID_RESEARCH", "Fingerprint invalido.");
+    }
+
+    releaseLock = await acquireResearchLock(projectRoot);
+    const entry = await dossierEntry(projectRoot, workId);
+    const original = await fs.readFile(entry.filePath, "utf8");
+    if (editionFileFingerprint(original) !== body.expectedFingerprint) {
+      throw new EditorialResearchError(
+        "DOSSIER_CHANGED",
+        "O dossie mudou desde que a pesquisa foi aberta. Atualize antes de salvar.",
+      );
+    }
+    const updated = recordEditorialResearchEvent(JSON.parse(original), {
+      eventId: `historico-${randomUUID()}`,
+      reason: body.reason,
+      recordedAt: new Date().toISOString(),
+      recordedBy: body.recordedBy,
+      replacementId: body.replacementId,
+      targetId: body.targetId,
+      targetType: body.targetType,
+      type: body.type,
     });
     const contents = `${JSON.stringify(updated.dossier, null, 2)}\n`;
     await writeTextAtomically(entry.filePath, contents);

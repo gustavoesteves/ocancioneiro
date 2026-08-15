@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   GET,
+  PATCH,
   POST,
 } from "../app/api/import/dossiers/[workId]/research/route.ts";
 
@@ -154,6 +155,51 @@ test("reutiliza fonte existente sem criar duplicata", async () => {
     assert.equal(second.sources.length, 1);
     assert.equal(second.evidence.length, 2);
     assert.equal(second.evidence[1].sources[0].sourceId, sourceId);
+  } finally {
+    if (previousRoot === undefined) delete process.env.CANCIONEIRO_PROJECT_ROOT;
+    else process.env.CANCIONEIRO_PROJECT_ROOT = previousRoot;
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("registra historico de correcao por PATCH com concorrencia otimista", async () => {
+  const root = await fixtureRoot();
+  const previousRoot = process.env.CANCIONEIRO_PROJECT_ROOT;
+  process.env.CANCIONEIRO_PROJECT_ROOT = root;
+  try {
+    const initialResponse = await GET(
+      new Request("http://localhost:3000/api/import/dossiers/obra-fixture/research"),
+      context,
+    );
+    const initial = await initialResponse.json();
+    const firstResponse = await POST(request(initial.fingerprint), context);
+    const first = await firstResponse.json();
+    const sourceId = first.sources[0].id;
+
+    const historyResponse = await PATCH(
+      new Request(
+        "http://localhost:3000/api/import/dossiers/obra-fixture/research",
+        {
+          body: JSON.stringify({
+            expectedFingerprint: first.fingerprint,
+            reason: "Fonte revisada e referencia normalizada.",
+            recordedBy: "Pesquisadora Fixture",
+            targetId: sourceId,
+            targetType: "source",
+            type: "correcao",
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        },
+      ),
+      context,
+    );
+    const history = await historyResponse.json();
+
+    assert.equal(historyResponse.status, 200);
+    assert.equal(history.researchEvents.length, 1);
+    assert.equal(history.researchEvents[0].targetId, sourceId);
+    assert.equal(history.sources.length, 1);
   } finally {
     if (previousRoot === undefined) delete process.env.CANCIONEIRO_PROJECT_ROOT;
     else process.env.CANCIONEIRO_PROJECT_ROOT = previousRoot;

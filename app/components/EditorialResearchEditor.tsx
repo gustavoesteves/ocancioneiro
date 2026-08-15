@@ -20,6 +20,16 @@ type ResearchResponse = {
     strength: string;
   }[];
   fingerprint?: string;
+  researchEvents?: {
+    id: string;
+    reason: string;
+    recordedAt: string;
+    recordedBy: string;
+    replacementId?: string;
+    targetId: string;
+    targetType: string;
+    type: string;
+  }[];
   sources?: {
     id: string;
     reference?: string;
@@ -34,6 +44,8 @@ type ResearchResponse = {
     evidenceCriteria: string[];
     evidenceDirections: string[];
     evidenceStrengths: string[];
+    researchEventTargetTypes: string[];
+    researchEventTypes: string[];
     sourceTypes: string[];
   };
   work?: { id: string; title: string };
@@ -69,6 +81,15 @@ const initialCanonicalClaim = {
   reach: "nacional",
 };
 
+const initialResearchEvent = {
+  reason: "",
+  recordedBy: "",
+  replacementId: "",
+  targetId: "",
+  targetType: "evidence",
+  type: "correcao",
+};
+
 function label(value: string) {
   return value.replaceAll("_", " ");
 }
@@ -79,6 +100,7 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
   const [existingSourceId, setExistingSourceId] = useState("");
   const [evidence, setEvidence] = useState(initialEvidence);
   const [canonicalClaim, setCanonicalClaim] = useState(initialCanonicalClaim);
+  const [researchEvent, setResearchEvent] = useState(initialResearchEvent);
   const [state, setState] = useState<"loading" | "idle" | "saving" | "error">(
     "loading",
   );
@@ -118,6 +140,18 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
       canonicalClaim.context.trim() &&
       canonicalClaim.justification.trim(),
   );
+  const eventTargets = researchEvent.targetType === "source"
+    ? (data?.sources ?? [])
+    : (data?.evidence ?? []);
+  const eventComplete = Boolean(
+    data?.fingerprint &&
+      researchEvent.targetId &&
+      researchEvent.reason.trim() &&
+      researchEvent.recordedBy.trim() &&
+      (researchEvent.type !== "substituicao" ||
+        (researchEvent.replacementId &&
+          researchEvent.replacementId !== researchEvent.targetId)),
+  );
 
   async function save() {
     if (!complete || !data?.fingerprint) return;
@@ -150,6 +184,38 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Falha ao registrar a pesquisa.");
+    }
+  }
+
+  async function saveResearchEvent() {
+    if (!eventComplete || !data?.fingerprint) return;
+    setState("saving");
+    setMessage(null);
+    try {
+      const response = await fetch(
+        `/api/import/dossiers/${encodeURIComponent(workId)}/research`,
+        {
+          body: JSON.stringify({
+            ...researchEvent,
+            expectedFingerprint: data.fingerprint,
+            replacementId: researchEvent.replacementId || undefined,
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        },
+      );
+      const result = (await response.json()) as ResearchResponse;
+      if (!response.ok) throw new Error(result.error || "Nao consegui registrar o historico.");
+      setData(result);
+      setResearchEvent((current) => ({
+        ...initialResearchEvent,
+        recordedBy: current.recordedBy,
+      }));
+      setState("idle");
+      setMessage("Historico de pesquisa registrado sem apagar o registro original.");
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "Falha ao registrar o historico.");
     }
   }
 
@@ -236,6 +302,40 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
           <div><h3 className="text-sm font-semibold">Evidencias ({data?.evidence?.length ?? 0})</h3><ul className="mt-2 space-y-2 text-sm">{data?.evidence?.map((item) => <li className="rounded border border-[#e1dbcf] bg-white p-3" key={item.id}><strong>{item.claim}</strong><p className="mt-1 text-xs text-[#70695e]">{label(item.criterion)} · {item.strength}</p></li>)}</ul></div>
           <div><h3 className="text-sm font-semibold">Afirmacoes ({data?.canonicalClaims?.length ?? 0})</h3><ul className="mt-2 space-y-2 text-sm">{data?.canonicalClaims?.map((item, index) => <li className="rounded border border-[#e1dbcf] bg-white p-3" key={`${item.context}-${index}`}><strong>{item.context}</strong><p className="mt-1 text-xs text-[#70695e]">{item.centrality} · {item.reach}</p></li>)}</ul></div>
         </div>
+      </section>
+
+      <section className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <article className="rounded-md border border-[#d8d0c1] bg-white p-5">
+          <h2 className="text-lg font-semibold">Historico de pesquisa</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <label className="grid gap-2 text-sm font-semibold">Tipo<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setResearchEvent((current) => ({ ...current, replacementId: "", type: event.target.value }))} value={researchEvent.type}>{data?.vocabularies?.researchEventTypes.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
+            <label className="grid gap-2 text-sm font-semibold">Alvo<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setResearchEvent((current) => ({ ...current, replacementId: "", targetId: "", targetType: event.target.value }))} value={researchEvent.targetType}>{data?.vocabularies?.researchEventTargetTypes.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
+            <label className="grid gap-2 text-sm font-semibold">Registro original<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setResearchEvent((current) => ({ ...current, targetId: event.target.value }))} value={researchEvent.targetId}><option value="">Selecionar</option>{eventTargets.map((item) => <option key={item.id} value={item.id}>{"title" in item ? item.title : item.claim}</option>)}</select></label>
+            {researchEvent.type === "substituicao" ? (
+              <label className="grid gap-2 text-sm font-semibold">Registro substituto<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setResearchEvent((current) => ({ ...current, replacementId: event.target.value }))} value={researchEvent.replacementId}><option value="">Selecionar</option>{eventTargets.filter((item) => item.id !== researchEvent.targetId).map((item) => <option key={item.id} value={item.id}>{"title" in item ? item.title : item.claim}</option>)}</select></label>
+            ) : null}
+            <label className="grid gap-2 text-sm font-semibold md:col-span-2">Motivo<textarea className="min-h-24 rounded border border-[#cfc6b5] p-3 font-normal" onChange={(event) => setResearchEvent((current) => ({ ...current, reason: event.target.value }))} value={researchEvent.reason} /></label>
+            <label className="grid gap-2 text-sm font-semibold">Registrado por<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setResearchEvent((current) => ({ ...current, recordedBy: event.target.value }))} value={researchEvent.recordedBy} /></label>
+            <div className="flex items-end">
+              <button className="h-10 w-full rounded-md bg-[#70431f] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!eventComplete || state === "saving"} onClick={() => void saveResearchEvent()} type="button">
+                {state === "saving" ? "Registrando..." : "Registrar historico"}
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-5">
+          <h2 className="text-lg font-semibold">Eventos ({data?.researchEvents?.length ?? 0})</h2>
+          <ul className="mt-4 space-y-2 text-sm">
+            {data?.researchEvents?.map((item) => (
+              <li className="rounded border border-[#e1dbcf] bg-white p-3" key={item.id}>
+                <strong>{label(item.type)} de {label(item.targetType)}</strong>
+                <p className="mt-1 text-xs text-[#70695e]">{item.targetId}{item.replacementId ? ` -> ${item.replacementId}` : ""}</p>
+                <p className="mt-2 text-[#403b33]">{item.reason}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
       </section>
     </main>
   );

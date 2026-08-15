@@ -590,6 +590,119 @@ test("accepts many-to-many evidence references with structured locators", () => 
   assert.equal(dossier.evidence[1].sources[0].locators[1].type, "item_acervo");
 });
 
+test("accepts research correction and substitution events without mutating records", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      evidence: [
+        {
+          assessedAt: "2026-08-07",
+          assessedBy: "pesquisador",
+          claim: "A fonte antiga sustenta uma leitura superada.",
+          criterion: "circulacao",
+          direction: "sustenta",
+          id: "evidencia-antiga",
+          justification: "Fixture historica.",
+          sources: [{ sourceId: "fonte-songbook" }],
+          strength: "fraca",
+          strengthJustification: "Registro mantido para auditoria.",
+        },
+        {
+          assessedAt: "2026-08-08",
+          assessedBy: "pesquisador",
+          claim: "A fonte nova corrige a leitura anterior.",
+          criterion: "circulacao",
+          direction: "sustenta",
+          id: "evidencia-nova",
+          justification: "Fixture substituta.",
+          sources: [{ sourceId: "fonte-gravacao" }],
+          strength: "moderada",
+          strengthJustification: "Registro mais preciso.",
+        },
+      ],
+      researchEvents: [
+        {
+          id: "historico-correcao-1",
+          reason: "Referencia normalizada sem apagar o registro original.",
+          recordedAt: "2026-08-09",
+          recordedBy: "editor",
+          targetId: "fonte-songbook",
+          targetType: "source",
+          type: "correcao",
+        },
+        {
+          id: "historico-substituicao-1",
+          reason: "Evidencia nova substitui leitura preliminar.",
+          recordedAt: "2026-08-10",
+          recordedBy: "editor",
+          replacementId: "evidencia-nova",
+          targetId: "evidencia-antiga",
+          targetType: "evidence",
+          type: "substituicao",
+        },
+      ],
+      sources: [
+        {
+          id: "fonte-songbook",
+          title: "Songbook de teste",
+          type: "songbook",
+        },
+        {
+          id: "fonte-gravacao",
+          title: "Gravacao de teste",
+          type: "gravacao",
+        },
+      ],
+    }),
+  );
+
+  assert.equal(dossier.researchEvents.length, 2);
+  assert.equal(dossier.evidence.length, 2);
+});
+
+test("rejects research substitution without a valid replacement", () => {
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          evidence: [
+            {
+              assessedAt: "2026-08-07",
+              assessedBy: "pesquisador",
+              claim: "A fonte antiga sustenta uma leitura superada.",
+              criterion: "circulacao",
+              direction: "sustenta",
+              id: "evidencia-antiga",
+              justification: "Fixture historica.",
+              sources: [{ sourceId: "fonte-songbook" }],
+              strength: "fraca",
+              strengthJustification: "Registro mantido para auditoria.",
+            },
+          ],
+          researchEvents: [
+            {
+              id: "historico-substituicao-1",
+              reason: "Evidencia nova substituiria leitura preliminar.",
+              recordedAt: "2026-08-10",
+              recordedBy: "editor",
+              replacementId: "evidencia-ausente",
+              targetId: "evidencia-antiga",
+              targetType: "evidence",
+              type: "substituicao",
+            },
+          ],
+          sources: [
+            {
+              id: "fonte-songbook",
+              title: "Songbook de teste",
+              type: "songbook",
+            },
+          ],
+        }),
+      ),
+    /researchEvents\[0\]\.replacementId referencia evidence inexistente/,
+  );
+});
+
 test("rejects invalid structured evidence locators", () => {
   assert.throws(
     () =>

@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   addEditorialResearch,
   EditorialResearchError,
+  recordEditorialResearchEvent,
 } from "../lib/editorial-research.mjs";
 
 function dossier() {
@@ -98,6 +99,74 @@ test("rejeita reutilizacao de fonte inexistente", () => {
         sourceId: undefined,
       }),
     /Fonte existente nao encontrada/,
+  );
+});
+
+test("registra correcao de pesquisa sem alterar fonte ou evidencia", () => {
+  const first = addEditorialResearch(dossier(), input);
+  const result = recordEditorialResearchEvent(first.dossier, {
+    eventId: "historico-correcao-1",
+    reason: "Referencia catalografica normalizada depois da revisao.",
+    recordedAt: "2026-08-15T19:00:00.000Z",
+    recordedBy: "Editora Fixture",
+    targetId: input.sourceId,
+    targetType: "source",
+    type: "correcao",
+  });
+
+  assert.equal(result.dossier.sources.length, 1);
+  assert.equal(result.dossier.evidence.length, 1);
+  assert.equal(result.dossier.researchEvents[0].targetId, input.sourceId);
+});
+
+test("registra substituicao de evidencia apontando para registro substituto", () => {
+  const first = addEditorialResearch(dossier(), input);
+  const second = addEditorialResearch(first.dossier, {
+    ...input,
+    evidence: {
+      ...input.evidence,
+      claim: "A obra tem circulacao documentada em outra fonte.",
+      criterion: "circulacao",
+    },
+    evidenceId: "evidencia-atraente-2",
+    source: {
+      ...input.source,
+      persistentId: "acervo:atraente:2",
+      title: "Segundo registro catalografico de Atraente",
+      url: "https://example.org/atraente/2",
+    },
+    sourceId: "fonte-atraente-2",
+  });
+  const result = recordEditorialResearchEvent(second.dossier, {
+    eventId: "historico-substituicao-1",
+    reason: "Evidencia mais precisa substitui a leitura preliminar.",
+    recordedAt: "2026-08-15T19:10:00.000Z",
+    recordedBy: "Editora Fixture",
+    replacementId: "evidencia-atraente-2",
+    targetId: input.evidenceId,
+    targetType: "evidence",
+    type: "substituicao",
+  });
+
+  assert.equal(result.dossier.researchEvents[0].replacementId, "evidencia-atraente-2");
+});
+
+test("rejeita substituicao por registro inexistente", () => {
+  const first = addEditorialResearch(dossier(), input);
+
+  assert.throws(
+    () =>
+      recordEditorialResearchEvent(first.dossier, {
+        eventId: "historico-substituicao-1",
+        reason: "Tentativa invalida.",
+        recordedAt: "2026-08-15T19:10:00.000Z",
+        recordedBy: "Editora Fixture",
+        replacementId: "evidencia-ausente",
+        targetId: input.evidenceId,
+        targetType: "evidence",
+        type: "substituicao",
+      }),
+    /Registro substituto nao encontrado/,
   );
 });
 
