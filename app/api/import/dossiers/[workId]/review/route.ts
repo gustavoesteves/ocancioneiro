@@ -70,7 +70,16 @@ function responseBody(
   dossier: {
     assets?: { editionId?: string; status?: string; type?: string }[];
     curation: { status: string };
-    editions?: { id: string; status: string; title?: string }[];
+    editions?: {
+      id: string;
+      notationProfile?: {
+        instrument?: "piano" | "violao";
+        justification?: string;
+        kind: "lead_sheet" | "partitura_instrumental_original";
+      };
+      status: string;
+      title?: string;
+    }[];
     rights: {
       basis?: string;
       confirmedAt?: string;
@@ -99,6 +108,7 @@ function responseBody(
   return {
     editions: (dossier.editions ?? []).map((edition) => ({
       id: edition.id,
+      notationProfile: edition.notationProfile ?? { kind: "lead_sheet" },
       status: edition.status,
       title: edition.title ?? edition.id,
     })),
@@ -220,6 +230,9 @@ export async function PUT(request: Request, context: RouteContext) {
       editionReviewed?: boolean;
       editionReviewedBy?: string;
       expectedFingerprint?: string;
+      notationInstrument?: "piano" | "violao";
+      notationJustification?: string;
+      notationKind?: "lead_sheet" | "partitura_instrumental_original";
       rightsBasis?: string;
       rightsConfirmed?: boolean;
       rightsConfirmedBy?: string;
@@ -255,6 +268,9 @@ export async function PUT(request: Request, context: RouteContext) {
       editionId: body.editionId,
       editionReviewed: body.editionReviewed,
       editionReviewedBy: body.editionReviewedBy,
+      notationInstrument: body.notationInstrument,
+      notationJustification: body.notationJustification,
+      notationKind: body.notationKind,
       reviewedAt,
       rightsBasis: body.rightsBasis,
       rightsConfirmed: body.rightsConfirmed,

@@ -827,8 +827,16 @@ test("builds a lead sheet scope report for valid MusicXML assets", async () => {
       {
         dossier: {
           ...dossier("obra-arranjo", "Obra com arranjo"),
+          editions: [
+            {
+              id: "edicao-arranjo",
+              notationProfile: { kind: "lead_sheet" },
+              status: "em_revisao",
+            },
+          ],
           assets: [
             {
+              editionId: "edicao-arranjo",
               id: "asset-arranjo",
               path: "/musicxml/fixture.musicxml",
               status: "valido",
@@ -845,10 +853,55 @@ test("builds a lead sheet scope report for valid MusicXML assets", async () => {
   assert.deepEqual(report, [
     {
       assetId: "asset-arranjo",
+      disposition: "revisao_necessaria",
       filePath: "data/dossiers/obra-arranjo.json",
       findings: ["mais de uma pauta/parte (2)"],
       label: "obra-arranjo (Obra com arranjo)",
+      notationProfile: { kind: "lead_sheet" },
       path: "/musicxml/fixture.musicxml",
     },
   ]);
+});
+
+test("classifica partitura instrumental original documentada sem chama-la de arranjo", async () => {
+  const projectRoot = await writeMusicXmlFixture(`<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1"><measure number="1">
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>
+    <note><chord/><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration></note>
+  </measure></part>
+</score-partwise>`);
+  const notationProfile = {
+    instrument: "piano",
+    justification: "A escrita original para piano integra a identidade da obra.",
+    kind: "partitura_instrumental_original",
+  };
+
+  const report = await leadSheetScopeReport(
+    [
+      {
+        dossier: {
+          ...dossier("obra-piano", "Obra para piano"),
+          assets: [
+            {
+              editionId: "edicao-original",
+              id: "asset-original",
+              path: "/musicxml/fixture.musicxml",
+              status: "valido",
+              type: "musicxml",
+            },
+          ],
+          editions: [
+            { id: "edicao-original", notationProfile, status: "valida" },
+          ],
+        },
+        filePath: "data/dossiers/obra-piano.json",
+      },
+    ],
+    { projectRoot },
+  );
+
+  assert.equal(report[0].disposition, "excecao_instrumental_documentada");
+  assert.deepEqual(report[0].notationProfile, notationProfile);
 });

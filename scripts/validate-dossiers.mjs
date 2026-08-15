@@ -556,6 +556,10 @@ function editionForAsset(dossier, asset) {
   return (dossier.editions ?? []).find((edition) => edition.id === asset.editionId);
 }
 
+function notationProfileForEdition(edition) {
+  return edition?.notationProfile ?? { kind: "lead_sheet" };
+}
+
 function countMatches(xml, pattern) {
   return [...xml.matchAll(pattern)].length;
 }
@@ -637,11 +641,19 @@ export async function leadSheetScopeReport(
 
       const findings = leadSheetScopeFindings(xml);
       if (findings.length > 0) {
+        const notationProfile = notationProfileForEdition(
+          editionForAsset(dossier, asset),
+        );
         report.push({
           assetId: asset.id,
+          disposition:
+            notationProfile.kind === "partitura_instrumental_original"
+              ? "excecao_instrumental_documentada"
+              : "revisao_necessaria",
           filePath,
           findings,
           label: `${dossier.work.id} (${dossier.work.preferredTitle})`,
+          notationProfile,
           path: asset.path,
         });
       }
@@ -768,11 +780,26 @@ export async function main({
     });
   }
 
-  if (scopeReport.length > 0) {
+  const pendingScopeReview = scopeReport.filter(
+    (item) => item.disposition === "revisao_necessaria",
+  );
+  if (pendingScopeReview.length > 0) {
     console.log("\nConteudo potencialmente fora do escopo de lead sheet:");
-    scopeReport.forEach((item) => {
+    pendingScopeReview.forEach((item) => {
       console.log(
         `- ${item.label}: ${item.assetId} (${item.path}): ${item.findings.join(", ")}`,
+      );
+    });
+  }
+
+  const documentedOriginalScores = scopeReport.filter(
+    (item) => item.disposition === "excecao_instrumental_documentada",
+  );
+  if (documentedOriginalScores.length > 0) {
+    console.log("\nPartituras instrumentais originais documentadas:");
+    documentedOriginalScores.forEach((item) => {
+      console.log(
+        `- ${item.label}: ${item.notationProfile.instrument}; ${item.notationProfile.justification}`,
       );
     });
   }

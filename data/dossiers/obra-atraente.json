@@ -70,7 +70,12 @@
       "id": "edicao-importada-atraente",
       "instrumentation": "Piano",
       "level": "Nao classificado",
-      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
+      "notationProfile": {
+        "kind": "partitura_instrumental_original",
+        "instrument": "piano",
+        "justification": "Obra instrumental originalmente concebida para piano; a escrita pianistica original integra sua identidade musical e e preferida a uma reducao posterior para melodia e cifras."
+      },
+      "notes": "",
       "source": "Acervo",
       "status": "valida",
       "tags": [],

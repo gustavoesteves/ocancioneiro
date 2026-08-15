@@ -50,6 +50,11 @@ export type PromotionReviewResponse = {
   code?: string;
   editions?: {
     id: string;
+    notationProfile: {
+      instrument?: "piano" | "violao";
+      justification?: string;
+      kind: "lead_sheet" | "partitura_instrumental_original";
+    };
     status: string;
     title: string;
   }[];

@@ -78,6 +78,7 @@ function putRequest(fingerprint) {
         editionReviewed: true,
         editionReviewedBy: "Revisor Musical",
         expectedFingerprint: fingerprint,
+        notationKind: "lead_sheet",
         rightsBasis: "Dominio publico e procedencia da edicao verificados documentalmente.",
         rightsConfirmed: true,
         rightsConfirmedBy: "Responsavel Juridica",
@@ -122,6 +123,7 @@ test("conclui gates com concorrencia otimista e sem criar asset publico", async 
       ),
     );
     assert.equal(persisted.editions[0].status, "valida");
+    assert.deepEqual(persisted.editions[0].notationProfile, { kind: "lead_sheet" });
     assert.equal(persisted.curation.status, "aceita");
     assert.equal(persisted.rights.status, "liberado");
     assert.deepEqual(persisted.assets, []);

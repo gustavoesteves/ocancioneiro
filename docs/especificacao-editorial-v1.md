@@ -12,10 +12,12 @@ Esta especificação define o que O Cancioneiro publica, como uma obra entra no
 acervo e quais informações precisam sustentar cada decisão editorial.
 
 O Cancioneiro é um acervo editorial navegável do repertório comum da música
-brasileira. Seu objetivo não é reunir sucessos por popularidade nem produzir
-partituras completas. O projeto documenta repertório e publica edições de
+brasileira. Seu objetivo não é reunir sucessos por popularidade nem reproduzir
+arranjos particulares. O projeto documenta repertório e publica edições de
 referência em formato lead sheet quando a pesquisa, a edição e os direitos
-permitem.
+permitem. Para obras originalmente concebidas para piano ou violão, pode
+preservar a partitura instrumental original quando sua escrita integra a
+identidade da composição.
 
 Uma obra pode pertencer ao cânone mesmo quando ainda não possui lead sheet ou
 quando sua partitura não pode ser publicada. Curadoria, edição e direitos são
@@ -23,10 +25,11 @@ processos independentes.
 
 ## 2. Definição editorial
 
-> O Cancioneiro publica edições editoriais em formato lead sheet destinadas a
-> preservar a identidade executável da obra — melodia, harmonia e forma
-> essenciais — distinguindo explicitamente composição, fontes históricas,
-> decisões editoriais e realizações ou arranjos particulares.
+> O Cancioneiro publica edições editoriais destinadas a preservar a identidade
+> executável da obra. O padrão é o lead sheet — melodia, harmonia e forma
+> essenciais. A exceção é a partitura instrumental original de obra concebida
+> para piano ou violão, distinguindo sempre composição, fonte, edição e
+> arranjos posteriores.
 
 ### 2.1 O que o lead sheet preserva
 
@@ -63,6 +66,26 @@ responder:
 
 Somente elementos que satisfaçam o teste e tenham justificativa documentada
 podem ser tratados como essenciais.
+
+### 2.4 Exceção para partitura instrumental original
+
+Quando a obra canônica foi originalmente concebida para piano ou violão, uma
+redução posterior para melodia e cifras pode retirar justamente a escrita que
+define sua identidade. Nesses casos, a edição pode adotar o perfil
+`partitura_instrumental_original` em vez de `lead_sheet`.
+
+A exceção exige:
+
+- instrumento original classificado como `piano` ou `violao`;
+- justificativa editorial específica para a obra;
+- preferência por fonte original ou edição historicamente fundamentada;
+- revisão musical e verificação de direitos iguais às de qualquer outra edição;
+- distinção explícita entre a composição original e arranjos ou transcrições
+  posteriores.
+
+Não são exceções válidas partituras completas de canções, acompanhamentos
+escritos, reduções orquestrais, transcrições para outro instrumento ou arranjos
+de terceiros. Ausência de lead sheet pronto também não autoriza a exceção.
 
 ## 3. Princípios obrigatórios
 

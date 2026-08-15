@@ -96,6 +96,37 @@ test("keeps the active song inside the filtered result", () => {
   assert.equal(resolveActiveSong([], "cancao"), null);
 });
 
+test("publica perfil de partitura original apenas para piano ou violao", () => {
+  const parsed = parseCatalog({
+    schemaVersion: 2,
+    songs: [
+      publicSong({
+        notationProfile: {
+          instrument: "piano",
+          kind: "partitura_instrumental_original",
+        },
+      }),
+    ],
+  });
+  assert.equal(parsed.songs[0].notationProfile.instrument, "piano");
+
+  assert.throws(
+    () =>
+      parseCatalog({
+        schemaVersion: 2,
+        songs: [
+          publicSong({
+            notationProfile: {
+              instrument: "orquestra",
+              kind: "partitura_instrumental_original",
+            },
+          }),
+        ],
+      }),
+    /notationProfile\.instrument possui valor invalido/,
+  );
+});
+
 test("accepts metadata-only works without exposing a MusicXML URL", () => {
   const metadataOnly = publicSong({
     id: "carinhoso",

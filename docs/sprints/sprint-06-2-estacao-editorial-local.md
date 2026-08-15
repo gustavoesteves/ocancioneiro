@@ -1,5 +1,7 @@
 # Sprint 6.2 — Estacao editorial local e publicacao assistida
 
+**Status:** concluida em 2026-08-15 com ensaio E2E publicado
+
 ## Objetivo
 
 Transformar `/import` em uma superficie local capaz de operar um acervo com
@@ -81,5 +83,9 @@ Cada seta e uma operacao separada. Falhar em uma etapa nao executa a seguinte.
 - [x] commit so ocorre depois de verificacao atual;
 - [x] PR nao publica;
 - [x] merge depende de checks remotos aprovados;
-- [ ] ensaio manual de push, PR e merge em branch de teste;
-- [ ] confirmacao visual do deploy publicado.
+- [x] ensaio manual de push, PR e merge em branch de teste;
+- [x] confirmacao visual do deploy publicado.
+
+O ensaio completo, incluindo as falhas encontradas e corrigidas durante a
+retomada, esta registrado em
+[`ensaio-publicacao-e2e-s62-2026-08-15.md`](../evidencias/ensaio-publicacao-e2e-s62-2026-08-15.md).

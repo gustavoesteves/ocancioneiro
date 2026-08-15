@@ -50,7 +50,10 @@
       "id": "edicao-importada-asa-branca",
       "instrumentation": "Electric Guitar",
       "level": "Nao classificado",
-      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
+      "notationProfile": {
+        "kind": "lead_sheet"
+      },
+      "notes": "",
       "source": "Acervo",
       "status": "valida",
       "tags": [],

@@ -894,7 +894,8 @@ O conjunto deve incluir:
 
 - três a cinco edições passam por editor e revisor;
 - cada escolha não trivial é rastreável;
-- o MusicXML permanece lead sheet, não arranjo;
+- o MusicXML permanece lead sheet ou partitura instrumental original de piano
+  ou violão com exceção documentada; nunca arranjo posterior;
 - arquivos anteriores não são silenciosamente sobrescritos;
 - `npm run check` cobre as novas validações;
 - nenhuma edição é publicada apenas porque tecnicamente renderiza.
@@ -956,7 +957,10 @@ não existe bloqueio técnico de download apenas por esconder um botão.
 - [x] validar que o build não empacota arquivos bloqueados;
 - [x] adicionar teste de regressão para caminhos públicos seguros;
 - [x] documentar procedimento de retirada emergencial;
-- [ ] verificar catálogo e site publicados após deploy controlado.
+- [x] verificar catálogo e site publicados após deploy controlado.
+
+A verificacao controlada esta documentada no
+[`ensaio E2E de publicacao assistida`](../evidencias/ensaio-publicacao-e2e-s62-2026-08-15.md).
 
 ### Segurança e privacidade
 
@@ -1013,6 +1017,9 @@ depois conectar uma nova forma de entrada ao fluxo editorial.
 ---
 
 ## Sprint 7 — Retrospectiva e estabilização
+
+A estabilizacao tecnica da pesquisa editorial foi fatiada na
+[`Sprint 7.1 — Pesquisa editorial estruturada`](sprint-07-1-pesquisa-editorial.md).
 
 ### Objetivo
 

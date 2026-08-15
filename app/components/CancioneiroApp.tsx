@@ -261,7 +261,7 @@ export function CancioneiroApp() {
               </div>
             </div>
 
-            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-6">
               <div>
                 <dt className="font-medium text-[#70695e]">Tom</dt>
                 <dd>{activeSong.key}</dd>
@@ -277,6 +277,15 @@ export function CancioneiroApp() {
               <div>
                 <dt className="font-medium text-[#70695e]">Instrumentacao</dt>
                 <dd>{activeSong.instrumentation}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-[#70695e]">Formato</dt>
+                <dd>
+                  {activeSong.notationProfile.kind ===
+                  "partitura_instrumental_original"
+                    ? `Partitura original para ${activeSong.notationProfile.instrument}`
+                    : "Lead sheet"}
+                </dd>
               </div>
               <div>
                 <dt className="font-medium text-[#70695e]">Cifras</dt>

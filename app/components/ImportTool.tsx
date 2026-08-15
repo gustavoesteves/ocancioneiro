@@ -1057,12 +1057,17 @@ export function ImportTool() {
                     value={effectiveId}
                   />
                 </label>
-                {(["genre", "level", "source", "tags"] as const).map((field) => (
+                {([
+                  ["genre", "Genero"],
+                  ["level", "Nivel"],
+                  ["source", "Fonte editorial"],
+                  ["tags", "Tags separadas por virgula"],
+                ] as const).map(([field, label]) => (
                   <label
                     className="flex flex-col gap-2 text-sm font-medium text-[#4d473d]"
                     key={field}
                   >
-                    {field}
+                    {label}
                     <input
                       className="h-10 rounded-md border border-[#cfc6b5] bg-white px-3 outline-none transition focus:border-[#8a4c2f] focus:ring-2 focus:ring-[#e6d4c8]"
                       onChange={(event) =>
@@ -1076,7 +1081,7 @@ export function ImportTool() {
                   </label>
                 ))}
                 <label className="flex flex-col gap-2 text-sm font-medium text-[#4d473d]">
-                  notes
+                  Notas editoriais publicas
                   <textarea
                     className="min-h-24 rounded-md border border-[#cfc6b5] bg-white px-3 py-2 outline-none transition focus:border-[#8a4c2f] focus:ring-2 focus:ring-[#e6d4c8]"
                     onChange={(event) =>
@@ -1087,6 +1092,10 @@ export function ImportTool() {
                     }
                     value={editorial.notes}
                   />
+                  <span className="text-xs font-normal text-[#70695e]">
+                    Se preenchidas, aparecem na biblioteca depois da promocao e
+                    da publicacao.
+                  </span>
                 </label>
               </div>
             </div>

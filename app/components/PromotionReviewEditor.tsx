@@ -26,6 +26,11 @@ export function PromotionReviewEditor({
   const [message, setMessage] = useState<string | null>(null);
   const [editionReviewed, setEditionReviewed] = useState(false);
   const [editionReviewedBy, setEditionReviewedBy] = useState("");
+  const [notationKind, setNotationKind] = useState<
+    "lead_sheet" | "partitura_instrumental_original"
+  >("lead_sheet");
+  const [notationInstrument, setNotationInstrument] = useState<"piano" | "violao">("piano");
+  const [notationJustification, setNotationJustification] = useState("");
   const [curationAccepted, setCurationAccepted] = useState(false);
   const [curationDecidedBy, setCurationDecidedBy] = useState("");
   const [curationReviewedBy, setCurationReviewedBy] = useState("");
@@ -46,6 +51,12 @@ export function PromotionReviewEditor({
       if (!response.ok) throw new Error(result.error || "Nao consegui carregar a revisao.");
       setData(result);
       setSelectedEditionId(result.preferredEditionId ?? "");
+      const preferredEdition = result.editions?.find(
+        (edition) => edition.id === result.preferredEditionId,
+      );
+      setNotationKind(preferredEdition?.notationProfile.kind ?? "lead_sheet");
+      setNotationInstrument(preferredEdition?.notationProfile.instrument ?? "piano");
+      setNotationJustification(preferredEdition?.notationProfile.justification ?? "");
       setRightsBasis(result.rights?.basis ?? "");
       setRightsConfirmedBy(result.rights?.confirmedBy ?? "");
     } catch (error) {
@@ -69,6 +80,8 @@ export function PromotionReviewEditor({
   const formComplete = Boolean(
     editionReviewed &&
       editionReviewedBy.trim() &&
+      (notationKind === "lead_sheet" ||
+        (notationInstrument && notationJustification.trim())) &&
       curationAccepted &&
       curationDecidedBy.trim() &&
       curationReviewedBy.trim() &&
@@ -95,6 +108,15 @@ export function PromotionReviewEditor({
             editionReviewed,
             editionReviewedBy,
             expectedFingerprint: data.fingerprint,
+            notationInstrument:
+              notationKind === "partitura_instrumental_original"
+                ? notationInstrument
+                : undefined,
+            notationJustification:
+              notationKind === "partitura_instrumental_original"
+                ? notationJustification
+                : undefined,
+            notationKind,
             rightsBasis,
             rightsConfirmed,
             rightsConfirmedBy,
@@ -199,6 +221,56 @@ export function PromotionReviewEditor({
               Responsavel pela validacao musical
               <input className="h-11 rounded-md border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setEditionReviewedBy(event.target.value)} value={editionReviewedBy} />
             </label>
+            <label className="mt-4 flex flex-col gap-2 text-sm font-semibold">
+              Perfil da partitura
+              <select
+                className="h-11 rounded-md border border-[#cfc6b5] bg-white px-3 font-normal"
+                onChange={(event) =>
+                  setNotationKind(
+                    event.target.value as
+                      | "lead_sheet"
+                      | "partitura_instrumental_original",
+                  )
+                }
+                value={notationKind}
+              >
+                <option value="lead_sheet">Lead sheet — melodia e cifras</option>
+                <option value="partitura_instrumental_original">
+                  Partitura instrumental original — excecao
+                </option>
+              </select>
+            </label>
+            {notationKind === "partitura_instrumental_original" ? (
+              <div className="mt-4 rounded-md border border-[#d3a36f] bg-[#fff8e9] p-4">
+                <p className="text-sm text-[#70431f]">
+                  Use somente quando a obra foi originalmente concebida para
+                  piano ou violao e a escrita instrumental integra sua identidade.
+                  A opcao nao autoriza arranjos ou transcricoes posteriores.
+                </p>
+                <label className="mt-4 flex flex-col gap-2 text-sm font-semibold">
+                  Instrumento original
+                  <select
+                    className="h-11 rounded-md border border-[#cfc6b5] bg-white px-3 font-normal"
+                    onChange={(event) =>
+                      setNotationInstrument(event.target.value as "piano" | "violao")
+                    }
+                    value={notationInstrument}
+                  >
+                    <option value="piano">Piano</option>
+                    <option value="violao">Violao</option>
+                  </select>
+                </label>
+                <label className="mt-4 flex flex-col gap-2 text-sm font-semibold">
+                  Justificativa editorial da excecao
+                  <textarea
+                    className="min-h-24 rounded-md border border-[#cfc6b5] bg-white p-3 font-normal"
+                    onChange={(event) => setNotationJustification(event.target.value)}
+                    required
+                    value={notationJustification}
+                  />
+                </label>
+              </div>
+            ) : null}
           </section>
 
           <section className="rounded-md border border-[#d8d0c1] bg-white p-5">

@@ -870,3 +870,43 @@ test("rejects silent or inconsistent asset replacement chains", () => {
     },
   );
 });
+
+test("aceita somente excecao instrumental original documentada para piano ou violao", () => {
+  const dossier = parseEditorialDossier(
+    minimalDossier({
+      editions: [
+        {
+          id: "edicao-original",
+          notationProfile: {
+            instrument: "violao",
+            justification:
+              "A escrita original para violao integra a identidade da obra.",
+            kind: "partitura_instrumental_original",
+          },
+          status: "valida",
+        },
+      ],
+    }),
+  );
+  assert.equal(dossier.editions[0].notationProfile.instrument, "violao");
+
+  assert.throws(
+    () =>
+      parseEditorialDossier(
+        minimalDossier({
+          editions: [
+            {
+              id: "edicao-arranjo",
+              notationProfile: {
+                instrument: "orquestra",
+                justification: "Arranjo posterior.",
+                kind: "partitura_instrumental_original",
+              },
+              status: "valida",
+            },
+          ],
+        }),
+      ),
+    /notationProfile\.instrument possui valor invalido/,
+  );
+});

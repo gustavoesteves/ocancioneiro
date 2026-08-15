@@ -87,6 +87,7 @@ test("confirma captura privada e cria edicao em revisao sem asset publico", asyn
     assert.equal(first.editionCreated, true);
     assert.equal(persisted.editions.length, 1);
     assert.equal(persisted.editions[0].status, "em_revisao");
+    assert.equal(persisted.editions[0].notes, "");
     assert.equal(persisted.assets.length, 0);
     assert.equal(JSON.stringify(persisted).includes("/.local/"), false);
     assert.equal(JSON.stringify(persisted).includes("/musicxml/"), false);

@@ -71,6 +71,12 @@ export function WorkDetail({ workId }: { workId: string }) {
           <p className="mt-2 text-sm text-[#70695e]">{creatorLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <a
+            className="rounded-md border border-[#8a4c2f] bg-white px-3 py-2 text-sm font-semibold text-[#8a4c2f]"
+            href={`/import/obras/${encodeURIComponent(dossier.workId)}/pesquisa`}
+          >
+            Registrar pesquisa
+          </a>
           {dossier.editions.length > 0 ? (
             <>
               <a

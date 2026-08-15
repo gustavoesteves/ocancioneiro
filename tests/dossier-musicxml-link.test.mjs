@@ -101,6 +101,7 @@ test("links MusicXML to an existing editorial dossier without changing work iden
   assert.equal(linked.editions[0].id, "edicao-importada-carinhoso");
   assert.equal(linked.editions[0].encodedKey, "F maior");
   assert.equal(linked.editions[0].status, "em_revisao");
+  assert.equal(linked.editions[0].notes, "");
   assert.deepEqual(linked.editions[0].chords, ["F"]);
   assert.equal(linked.assets[0].editionId, "edicao-importada-carinhoso");
   assert.equal(linked.assets[0].path, "/musicxml/carinhoso.musicxml");

@@ -54,6 +54,7 @@ const review = {
   editionId: "edicao-fixture",
   editionReviewed: true,
   editionReviewedBy: "Revisor Musical",
+  notationKind: "lead_sheet",
   reviewedAt: "2026-08-15T12:00:00.000Z",
   rightsBasis: "Dominio publico e procedencia da edicao verificados documentalmente.",
   rightsConfirmed: true,
@@ -75,6 +76,7 @@ test("conclui os tres gates sem publicar asset e preserva a trilha de autoria", 
 
   assert.equal(result.gates.ready, true);
   assert.equal(edition.status, "valida");
+  assert.deepEqual(edition.notationProfile, { kind: "lead_sheet" });
   assert.equal(edition.validatedBy, "Revisor Musical");
   assert.equal(parsed.curation.currentDecisionId, decision.id);
   assert.equal(decision.status, "aceita");
@@ -122,4 +124,34 @@ test("aceita justificativas concisas sem um limite minimo oculto", () => {
     "Lead sheet completo",
   );
   assert.equal(result.dossier.rights.basis, "Dominio publico");
+});
+
+test("registra partitura instrumental original apenas para piano ou violao", () => {
+  const result = applyPromotionReview(candidateDossier(), {
+    ...review,
+    notationInstrument: "piano",
+    notationJustification:
+      "A escrita pianistica original integra a identidade da composicao.",
+    notationKind: "partitura_instrumental_original",
+  });
+
+  assert.deepEqual(result.dossier.editions[0].notationProfile, {
+    instrument: "piano",
+    justification:
+      "A escrita pianistica original integra a identidade da composicao.",
+    kind: "partitura_instrumental_original",
+  });
+
+  assert.throws(
+    () =>
+      applyPromotionReview(candidateDossier(), {
+        ...review,
+        notationInstrument: "orquestra",
+        notationJustification: "Arranjo posterior.",
+        notationKind: "partitura_instrumental_original",
+      }),
+    (error) =>
+      error instanceof PromotionReviewError &&
+      error.code === "INVALID_PROMOTION_REVIEW",
+  );
 });

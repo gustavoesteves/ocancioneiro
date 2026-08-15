@@ -83,6 +83,12 @@ O formato padrao de uma obra deve ser:
 - forma e marcacoes essenciais quando ajudarem a tocar a musica;
 - MusicXML limpo, legivel e facil de revisar.
 
+Ha uma excecao editorial estreita: obras originalmente concebidas para piano
+ou violao podem preservar a partitura instrumental original quando essa escrita
+integra a identidade da composicao. A excecao precisa declarar o instrumento e
+uma justificativa editorial; ela nao autoriza arranjos, transcricoes posteriores
+ou partituras completas de cancoes.
+
 O objetivo nao e publicar partituras completas, arranjos fechados ou reducoes
 orquestrais. Isso deixaria o acervo mais lento de produzir e menos flexivel para
 quem quer estudar, acompanhar, improvisar ou montar seu proprio arranjo.

@@ -9,8 +9,11 @@
       "key": "C maior",
       "level": "Nao classificado",
       "instrumentation": "Electric Guitar",
+      "notationProfile": {
+        "kind": "lead_sheet"
+      },
       "source": "Acervo",
-      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
+      "notes": "",
       "chords": [
         "C",
         "F",
@@ -41,8 +44,12 @@
       "key": "F maior",
       "level": "Nao classificado",
       "instrumentation": "Piano",
+      "notationProfile": {
+        "instrument": "piano",
+        "kind": "partitura_instrumental_original"
+      },
       "source": "Acervo",
-      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
+      "notes": "",
       "chords": [
         "C7",
         "F/C",
