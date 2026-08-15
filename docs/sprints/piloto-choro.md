@@ -1208,3 +1208,16 @@ O programa é bem-sucedido se:
 - o catálogo continua útil com ou sem partitura disponível;
 - a equipe consegue ampliar o repertório sem depender de memória informal;
 - a retrospectiva autoriza explicitamente a próxima escala.
+
+## 14. Atualização de acompanhamento — 2026-08-15
+
+A Sprint 7.1 já tem a primeira fatia publicada no `main` até o commit
+`1d0c2d0`: pesquisa editorial estruturada, registro ligado de fonte,
+evidência e afirmação canônica, controle de concorrência e reuso de fonte
+existente. A validação passou com `npm run check` e 215 testes, e o GitHub Pages
+publicou com sucesso no run `31904010055`.
+
+Pendência operacional: o workflow de Pages emitiu aviso porque
+`actions/deploy-pages@v4` ainda referencia Node.js 20 e está sendo forçado pelo
+GitHub Actions para Node.js 24. Esta manutenção deve entrar na próxima rodada
+curta antes que o aviso se torne falha de deploy.

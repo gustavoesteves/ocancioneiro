@@ -53,3 +53,15 @@ editor pesquisador.
 
 O gate obrigatorio so sera ativado depois que a interface conseguir satisfaze-lo
 sem edicao manual de arquivos.
+
+## Atualizacao 2026-08-15
+
+A primeira fatia da Sprint 7.1 foi publicada no `main` ate o commit `1d0c2d0`,
+incluindo pesquisa editorial estruturada e reuso de fonte existente. O
+`npm run check` passou com 215 testes, e o GitHub Pages publicou com sucesso no
+run `31904010055`.
+
+Pendencia operacional: o deploy avisou que `actions/deploy-pages@v4` ainda
+referencia Node.js 20 e foi forcado pelo GitHub Actions a rodar em Node.js 24.
+Vale abrir uma manutencao curta para atualizar a action/workflow antes que o
+aviso vire falha.
