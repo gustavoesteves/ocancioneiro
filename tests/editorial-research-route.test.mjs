@@ -45,7 +45,7 @@ async function fixtureRoot() {
 
 const context = { params: Promise.resolve({ workId: "obra-fixture" }) };
 
-function request(fingerprint) {
+function request(fingerprint, overrides = {}) {
   return new Request(
     "http://localhost:3000/api/import/dossiers/obra-fixture/research",
     {
@@ -73,6 +73,7 @@ function request(fingerprint) {
           type: "catalogo_ou_acervo",
           url: "https://example.org/catalogo",
         },
+        ...overrides,
       }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -109,6 +110,50 @@ test("registra pesquisa ligada com concorrencia otimista", async () => {
 
     const staleResponse = await POST(request(initial.fingerprint), context);
     assert.equal(staleResponse.status, 409);
+  } finally {
+    if (previousRoot === undefined) delete process.env.CANCIONEIRO_PROJECT_ROOT;
+    else process.env.CANCIONEIRO_PROJECT_ROOT = previousRoot;
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("reutiliza fonte existente sem criar duplicata", async () => {
+  const root = await fixtureRoot();
+  const previousRoot = process.env.CANCIONEIRO_PROJECT_ROOT;
+  process.env.CANCIONEIRO_PROJECT_ROOT = root;
+  try {
+    const initialResponse = await GET(
+      new Request("http://localhost:3000/api/import/dossiers/obra-fixture/research"),
+      context,
+    );
+    const initial = await initialResponse.json();
+    const firstResponse = await POST(request(initial.fingerprint), context);
+    const first = await firstResponse.json();
+    const sourceId = first.sources[0].id;
+
+    const secondResponse = await POST(
+      request(first.fingerprint, {
+        evidence: {
+          assessedBy: "Pesquisadora Fixture",
+          claim: "A mesma fonte sustenta outro criterio editorial.",
+          criterion: "valor_historico",
+          direction: "sustenta",
+          justification: "O registro institucional tambem contextualiza a historia.",
+          locator: "verbete historico",
+          strength: "moderada",
+          strengthJustification: "A fonte permanece identificada e reencontravel.",
+        },
+        existingSourceId: sourceId,
+        source: undefined,
+      }),
+      context,
+    );
+    const second = await secondResponse.json();
+
+    assert.equal(secondResponse.status, 200);
+    assert.equal(second.sources.length, 1);
+    assert.equal(second.evidence.length, 2);
+    assert.equal(second.evidence[1].sources[0].sourceId, sourceId);
   } finally {
     if (previousRoot === undefined) delete process.env.CANCIONEIRO_PROJECT_ROOT;
     else process.env.CANCIONEIRO_PROJECT_ROOT = previousRoot;

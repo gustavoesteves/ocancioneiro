@@ -67,6 +67,40 @@ test("adiciona fonte, evidencia e afirmacao canonica ligadas", () => {
   ]);
 });
 
+test("reutiliza fonte existente em nova evidencia sem duplica-la", () => {
+  const first = addEditorialResearch(dossier(), input);
+  const second = addEditorialResearch(first.dossier, {
+    ...input,
+    existingSourceId: input.sourceId,
+    evidence: {
+      ...input.evidence,
+      claim: "A obra tambem e citada como referencia instrumental.",
+      criterion: "valor_instrumental_ou_pedagogico",
+    },
+    evidenceId: "evidencia-atraente-2",
+    source: undefined,
+    sourceId: undefined,
+  });
+
+  assert.equal(second.dossier.sources.length, 1);
+  assert.equal(second.dossier.evidence.length, 2);
+  assert.equal(second.dossier.evidence[1].sources[0].sourceId, input.sourceId);
+  assert.equal(second.source.id, input.sourceId);
+});
+
+test("rejeita reutilizacao de fonte inexistente", () => {
+  assert.throws(
+    () =>
+      addEditorialResearch(dossier(), {
+        ...input,
+        existingSourceId: "fonte-ausente",
+        source: undefined,
+        sourceId: undefined,
+      }),
+    /Fonte existente nao encontrada/,
+  );
+});
+
 test("rejeita URL insegura e vocabulario aberto", () => {
   assert.throws(
     () =>

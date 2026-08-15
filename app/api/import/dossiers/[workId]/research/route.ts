@@ -159,6 +159,7 @@ export async function POST(request: Request, context: RouteContext) {
     const body = (await request.json()) as {
       canonicalClaim?: Record<string, unknown>;
       evidence?: Record<string, unknown>;
+      existingSourceId?: string;
       expectedFingerprint?: string;
       source?: Record<string, unknown>;
     };
@@ -180,6 +181,7 @@ export async function POST(request: Request, context: RouteContext) {
       canonicalClaim: body.canonicalClaim ?? {},
       evidence: body.evidence ?? {},
       evidenceId: `evidencia-${randomUUID()}`,
+      existingSourceId: body.existingSourceId,
       source: body.source ?? {},
       sourceId: `fonte-${randomUUID()}`,
     });

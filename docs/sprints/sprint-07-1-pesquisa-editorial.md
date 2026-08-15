@@ -44,7 +44,7 @@ editor pesquisador.
 
 ## Proximas fatias
 
-- reutilizar uma fonte existente em novas evidencias sem duplica-la;
+- [x] reutilizar uma fonte existente em novas evidencias sem duplica-la;
 - registrar substituicao ou correcao de fonte/evidencia preservando historico;
 - exibir cobertura e contradicoes na fila de revisao;
 - exigir pesquisa minima antes de uma nova aceitacao curatorial;

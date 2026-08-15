@@ -76,6 +76,7 @@ function label(value: string) {
 export function EditorialResearchEditor({ workId }: { workId: string }) {
   const [data, setData] = useState<ResearchResponse | null>(null);
   const [source, setSource] = useState(initialSource);
+  const [existingSourceId, setExistingSourceId] = useState("");
   const [evidence, setEvidence] = useState(initialEvidence);
   const [canonicalClaim, setCanonicalClaim] = useState(initialCanonicalClaim);
   const [state, setState] = useState<"loading" | "idle" | "saving" | "error">(
@@ -109,8 +110,7 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
 
   const complete = Boolean(
     data?.fingerprint &&
-      source.title.trim() &&
-      source.accessedAt &&
+      (existingSourceId || (source.title.trim() && source.accessedAt)) &&
       evidence.assessedBy.trim() &&
       evidence.claim.trim() &&
       evidence.justification.trim() &&
@@ -130,8 +130,9 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
           body: JSON.stringify({
             canonicalClaim,
             evidence,
+            existingSourceId: existingSourceId || undefined,
             expectedFingerprint: data.fingerprint,
-            source,
+            source: existingSourceId ? undefined : source,
           }),
           headers: { "Content-Type": "application/json" },
           method: "POST",
@@ -141,6 +142,7 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
       if (!response.ok) throw new Error(result.error || "Nao consegui registrar a pesquisa.");
       setData(result);
       setSource(initialSource());
+      setExistingSourceId("");
       setEvidence((current) => ({ ...initialEvidence, assessedBy: current.assessedBy }));
       setCanonicalClaim(initialCanonicalClaim);
       setState("idle");
@@ -180,13 +182,22 @@ export function EditorialResearchEditor({ workId }: { workId: string }) {
         <article className="rounded-md border border-[#d8d0c1] bg-white p-5">
           <h2 className="text-lg font-semibold">1. Fonte</h2>
           <div className="mt-4 grid gap-3">
-            <label className="grid gap-2 text-sm font-semibold">Titulo<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, title: event.target.value }))} value={source.title} /></label>
-            <label className="grid gap-2 text-sm font-semibold">Tipo<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, type: event.target.value }))} value={source.type}>{data?.vocabularies?.sourceTypes.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
-            <label className="grid gap-2 text-sm font-semibold">Responsavel ou instituicao<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, responsible: event.target.value }))} value={source.responsible} /></label>
-            <label className="grid gap-2 text-sm font-semibold">Referencia<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, reference: event.target.value }))} value={source.reference} /></label>
-            <label className="grid gap-2 text-sm font-semibold">URL<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, url: event.target.value }))} type="url" value={source.url} /></label>
-            <label className="grid gap-2 text-sm font-semibold">Identificador persistente<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, persistentId: event.target.value }))} value={source.persistentId} /></label>
-            <label className="grid gap-2 text-sm font-semibold">Consultada em<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, accessedAt: event.target.value }))} type="date" value={source.accessedAt} /></label>
+            <label className="grid gap-2 text-sm font-semibold">Fonte existente<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setExistingSourceId(event.target.value)} value={existingSourceId}><option value="">Cadastrar nova fonte</option>{data?.sources?.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
+            {existingSourceId ? (
+              <p className="rounded border border-[#e1dbcf] bg-[#fffdf8] p-3 text-sm text-[#70695e]">
+                A evidencia sera ligada a fonte selecionada, sem criar outro registro.
+              </p>
+            ) : (
+              <>
+                <label className="grid gap-2 text-sm font-semibold">Titulo<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, title: event.target.value }))} value={source.title} /></label>
+                <label className="grid gap-2 text-sm font-semibold">Tipo<select className="h-10 rounded border border-[#cfc6b5] bg-white px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, type: event.target.value }))} value={source.type}>{data?.vocabularies?.sourceTypes.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
+                <label className="grid gap-2 text-sm font-semibold">Responsavel ou instituicao<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, responsible: event.target.value }))} value={source.responsible} /></label>
+                <label className="grid gap-2 text-sm font-semibold">Referencia<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, reference: event.target.value }))} value={source.reference} /></label>
+                <label className="grid gap-2 text-sm font-semibold">URL<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, url: event.target.value }))} type="url" value={source.url} /></label>
+                <label className="grid gap-2 text-sm font-semibold">Identificador persistente<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, persistentId: event.target.value }))} value={source.persistentId} /></label>
+                <label className="grid gap-2 text-sm font-semibold">Consultada em<input className="h-10 rounded border border-[#cfc6b5] px-3 font-normal" onChange={(event) => setSource((current) => ({ ...current, accessedAt: event.target.value }))} type="date" value={source.accessedAt} /></label>
+              </>
+            )}
           </div>
         </article>
 
