@@ -1,0 +1,15 @@
+{
+  "protocol": "cancioneiro.musescore.capture/1",
+  "messageType": "CAPTURE_REQUEST",
+  "messageId": "msg_capture_req_0001",
+  "sentAt": "2026-08-13T12:00:01.000Z",
+  "payload": {
+    "sessionId": "session_bridge_0001",
+    "pluginSessionId": "plugin_session_0001",
+    "requestId": "capture_request_0001",
+    "requestedAt": "2026-08-13T12:00:01.000Z",
+    "expiresAt": "2026-08-13T12:00:31.000Z",
+    "destinationPath": "/private/tmp/cancioneiro-capture/example.musicxml",
+    "maxBytes": 16777216
+  }
+}

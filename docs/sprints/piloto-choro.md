@@ -5,6 +5,7 @@
 **Glossário:** [Glossário editorial v1](../glossario-editorial-v1.md)
 **Vocabulários iniciais:** [Vocabulários editoriais v1](../vocabularios-editoriais-v1.md)
 **Decisões Sprint 1:** [Decisões arquiteturais para o Sprint 1](../decisoes-arquiteturais-sprint-1.md)
+**Superficies do sistema:** [ADR 0003 — biblioteca publica e ferramenta local](../adr/0003-superficies-publica-e-local.md)
 **Mapeamento legado:** [Mapeamento preliminar dos campos atuais](../mapeamento-campos-legados-v1.md)
 **Identificadores:** [Política de identificadores e aliases v1](../politica-identificadores-aliases-v1.md)
 **Aprovações editoriais:** [Aprovações editoriais da Sprint 0](../aprovacoes-editoriais-sprint-0.md)
@@ -32,6 +33,20 @@ O piloto deve demonstrar que O Cancioneiro consegue:
 
 O piloto não pretende fechar o cânone do Choro. Ele valida o método que será
 usado para investigar Choro e, depois, outras tradições.
+
+### 1.1 Superficies do sistema
+
+O desenvolvimento preserva duas superficies no mesmo repositorio:
+
+- a biblioteca e a unica superficie publica e seu artefato oficial e o build
+  estatico do GitHub Pages;
+- `/import`, `/api/import`, a futura captura do MuseScore e toda escrita
+  editorial pertencem exclusivamente a ferramenta local;
+- a ferramenta local nao e uma area administrativa publicada: seu codigo e
+  suas rotas devem estar ausentes do pacote publico.
+
+Esse limite faz parte da porta de qualidade e segue a
+[ADR 0003](../adr/0003-superficies-publica-e-local.md).
 
 ## 2. Estado inicial confirmado
 
@@ -928,19 +943,19 @@ não existe bloqueio técnico de download apenas por esconder um botão.
 
 ### Tarefas de desenvolvimento
 
-- [ ] implementar política deny-by-default;
-- [ ] calcular permissões efetivas considerando como cada asset é entregue;
-- [ ] separar URL interna de permissão pública;
-- [ ] impedir acesso direto a asset bloqueado no artefato publicado;
-- [ ] impedir que asset não liberado seja commitado no repositório público;
-- [ ] adaptar busca para registros sem MusicXML;
-- [ ] adaptar seleção ativa para obra sem partitura;
-- [ ] mostrar motivo editorial de indisponibilidade sem expor informação
+- [x] implementar política deny-by-default;
+- [x] calcular permissões efetivas considerando como cada asset é entregue;
+- [x] separar URL interna de permissão pública;
+- [x] impedir acesso direto a asset bloqueado no artefato publicado;
+- [x] impedir que asset não liberado seja commitado no repositório público;
+- [x] adaptar busca para registros sem MusicXML;
+- [x] adaptar seleção ativa para obra sem partitura;
+- [x] mostrar motivo editorial de indisponibilidade sem expor informação
   jurídica interna;
-- [ ] condicionar playback, impressão e download separadamente;
-- [ ] validar que o build não empacota arquivos bloqueados;
-- [ ] adicionar teste de regressão para caminhos públicos seguros;
-- [ ] documentar procedimento de retirada emergencial;
+- [x] condicionar playback, impressão e download separadamente;
+- [x] validar que o build não empacota arquivos bloqueados;
+- [x] adicionar teste de regressão para caminhos públicos seguros;
+- [x] documentar procedimento de retirada emergencial;
 - [ ] verificar catálogo e site publicados após deploy controlado.
 
 ### Segurança e privacidade
@@ -982,6 +997,18 @@ não existe bloqueio técnico de download apenas por esconder um botão.
 - automatizar decisão jurídica;
 - publicar o piloto completo;
 - abrir ferramenta editorial de escrita na internet.
+
+### Continuidade tecnica apos o gate de direitos
+
+A integracao direta com o MuseScore nao reabre a Sprint 5 e nao faz parte da
+porta de saida desta sprint. Depois que o gate minimo de direitos provar que
+assets privados e bloqueados ficam fora do repositorio e do pacote publico, a
+[Sprint 6.1 — Captura segura do MuseScore](sprint-06-1-captura-musescore.md)
+implementara a captura local conforme a
+[ADR 0002 — Captura de MusicXML do MuseScore por ponte local](../adr/0002-captura-musescore-ponte-local.md).
+
+A separacao preserva a ordem de risco: primeiro impedir publicacao indevida;
+depois conectar uma nova forma de entrada ao fluxo editorial.
 
 ---
 
@@ -1114,7 +1141,7 @@ Sprint 0 ──► Sprint 1 ──► Sprint 2 ──► Sprint 3 ──► Spri
                  │                                      │
                  └──────── infraestrutura ──────────────┤
                                                         ▼
-Sprint 7 ◄── Sprint 6 ◄── Sprint 5 ◄────────────────────┘
+Sprint 7 ◄── Sprint 6.1 ◄── Sprint 6 ◄── Sprint 5 ◄────┘
 ```
 
 Pesquisa exploratória pode começar antes do Sprint 1, mas dados definitivos só

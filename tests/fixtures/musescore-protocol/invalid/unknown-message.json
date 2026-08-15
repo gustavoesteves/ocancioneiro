@@ -1,0 +1,7 @@
+{
+  "protocol": "cancioneiro.musescore.capture/1",
+  "messageType": "DELETE_SCORE",
+  "messageId": "msg_delete_score_001",
+  "sentAt": "2026-08-13T12:00:00.000Z",
+  "payload": {}
+}

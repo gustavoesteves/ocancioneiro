@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "work": {
+    "creators": [
+      {
+        "name": "Francisca Gonzaga (1847-1935)",
+        "role": "composer"
+      }
+    ],
+    "id": "obra-atraente",
+    "identityNotes": "Dossie candidato criado por uma captura local; identidade, fontes e curadoria precisam de revisao humana.",
+    "preferredTitle": "Atraente"
+  },
+  "curation": {
+    "status": "aceita",
+    "currentDecisionId": "decisao-promocao-00d1ee84-e445-4baa-a19c-a57117c23a40",
+    "decisions": [
+      {
+        "decidedAt": "2026-08-15T17:04:26.809Z",
+        "decidedBy": "Gustavo Esteves",
+        "id": "decisao-promocao-00d1ee84-e445-4baa-a19c-a57117c23a40",
+        "justification": "Lead sheet completo",
+        "reviews": [
+          {
+            "conflictOfInterest": false,
+            "reviewedAt": "2026-08-15T17:04:26.809Z",
+            "reviewedBy": "Administrador",
+            "role": "revisao-editorial-independente",
+            "summary": "Revisao independente registrada para a edicao edicao-importada-atraente."
+          }
+        ],
+        "status": "aceita",
+        "recordHash": "e9f515cc18b4b6b79c8ee489bcbadcbc68a79354ddd20c6223a297b33384e50e"
+      }
+    ]
+  },
+  "sources": [],
+  "evidence": [],
+  "editions": [
+    {
+      "chords": [
+        "C7",
+        "F/C",
+        "Fm/Ab",
+        "C/G",
+        "G7",
+        "C/Bb",
+        "Gm/Bb",
+        "Bbdim",
+        "G7/D",
+        "C7/E",
+        "F",
+        "A7",
+        "Dm",
+        "Dm/F",
+        "Abdim",
+        "C",
+        "Bb",
+        "Bb/D",
+        "Eb",
+        "F7",
+        "Bbm/Db",
+        "Cm/Eb",
+        "Cm/G",
+        "Ebdim",
+        "Bb/F"
+      ],
+      "encodedKey": "F maior",
+      "genre": "Polca",
+      "id": "edicao-importada-atraente",
+      "instrumentation": "Piano",
+      "level": "Nao classificado",
+      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
+      "source": "Acervo",
+      "status": "valida",
+      "tags": [],
+      "title": "Atraente",
+      "validatedAt": "2026-08-15T17:04:26.809Z",
+      "validatedBy": "Gustavo Esteves",
+      "publicCatalogId": "atraente"
+    }
+  ],
+  "assets": [
+    {
+      "checksum": "328230850e687ced65b41756903a6353130128e68a1848d39435e6f488a9101e",
+      "checksumAlgorithm": "sha256",
+      "editionId": "edicao-importada-atraente",
+      "generatedAt": "2026-08-15",
+      "generatedBy": "Gustavo Esteves",
+      "id": "asset-musicxml-atraente-328230850e68",
+      "path": "/musicxml/atraente/asset-musicxml-atraente-328230850e68.musicxml",
+      "status": "valido",
+      "type": "musicxml"
+    }
+  ],
+  "rights": {
+    "actions": {
+      "baixar_pdf": "nao_avaliada",
+      "distribuir_musicxml": "permitida",
+      "exibir_metadados": "permitida",
+      "exibir_partitura": "permitida",
+      "imprimir": "permitida",
+      "reproduzir_playback": "permitida"
+    },
+    "status": "liberado",
+    "basis": "domínio público",
+    "confirmedAt": "2026-08-15T17:04:26.809Z",
+    "confirmedBy": "Gustavo Esteves"
+  },
+  "publicCatalogId": "atraente"
+}

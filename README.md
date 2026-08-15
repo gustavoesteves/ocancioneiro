@@ -4,6 +4,24 @@ O Cancioneiro e um acervo navegavel de partituras em MusicXML. A ideia e manter
 as obras como arquivos-fonte versionados, exibir as partituras no browser e
 oferecer busca, filtros, download, impressao/PDF e playback simples.
 
+## Duas Superficies, Uma So Publica
+
+O repositorio contem duas partes com destinos diferentes:
+
+- **biblioteca publica:** e o produto hospedado no GitHub Pages. O comando
+  `npm run build:pages` gera somente catalogo, busca, visualizacao, playback,
+  impressao e downloads autorizados;
+- **ferramenta local:** concentra o fluxo editorial de importacao. Ela roda com
+  `npm run dev`, a partir de `http://localhost:3000/import`, e separa painel,
+  captura, acervo, revisao e publicacao em rotas proprias. Pode usar
+  `/api/import`, a ponte com MuseScore e operacoes de escrita locais.
+
+O pacote publico nao inclui a rota `/import`, a API, a interface do importador
+nem codigo de escrita editorial. `npm run build` valida a aplicacao completa,
+mas nao gera o artefato oficial de publicacao. A decisao e os limites
+verificaveis estao na
+[`ADR 0003`](docs/adr/0003-superficies-publica-e-local.md).
+
 ## O Que Existe Hoje
 
 - Catalogo carregado de `public/catalog.json`.
@@ -50,6 +68,14 @@ A politica detalhada esta em
 plano de implementacao e validacao pelo piloto de Choro esta em
 [`docs/sprints/piloto-choro.md`](docs/sprints/piloto-choro.md).
 
+A captura direta da partitura ativa no MuseScore usa uma ponte local segura,
+sem publicacao automatica. A decisao arquitetural esta na
+[`ADR 0002`](docs/adr/0002-captura-musescore-ponte-local.md) e o backlog
+executavel esta na
+[`Sprint 6.1`](docs/sprints/sprint-06-1-captura-musescore.md). A integracao so
+comeca depois que a Sprint 6 demonstrar que assets privados ou bloqueados ficam
+fora do pacote publico.
+
 O formato padrao de uma obra deve ser:
 
 - melodia principal em uma pauta;
@@ -85,11 +111,30 @@ Rode o app localmente:
 npm run dev
 ```
 
+Esse comando usa o runtime Node para a ferramenta editorial local. O build
+continua validando o runtime Cloudflare, mas a API de escrita nao opera dentro
+do filesystem virtual do Worker e nunca faz parte do artefato do GitHub Pages.
+
 Depois abra:
 
 ```text
 http://localhost:3000/
 ```
+
+A ponte local de captura do MuseScore roda em um processo separado:
+
+```bash
+npm run bridge:musescore
+```
+
+O plugin de captura esta implementado em `plugins/CancioneiroCapture.qml` e o
+fluxo feliz foi ensaiado no MuseScore Studio 4.7.3. A ponte e o plugin nao sao usados
+nem incluidos no GitHub Pages. Consulte a
+[`operacao da ponte`](docs/operacao-ponte-musescore.md) para limites e estado
+atual e a
+[`instalacao do plugin`](docs/instalacao-plugin-musescore.md) para o checklist.
+O procedimento completo para outro editor esta no
+[`manual operacional da importacao local`](docs/manual-operacional-importacao.md).
 
 Para checar se a versao compila:
 
@@ -111,16 +156,36 @@ npm run build:pages
 
 ## Como Adicionar Uma Obra
 
-Se estiver rodando localmente, voce pode abrir `/import` para preparar a entrada
-de uma nova peca pelo browser. A tela le um arquivo MusicXML local, mostra a
-previa da partitura, extrai metadados e gera a sugestao de entrada para
-`data/editorial.json`.
+Se estiver rodando localmente, abra `/import` para acompanhar a estacao
+editorial. Use `/import/capturar` para receber uma nova peca pelo MuseScore ou
+arquivo, `/import/acervo` para consultar centenas de obras sem sobrecarregar a
+captura, `/import/revisao` para a fila privada e `/import/publicacao` para o
+fluxo Git/GitHub. A captura mostra a previa, extrai metadados e permite escolher
+um dossie editorial.
 
-Em ambiente local, a tela tambem pode gravar a importacao no repositorio: ela
-salva o MusicXML em `public/musicxml/<id>.musicxml`, atualiza
-`data/editorial.json` e regenera `public/catalog.json`. Essa gravacao usa a API
-local `/api/import`; no GitHub Pages ela nao deve ser considerada uma
-funcionalidade publica.
+Obras com edicoes existentes podem ter genero, nivel, fonte, notas e tags
+corrigidos pela pagina **Editar metadados** do dossie. Essa operacao altera a
+edicao em `data/dossiers/` e regenera o catalogo, sem reimportar ou reescrever o
+MusicXML. Uma mudanca musical na partitura continua exigindo o fluxo de captura,
+revisao e promocao.
+
+Confirmar uma captura grava somente na area privada `.local/cancioneiro/`,
+ignorada pelo Git, e pode criar uma edicao `em_revisao` no dossie. Essa operacao
+nao escreve em `public/`, nao valida a edicao e nao altera direitos. Consulte a
+[`operacao das capturas privadas`](docs/operacao-capturas-privadas.md). Edicoes
+legadas ja publicadas ainda podem ser mantidas localmente. No GitHub Pages,
+`/import` nunca deve ser considerada uma ferramenta publica de escrita.
+
+Depois da revisao, a promocao cria uma versao publica imutavel, atualiza dossie
+e catalogo de forma recuperavel e preserva a versao anterior. Consulte a
+[`operacao de promocao`](docs/operacao-promocao-musicxml.md).
+
+Na rota **Publicacao**, o painel **Revisao e publicacao** permite verificar as mudancas,
+preparar uma branch e um commit, abrir o pull request e, depois que os checks
+remotos forem aprovados, iniciar a publicacao. Git e GitHub continuam sendo o
+mecanismo interno, mas o operador nao precisa alternar para o terminal. A
+ferramenta nunca faz essas transicoes automaticamente: preparar, enviar e
+publicar exigem acoes e confirmacoes separadas.
 
 1. Exporte ou salve a partitura em MusicXML.
 2. Confira se ela segue a linha editorial do acervo:
@@ -128,26 +193,51 @@ funcionalidade publica.
    - cifras/acordes em `<harmony>`;
    - titulo e compositor preenchidos quando possivel;
    - sem arranjo completo quando a melodia+cifra for suficiente.
-3. Coloque o arquivo em `public/musicxml/`.
-4. Rode:
+3. Crie ou escolha o dossie da obra e registre fontes, edicao e direitos.
+4. Mantenha o arquivo fora de `public/` enquanto estiver em revisao.
+5. Depois de revisao e liberacao explicitas, promova o asset pelo fluxo
+   controlado.
+6. Abra **Revisao e publicacao**, verifique o lote, prepare a versao e envie o
+   pull request.
+
+O comando abaixo permanece como alternativa operacional e para automacao:
 
 ```bash
 npm run catalog:generate
 ```
 
-O script varre `public/musicxml/`, le os arquivos `.musicxml` e `.xml`, e
-combina os dados extraidos com `data/editorial.json`. A saida final e
-`public/catalog.json`.
+O script varre `public/musicxml/` para validar os arquivos, mas a saida publica
+e projetada dos dossies. Arquivo sem dossie aceito, edicao valida e direitos
+compativeis nao entra no `public/catalog.json` nem no pacote de deploy.
 
-Ao final, o comando mostra pendencias editoriais. Se uma peca nova ainda nao
-tiver entrada em `data/editorial.json`, o terminal imprime um snippet JSON que
-pode ser usado como ponto de partida dentro de `songs`.
+Ao final, o comando mostra pendencias editoriais dos registros ainda em
+migracao. `data/editorial.json` permanece apenas como compatibilidade legada;
+novas obras devem usar `data/dossiers/`.
 
 Para validar que o catalogo versionado esta sincronizado sem modifica-lo:
 
 ```bash
 npm run catalog:check
 ```
+
+O catalogo publico usa `schemaVersion: 2`. Cada registro informa
+`availability.status` e permissoes efetivas por acao. `musicxml` e opcional e
+so aparece quando o arquivo pode ser entregue ao navegador. Obras aceitas com
+metadados permitidos podem, portanto, continuar no catalogo sem partitura.
+
+O build nao copia a pasta `public/` integralmente. Ele prepara somente os
+MusicXML autorizados pelo catalogo e depois inspeciona o pacote. A arvore fonte
+pode preservar assets historicos substituidos; o comando abaixo confere a
+integridade dos caminhos vigentes, enquanto o verificador do pacote final
+rejeita qualquer arquivo historico, bloqueado ou sem autorizacao que tente
+chegar ao deploy:
+
+```bash
+npm run public-assets:check
+```
+
+O procedimento de urgencia esta em
+[`docs/operacao-retirada-emergencial.md`](docs/operacao-retirada-emergencial.md).
 
 ## Dossies Editoriais
 
@@ -249,32 +339,37 @@ atomicamente.
   "musicxml": "/musicxml/estudo-de-abertura.musicxml",
   "notes": "Pequena peca de exemplo para validar o fluxo MusicXML.",
   "chords": ["C", "G7"],
-  "tags": ["musicxml", "exemplo", "melodia"]
+  "tags": ["musicxml", "exemplo", "melodia"],
+  "availability": {
+    "status": "disponivel",
+    "reason": "Partitura disponivel conforme as permissoes editoriais vigentes.",
+    "actions": {
+      "exibir_partitura": true,
+      "reproduzir_playback": true,
+      "imprimir": true,
+      "baixar_pdf": false,
+      "distribuir_musicxml": true
+    }
+  }
 }
 ```
 
 ## Fluxo Recomendado
 
-Para uma nova peca:
+Para uma nova peca durante a Sprint 6:
 
-```bash
-cp minha-musica.musicxml public/musicxml/
-npm run catalog:generate
-npm run dev
-```
-
-Se preferir fazer manualmente depois:
-
-1. copie o snippet sugerido pelo gerador para `data/editorial.json`, dentro de
-   `songs`;
-2. preencha `genre`, `level`, `source`, `notes` e `tags`;
-3. rode `npm run catalog:generate` novamente;
-4. abra o app e confira partitura, cifras, busca e playback;
-5. rode `npm run check` antes de publicar.
+1. crie o dossie em `data/dossiers/`;
+2. registre curadoria, fontes, edicao e direitos sem inferir permissao;
+3. revise o MusicXML fora da arvore publica;
+4. torne a edicao `valida` somente apos revisao musical;
+5. promova para `public/musicxml/` somente quando todas as acoes entregues pelo
+   site estiverem explicitamente permitidas;
+6. rode `npm run catalog:generate` e `npm run check`;
+7. abra o app e confira tanto a obra disponivel quanto uma fixture sem
+   partitura.
 
 O `public/catalog.json` deve mudar como resultado do gerador. Ele continua sendo
-artefato gerado; revise o diff, mas prefira alterar metadados editoriais em
-`data/editorial.json`.
+artefato gerado; revise o diff, mas altere a fonte editorial no dossie.
 
 ## Estrutura Principal
 
@@ -303,6 +398,11 @@ Quando houver push no branch `main`, o GitHub Actions:
 3. publica a pasta `github-pages` no GitHub Pages.
 
 Em pull requests, o mesmo workflow roda a validacao, mas nao publica.
+
+Na ferramenta local, o painel **Revisao e publicacao** representa esse mesmo
+fluxo em quatro passos: verificar, preparar versao, enviar para revisao e
+publicar. O ultimo passo apenas faz o merge de um pull request aprovado; o
+deploy continua sendo responsabilidade exclusiva do workflow do GitHub Pages.
 
 No GitHub, configure Pages para usar **GitHub Actions** como fonte de deploy.
 

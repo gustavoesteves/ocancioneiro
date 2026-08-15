@@ -110,10 +110,15 @@ function musicXmlDossier(editionOverrides = {}) {
 }
 
 test("loads the repository editorial dossiers", async () => {
-  const loaded = await loadEditorialDossiers();
+  const [files, loaded] = await Promise.all([
+    listDossierFiles(),
+    loadEditorialDossiers(),
+  ]);
 
-  assert.ok(
-    loaded.some(({ dossier }) => dossier.work.id === "obra-carinhoso"),
+  assert.equal(loaded.length, files.length);
+  assert.deepEqual(
+    loaded.map(({ filePath }) => filePath).sort(),
+    files.sort(),
   );
 });
 

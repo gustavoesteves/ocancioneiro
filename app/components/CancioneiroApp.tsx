@@ -70,6 +70,10 @@ export function CancioneiroApp() {
   }, [genre, level, query, songs]);
 
   const activeSong = resolveActiveSong(filteredSongs, activeSongId);
+  const activeActions = activeSong?.availability.actions;
+  const hasScore = Boolean(
+    activeSong?.musicxml && activeActions?.exibir_partitura,
+  );
 
   return (
     <main className="min-h-screen bg-[#f7f5ef] text-[#181714]">
@@ -196,6 +200,19 @@ export function CancioneiroApp() {
                   {song.composer}
                 </span>
                 <span className="mt-3 flex flex-wrap gap-2 text-xs text-[#6c6257]">
+                  <span
+                    className={`rounded border px-2 py-1 ${
+                      song.availability.status === "disponivel"
+                        ? "border-[#b7c7ad] bg-[#f3f8ef] text-[#3f5a37]"
+                        : "border-[#d8d0c1] bg-[#f5f1e8] text-[#6c6257]"
+                    }`}
+                  >
+                    {song.availability.actions.exibir_partitura
+                      ? "Partitura disponivel"
+                      : song.availability.actions.distribuir_musicxml
+                        ? "MusicXML disponivel"
+                        : "Somente metadados"}
+                  </span>
                   <span className="rounded border border-[#d8d0c1] px-2 py-1">
                     {song.genre}
                   </span>
@@ -223,20 +240,24 @@ export function CancioneiroApp() {
                 <p className="mt-2 text-[#5f5a50]">{activeSong.composer}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <a
-                  className="rounded-md border border-[#b99f8d] bg-white px-3 py-2 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5]"
-                  download
-                  href={publicUrl(activeSong.musicxml)}
-                >
-                  Baixar MusicXML
-                </a>
-                <button
-                  className="rounded-md border border-[#b99f8d] bg-white px-3 py-2 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5]"
-                  onClick={() => window.print()}
-                  type="button"
-                >
-                  Imprimir / PDF
-                </button>
+                {activeActions?.distribuir_musicxml && activeSong.musicxml ? (
+                  <a
+                    className="rounded-md border border-[#b99f8d] bg-white px-3 py-2 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5]"
+                    download
+                    href={publicUrl(activeSong.musicxml)}
+                  >
+                    Baixar MusicXML
+                  </a>
+                ) : null}
+                {activeActions?.imprimir ? (
+                  <button
+                    className="rounded-md border border-[#b99f8d] bg-white px-3 py-2 text-sm font-medium text-[#4b3024] transition hover:bg-[#f3efe5]"
+                    onClick={() => window.print()}
+                    type="button"
+                  >
+                    Imprimir / PDF
+                  </button>
+                ) : null}
               </div>
             </div>
 
@@ -272,7 +293,30 @@ export function CancioneiroApp() {
             </p>
           </div>
 
-          <ScoreViewer key={activeSong.id} song={activeSong} />
+          {hasScore ? (
+            <ScoreViewer key={activeSong.id} song={activeSong} />
+          ) : (
+            <div className="p-5">
+              <div className="grid min-h-[420px] place-items-center rounded-md border border-[#d8d0c1] bg-[#f7f5ef] p-8 text-center">
+                <div className="max-w-xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#8a4c2f]">
+                    Partitura indisponivel
+                  </p>
+                  <h3 className="mt-3 text-2xl font-semibold text-[#181714]">
+                    O registro da obra continua acessivel
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-[#5f5a50]">
+                    {activeSong.availability.reason}
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[#70695e]">
+                    O Cancioneiro publica metadados, partitura e arquivos como
+                    permissoes independentes. A ausencia da partitura nao remove
+                    a obra do repertorio.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
             </>
           ) : (
             <div className="grid min-h-[520px] place-items-center p-8 text-center text-sm text-[#70695e]">

@@ -1,6 +1,5 @@
 {
   "schemaVersion": 1,
-  "publicCatalogId": "asa-branca",
   "work": {
     "creators": [
       {
@@ -9,31 +8,34 @@
       }
     ],
     "id": "obra-asa-branca",
+    "identityNotes": "Dossie candidato criado por uma captura local; identidade, fontes e curadoria precisam de revisao humana.",
     "preferredTitle": "Asa branca"
   },
   "curation": {
-    "currentDecisionId": "decisao-migracao-legado",
+    "status": "aceita",
+    "currentDecisionId": "decisao-promocao-b1a95c8f-dcf6-4503-8ec7-7e0f43b62c70",
     "decisions": [
       {
-        "decidedAt": "2026-08-07",
-        "decidedBy": "migracao-catalogo-legado",
-        "id": "decisao-migracao-legado",
-        "justification": "Entrada ja publicada no catalogo legado; aceita tecnicamente para preservar equivalencia durante a migracao.",
+        "decidedAt": "2026-08-15T16:59:59.531Z",
+        "decidedBy": "Gustavo Esteves",
+        "id": "decisao-promocao-b1a95c8f-dcf6-4503-8ec7-7e0f43b62c70",
+        "justification": "Lead sheet completo",
         "reviews": [
           {
             "conflictOfInterest": false,
-            "reviewedAt": "2026-08-07",
-            "reviewedBy": "migracao-catalogo-legado",
-            "role": "revisao-tecnica",
-            "summary": "Revisao tecnica da migracao; curadoria canonica permanece pendente de bancada humana."
+            "reviewedAt": "2026-08-15T16:59:59.531Z",
+            "reviewedBy": "Administrador",
+            "role": "revisao-editorial-independente",
+            "summary": "Revisao independente registrada para a edicao edicao-importada-asa-branca."
           }
         ],
-        "recordHash": "414145e1aa433decc18cf39001a7ce12a96b195fa7a443554709ab8605a6ea34",
-        "status": "aceita"
+        "status": "aceita",
+        "recordHash": "8dc27a0d5dc808df85446fd6efe2849b65f53e81c9661c996033c6f66ae54050"
       }
-    ],
-    "status": "em_revisao"
+    ]
   },
+  "sources": [],
+  "evidence": [],
   "editions": [
     {
       "chords": [
@@ -44,56 +46,46 @@
         "G"
       ],
       "encodedKey": "C maior",
-      "genre": "Nao classificado",
-      "id": "edicao-legada",
+      "genre": "Baião",
+      "id": "edicao-importada-asa-branca",
       "instrumentation": "Electric Guitar",
       "level": "Nao classificado",
-      "notes": "",
-      "publicCatalogId": "asa-branca",
+      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
       "source": "Acervo",
       "status": "valida",
       "tags": [],
-      "title": "Asa branca"
+      "title": "Asa branca",
+      "validatedAt": "2026-08-15T16:59:59.531Z",
+      "validatedBy": "Gustavo Esteves",
+      "publicCatalogId": "asa-branca"
     }
   ],
   "assets": [
     {
-      "editionId": "edicao-legada",
-      "generatedAt": "2026-08-07",
-      "generatedBy": "migracao-catalogo-legado",
-      "id": "asset-musicxml-legado",
-      "path": "/musicxml/asa-branca.musicxml",
+      "checksum": "4565b4bf507c3811f2b7254d0ebb75c5b342d6e24915c0c982fc103b4aad21fa",
+      "checksumAlgorithm": "sha256",
+      "editionId": "edicao-importada-asa-branca",
+      "generatedAt": "2026-08-15",
+      "generatedBy": "Gustavo Esteves",
+      "id": "asset-musicxml-asa-branca-4565b4bf507c",
+      "path": "/musicxml/asa-branca/asset-musicxml-asa-branca-4565b4bf507c.musicxml",
       "status": "valido",
-      "type": "musicxml",
-      "checksum": "83c616dd65e4a8a59708989c5ebf25ef0a6c16ed69e62b2d9392498c166d2e86",
-      "checksumAlgorithm": "sha256"
+      "type": "musicxml"
     }
   ],
   "rights": {
     "actions": {
+      "baixar_pdf": "nao_avaliada",
+      "distribuir_musicxml": "permitida",
       "exibir_metadados": "permitida",
       "exibir_partitura": "permitida",
-      "reproduzir_playback": "permitida",
       "imprimir": "permitida",
-      "distribuir_musicxml": "permitida"
+      "reproduzir_playback": "permitida"
     },
-    "status": "liberado"
+    "status": "liberado",
+    "basis": "domínio público",
+    "confirmedAt": "2026-08-15T16:59:59.531Z",
+    "confirmedBy": "Gustavo Esteves"
   },
-  "sources": [
-    {
-      "id": "fonte-legada",
-      "reference": "Acervo",
-      "title": "Acervo",
-      "type": "catalogo_ou_acervo"
-    }
-  ],
-  "migration": {
-    "from": "public/catalog.json",
-    "migratedAt": "2026-08-07",
-    "pending": [
-      "curadoria canonica precisa de revisao humana",
-      "direitos herdados da publicacao legada precisam de confirmacao",
-      "fonte legada precisa de estruturacao"
-    ]
-  }
+  "publicCatalogId": "asa-branca"
 }

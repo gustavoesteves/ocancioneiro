@@ -620,7 +620,7 @@ export async function leadSheetScopeReport(
     for (const asset of dossier.assets ?? []) {
       if (
         asset.type !== "musicxml" ||
-        asset.status !== "valido" ||
+        ["bloqueado", "substituido"].includes(asset.status) ||
         typeof asset.path !== "string"
       ) {
         continue;
@@ -660,6 +660,7 @@ export async function validateAssetChecksums(
   for (const { dossier, filePath } of dossiers) {
     for (const asset of dossier.assets ?? []) {
       if (
+        ["bloqueado", "substituido"].includes(asset.status) ||
         asset.checksumAlgorithm !== "sha256" ||
         typeof asset.checksum !== "string" ||
         typeof asset.path !== "string" ||
@@ -697,7 +698,11 @@ export async function validateMusicXmlAssets(
 
   for (const { dossier, filePath } of dossiers) {
     for (const asset of dossier.assets ?? []) {
-      if (asset.type !== "musicxml" || typeof asset.path !== "string") {
+      if (
+        ["bloqueado", "substituido"].includes(asset.status) ||
+        asset.type !== "musicxml" ||
+        typeof asset.path !== "string"
+      ) {
         continue;
       }
 

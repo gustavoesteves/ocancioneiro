@@ -2,8 +2,13 @@ import { promises as fs } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { parseCatalog } from "../lib/catalog.mjs";
-import { legacyCatalogFromDossiers } from "../lib/dossier-catalog-projection.mjs";
+import {
+  PUBLIC_CATALOG_SCHEMA_VERSION,
+  parseCatalog,
+} from "../lib/catalog.mjs";
+import {
+  publicCatalogFromDossiers,
+} from "../lib/dossier-catalog-projection.mjs";
 import {
   assertMusicXmlDocument,
   chordsFromMusicXml,
@@ -18,18 +23,14 @@ import { loadEditorialDossiers } from "./validate-dossiers.mjs";
 
 export { chordsFromMusicXml, decodeXml };
 
-const projectRoot = process.cwd();
-const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
-const catalogPath = path.join(projectRoot, "public", "catalog.json");
-const editorialPath = path.join(projectRoot, "data", "editorial.json");
-
 const editorialFields = new Set(["genre", "level", "notes", "source", "tags"]);
 
 export function sourceHash(xml) {
   return createHash("sha256").update(xml).digest("hex");
 }
 
-export function fallbackIdFromFile(filePath, hash) {
+export function fallbackIdFromFile(filePath, hash, projectRoot = process.cwd()) {
+  const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
   const relativePath = path.relative(musicXmlDirectory, filePath);
   const withoutExtension = relativePath.slice(
     0,
@@ -59,10 +60,11 @@ async function listMusicXmlFiles(directory) {
   return files.flat();
 }
 
-async function readExistingCatalog() {
+async function readExistingCatalog(catalogPath) {
   try {
     const catalog = parseCatalog(
       JSON.parse(await fs.readFile(catalogPath, "utf8")),
+      { allowLegacy: true },
     );
     return catalog.songs;
   } catch (error) {
@@ -74,7 +76,7 @@ async function readExistingCatalog() {
   }
 }
 
-async function readEditorialManifest() {
+async function readEditorialManifest(editorialPath) {
   try {
     return validateEditorialManifest(
       JSON.parse(await fs.readFile(editorialPath, "utf8")),
@@ -240,7 +242,7 @@ function printEditorialTodoReport(songs, editorialManifest) {
   });
 }
 
-function publicPathFromFile(filePath) {
+function publicPathFromFile(filePath, projectRoot = process.cwd()) {
   const relativePath = path.relative(path.join(projectRoot, "public"), filePath);
   return `/${relativePath.split(path.sep).join("/")}`;
 }
@@ -255,10 +257,11 @@ export function buildSongEntry(
   existingEntry,
   hash,
   editorialManifest = {},
+  projectRoot = process.cwd(),
 ) {
   const filename = path.basename(filePath);
-  const publicPath = publicPathFromFile(filePath);
-  const fallbackId = fallbackIdFromFile(filePath, hash);
+  const publicPath = publicPathFromFile(filePath, projectRoot);
+  const fallbackId = fallbackIdFromFile(filePath, hash, projectRoot);
   const sourceMetadata = metadataFromMusicXml(xml, filename);
   const id = existingEntry?.id || fallbackId;
   const editorial = editorialFromManifest(editorialManifest, id, existingEntry);
@@ -282,7 +285,7 @@ export function buildSongEntry(
   };
 }
 
-async function writeCatalogAtomically(contents) {
+async function writeCatalogAtomically(catalogPath, contents) {
   const temporaryPath = `${catalogPath}.${process.pid}.tmp`;
   try {
     await fs.writeFile(temporaryPath, contents, "utf8");
@@ -329,33 +332,32 @@ export function matchExistingEntries(inputs, existingSongs) {
   return matchesByPath;
 }
 
-export function buildCatalog(generatedSongs, dossiers = []) {
-  const projectedSongs = legacyCatalogFromDossiers(dossiers).songs;
-  const projectedIds = new Set(projectedSongs.map((song) => song.id));
-  const projectedPaths = new Set(projectedSongs.map((song) => song.musicxml));
-  const legacySongs = generatedSongs.filter(
-    (song) => !projectedIds.has(song.id) && !projectedPaths.has(song.musicxml),
-  );
-  const songs = [...projectedSongs, ...legacySongs];
+export function buildCatalog(_generatedSongs, dossiers = []) {
+  const projectedSongs = publicCatalogFromDossiers(dossiers).songs;
+  const songs = [...projectedSongs];
 
   songs.sort((first, second) =>
     first.title.localeCompare(second.title, "pt-BR", { sensitivity: "base" }),
   );
 
-  return parseCatalog({ songs });
+  return parseCatalog({ schemaVersion: PUBLIC_CATALOG_SCHEMA_VERSION, songs });
 }
 
-export async function main({ check = false } = {}) {
-  const existingSongs = await readExistingCatalog();
-  const editorialManifest = await readEditorialManifest();
-  const dossierEntries = await loadEditorialDossiers();
+export async function main({ check = false, projectRoot = process.cwd() } = {}) {
+  const musicXmlDirectory = path.join(projectRoot, "public", "musicxml");
+  const catalogPath = path.join(projectRoot, "public", "catalog.json");
+  const editorialPath = path.join(projectRoot, "data", "editorial.json");
+  const dossierDirectory = path.join(projectRoot, "data", "dossiers");
+  const existingSongs = await readExistingCatalog(catalogPath);
+  const editorialManifest = await readEditorialManifest(editorialPath);
+  const dossierEntries = await loadEditorialDossiers(dossierDirectory);
   const dossiers = dossierEntries.map((entry) => entry.dossier);
   const files = await listMusicXmlFiles(musicXmlDirectory);
 
   const inputs = await Promise.all(
     files.map(async (filePath) => {
       const xml = await fs.readFile(filePath, "utf8");
-      const publicPath = publicPathFromFile(filePath);
+      const publicPath = publicPathFromFile(filePath, projectRoot);
       assertMusicXmlDocument(filePath, xml);
       return { filePath, hash: sourceHash(xml), publicPath, xml };
     }),
@@ -370,6 +372,7 @@ export async function main({ check = false } = {}) {
       matchesByPath.get(publicPath),
       hash,
       editorialManifest,
+      projectRoot,
     ),
   );
 
@@ -387,7 +390,7 @@ export async function main({ check = false } = {}) {
       );
     }
   } else {
-    await writeCatalogAtomically(contents);
+    await writeCatalogAtomically(catalogPath, contents);
   }
 
   console.log(

@@ -1,16 +1,16 @@
 {
+  "schemaVersion": 2,
   "songs": [
     {
       "id": "asa-branca",
       "title": "Asa branca",
       "composer": "Luiz Gonzaga",
-      "genre": "Nao classificado",
+      "genre": "Baião",
       "key": "C maior",
       "level": "Nao classificado",
       "instrumentation": "Electric Guitar",
       "source": "Acervo",
-      "musicxml": "/musicxml/asa-branca.musicxml",
-      "notes": "",
+      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
       "chords": [
         "C",
         "F",
@@ -19,7 +19,71 @@
         "G"
       ],
       "tags": [],
-      "sourceHash": "83c616dd65e4a8a59708989c5ebf25ef0a6c16ed69e62b2d9392498c166d2e86"
+      "availability": {
+        "status": "disponivel",
+        "reason": "Partitura disponivel conforme as permissoes editoriais vigentes.",
+        "actions": {
+          "exibir_partitura": true,
+          "reproduzir_playback": true,
+          "imprimir": true,
+          "distribuir_musicxml": true,
+          "baixar_pdf": false
+        }
+      },
+      "musicxml": "/musicxml/asa-branca/asset-musicxml-asa-branca-4565b4bf507c.musicxml",
+      "sourceHash": "4565b4bf507c3811f2b7254d0ebb75c5b342d6e24915c0c982fc103b4aad21fa"
+    },
+    {
+      "id": "atraente",
+      "title": "Atraente",
+      "composer": "Francisca Gonzaga (1847-1935)",
+      "genre": "Polca",
+      "key": "F maior",
+      "level": "Nao classificado",
+      "instrumentation": "Piano",
+      "source": "Acervo",
+      "notes": "Edicao privada criada pelo importador local; revisar antes de publicar.",
+      "chords": [
+        "C7",
+        "F/C",
+        "Fm/Ab",
+        "C/G",
+        "G7",
+        "C/Bb",
+        "Gm/Bb",
+        "Bbdim",
+        "G7/D",
+        "C7/E",
+        "F",
+        "A7",
+        "Dm",
+        "Dm/F",
+        "Abdim",
+        "C",
+        "Bb",
+        "Bb/D",
+        "Eb",
+        "F7",
+        "Bbm/Db",
+        "Cm/Eb",
+        "Cm/G",
+        "Ebdim",
+        "Bb/F"
+      ],
+      "tags": [],
+      "availability": {
+        "status": "disponivel",
+        "reason": "Partitura disponivel conforme as permissoes editoriais vigentes.",
+        "actions": {
+          "exibir_partitura": true,
+          "reproduzir_playback": true,
+          "imprimir": true,
+          "distribuir_musicxml": true,
+          "baixar_pdf": false
+        }
+      },
+      "musicxml": "/musicxml/atraente/asset-musicxml-atraente-328230850e68.musicxml",
+      "sourceHash": "328230850e687ced65b41756903a6353130128e68a1848d39435e6f488a9101e"
     }
   ]
 }

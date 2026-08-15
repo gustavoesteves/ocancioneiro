@@ -91,7 +91,10 @@ test("representative MusicXML fixtures produce catalog entries and playback even
     songs.push(song);
   }
 
-  assert.equal(parseCatalog({ songs }).songs.length, fixtures.length);
+  assert.equal(
+    parseCatalog({ songs }, { allowLegacy: true }).songs.length,
+    fixtures.length,
+  );
   assert.ok(
     songs.some(
       (song) => song.musicxml === "/musicxml/subdiretorio/Canção-λ.musicxml",

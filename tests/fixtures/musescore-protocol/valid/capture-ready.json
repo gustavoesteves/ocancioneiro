@@ -1,0 +1,12 @@
+{
+  "protocol": "cancioneiro.musescore.capture/1",
+  "messageType": "CAPTURE_READY",
+  "messageId": "msg_capture_ready_01",
+  "sentAt": "2026-08-13T12:00:02.000Z",
+  "payload": {
+    "sessionId": "session_bridge_0001",
+    "pluginSessionId": "plugin_session_0001",
+    "requestId": "capture_request_0001",
+    "exportedAt": "2026-08-13T12:00:02.000Z"
+  }
+}

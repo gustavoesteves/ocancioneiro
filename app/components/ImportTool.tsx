@@ -1,53 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OpenSheetMusicDisplay } from "opensheetmusicdisplay";
-import type { Song } from "../catalog";
-import { publicUrl } from "../url";
+import type {
+  ImportLibraryResponse,
+  ManagedDossier,
+  ManagedSong,
+} from "../import-types";
 import {
+  assertMusicXmlDocument,
   defaultEditorialFields,
   metadataFromMusicXml,
   musicXmlWithDisplayMetadata,
   slugify,
 } from "../../lib/musicxml-metadata.mjs";
+import { importIdentityDifferences } from "../../lib/import-identity.mjs";
+import { importCaptureReadiness } from "../import-capture-readiness";
+import { suggestImportDestination } from "../import-destination-suggestion";
+import {
+  MuseScoreBridgeError,
+  MuseScoreCaptureClient,
+  type MuseScoreBridgeStatus,
+  type MuseScoreCaptureResult,
+} from "../musescore-capture-client";
+import { ImportLibraryPanel } from "./ImportLibraryPanel";
 
 type ImportMetadata = ReturnType<typeof metadataFromMusicXml>;
 type SaveState = "idle" | "saving" | "saved" | "error";
+type CaptureState = "idle" | "capturing" | "ready" | "error";
 
-type ManagedSong = Song & {
-  editorial?: {
-    genre?: string;
-    level?: string;
-    notes?: string;
-    source?: string;
-    tags?: string[];
-  };
-  path: string;
+type PrivateCaptureReceipt = {
+  canonicalSha256: string;
+  captureId: string;
+  created: boolean;
+  editionId: string;
+  provenance: "manual_file" | "musescore_export";
+  rawSha256: string;
+  state: "em_revisao";
+  workId: string;
 };
 
-type ManagedDossier = {
-  assetCount: number;
-  currentDecision: {
-    decidedAt: string;
-    decidedBy: string;
+type PromotionReceipt = {
+  asset: {
+    checksum: string;
     id: string;
-    justification: string;
-    status: string;
-  } | null;
-  editionCount: number;
-  filePath: string;
-  publicCatalogId: string | null;
-  publicable: boolean;
-  projectionIssues: string[];
-  sources: {
-    id: string;
-    reference: string | null;
-    title: string;
-    type: string;
-  }[];
-  status: string;
-  title: string;
-  workId: string;
+    path: string;
+  };
+  captureId: string;
+  historical: boolean;
+  idempotent: boolean;
+  promoted: boolean;
+  promotedBy: string | null;
+  transactionId: string | null;
+};
+
+type PreImportModel = {
+  capture: MuseScoreCaptureResult | null;
+  displayXml: string;
+  fileName: string;
+  metadata: ImportMetadata;
+  partCount: number;
+  rawXml: string;
+  source: "manual_file" | "musescore_export";
+  warnings: string[];
 };
 
 function splitTags(value: string) {
@@ -55,22 +70,6 @@ function splitTags(value: string) {
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
-}
-
-function editorialSnippet(id: string, editorial: EditorialFields) {
-  return JSON.stringify(
-    {
-      [id]: {
-        genre: editorial.genre || defaultEditorialFields.genre,
-        level: editorial.level || defaultEditorialFields.level,
-        notes: editorial.notes,
-        source: editorial.source || defaultEditorialFields.source,
-        tags: splitTags(editorial.tags),
-      },
-    },
-    null,
-    2,
-  );
 }
 
 type EditorialFields = {
@@ -89,80 +88,137 @@ const initialEditorial: EditorialFields = {
   tags: "",
 };
 
-function fieldsFromSong(song: ManagedSong): EditorialFields {
+function preImportFromMusicXml({
+  capture = null,
+  fileName,
+  source,
+  xml,
+}: {
+  capture?: MuseScoreCaptureResult | null;
+  fileName: string;
+  source: PreImportModel["source"];
+  xml: string;
+}): PreImportModel {
+  assertMusicXmlDocument(fileName, xml);
+  const partCount = [...xml.matchAll(/<score-part\b/gi)].length;
+  const warnings: string[] = [];
+  if (partCount > 1) warnings.push(`${partCount} partes detectadas; revisar se ha arranjo.`);
+  if (/<lyric\b/i.test(xml)) warnings.push("Letra detectada no MusicXML.");
+  if (/<staff-layout\b|<staff-details\b/gi.test(xml)) {
+    warnings.push("Configuracao de multiplas pautas detectada.");
+  }
+
   return {
-    genre: song.editorial?.genre || song.genre || defaultEditorialFields.genre,
-    level: song.editorial?.level || song.level || defaultEditorialFields.level,
-    notes: song.editorial?.notes ?? song.notes ?? "",
-    source: song.editorial?.source || song.source || defaultEditorialFields.source,
-    tags: (song.editorial?.tags || song.tags || []).join(", "),
+    capture,
+    displayXml: musicXmlWithDisplayMetadata(xml, fileName),
+    fileName,
+    metadata: metadataFromMusicXml(xml, fileName),
+    partCount,
+    rawXml: xml,
+    source,
+    warnings,
   };
 }
 
 export function ImportTool() {
   const previewRef = useRef<HTMLDivElement | null>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
-  const [fileName, setFileName] = useState("");
-  const [scoreXml, setScoreXml] = useState("");
-  const [metadata, setMetadata] = useState<ImportMetadata | null>(null);
+  const bridgeClientRef = useRef<MuseScoreCaptureClient | null>(null);
+  const [preImport, setPreImport] = useState<PreImportModel | null>(null);
   const [editorial, setEditorial] = useState<EditorialFields>(initialEditorial);
   const [message, setMessage] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [overwrite, setOverwrite] = useState(false);
   const [suggestedId, setSuggestedId] = useState("");
   const [managedSongs, setManagedSongs] = useState<ManagedSong[]>([]);
   const [managedDossiers, setManagedDossiers] = useState<ManagedDossier[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
   const [selectedDossierWorkId, setSelectedDossierWorkId] = useState<string | null>(
     null,
   );
+  const [selectedEditionId, setSelectedEditionId] = useState<string | null>(null);
+  const [creatingNewWork, setCreatingNewWork] = useState(false);
+  const [destinationTouched, setDestinationTouched] = useState(false);
   const [libraryState, setLibraryState] = useState<SaveState>("idle");
   const [deleteState, setDeleteState] = useState<SaveState>("idle");
+  const [bridgeStatus, setBridgeStatus] = useState<MuseScoreBridgeStatus | null>(
+    null,
+  );
+  const [bridgeAvailable, setBridgeAvailable] = useState(false);
+  const [captureState, setCaptureState] = useState<CaptureState>("idle");
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const [privateCapture, setPrivateCapture] =
+    useState<PrivateCaptureReceipt | null>(null);
+  const [confirmedBy, setConfirmedBy] = useState("");
+  const [promotedBy, setPromotedBy] = useState("");
+  const [promotionReceipt, setPromotionReceipt] =
+    useState<PromotionReceipt | null>(null);
+  const [promotionState, setPromotionState] = useState<SaveState>("idle");
+
+  if (bridgeClientRef.current == null) {
+    bridgeClientRef.current = new MuseScoreCaptureClient();
+  }
+
+  const fileName = preImport?.fileName ?? "";
+  const scoreXml = preImport?.displayXml ?? "";
+  const metadata = preImport?.metadata ?? null;
 
   const effectiveId = suggestedId.trim() || metadata?.id || "nova-peca";
-  const suggestedFileName = `${effectiveId}.musicxml`;
-  const suggestedPath = `public/musicxml/${suggestedFileName}`;
+  const suggestedPath = "area privada local — fora de public/ e ignorada pelo Git";
+  const suggestedPrivateEditionId = `edicao-importada-${effectiveId}`;
+  const suggestedNewWorkId = `obra-${effectiveId}`;
   const selectedDossier = useMemo(
     () =>
       managedDossiers.find((dossier) => dossier.workId === selectedDossierWorkId) ??
       null,
     [managedDossiers, selectedDossierWorkId],
   );
+  const selectedEdition = useMemo(
+    () =>
+      selectedDossier?.editions.find(
+        (edition) => edition.id === selectedEditionId,
+      ) ?? null,
+    [selectedDossier, selectedEditionId],
+  );
+  const promotionReady = Boolean(
+    selectedEdition?.status === "valida" &&
+      selectedDossier?.status === "aceita" &&
+      selectedDossier.blockedPromotionRights.length === 0,
+  );
+  const identityDifferences = useMemo(() => {
+    if (!metadata || !selectedDossier) return [];
+    return importIdentityDifferences(metadata, selectedDossier);
+  }, [metadata, selectedDossier]);
+  const newWorkConflict = useMemo(
+    () =>
+      managedDossiers.find(
+        (dossier) =>
+          dossier.workId === suggestedNewWorkId ||
+          dossier.publicCatalogId === effectiveId,
+      ) ?? null,
+    [effectiveId, managedDossiers, suggestedNewWorkId],
+  );
+  const canCreateNewWork = creatingNewWork && newWorkConflict === null;
+  const destinationWorkId = canCreateNewWork
+    ? suggestedNewWorkId
+    : selectedDossierWorkId;
+  const destinationEditionId = canCreateNewWork
+    ? suggestedPrivateEditionId
+    : selectedEditionId;
+  const captureReadiness = importCaptureReadiness({
+    dossierSelected: destinationWorkId !== null,
+    editionSelected: destinationEditionId !== null,
+    hasIdentityDifferences: identityDifferences.length > 0,
+    identityConfirmed,
+    privateCaptureConfirmed: privateCapture !== null,
+    responsibleProvided: confirmedBy.trim().length > 0,
+    saving: saveState === "saving",
+  });
 
-  const catalogPreview = useMemo(() => {
-    if (!metadata) return "";
-
-    return JSON.stringify(
-      {
-        id: effectiveId,
-        title: metadata.title,
-        composer: metadata.composer,
-        genre: editorial.genre || defaultEditorialFields.genre,
-        key: metadata.key,
-        level: editorial.level || defaultEditorialFields.level,
-        instrumentation: metadata.instrumentation,
-        source: editorial.source || defaultEditorialFields.source,
-        musicxml: `/musicxml/${suggestedFileName}`,
-        notes: editorial.notes,
-        chords: metadata.chords,
-        tags: splitTags(editorial.tags),
-      },
-      null,
-      2,
-    );
-  }, [editorial, effectiveId, metadata, suggestedFileName]);
-
-  async function refreshLibrary() {
+  const refreshLibrary = useCallback(async () => {
     setLibraryState("saving");
 
     try {
       const response = await fetch("/api/import");
-      const result = (await response.json()) as {
-        dossiers?: ManagedDossier[];
-        error?: string;
-        songs?: ManagedSong[];
-      };
+      const result = (await response.json()) as ImportLibraryResponse;
 
       if (!response.ok) {
         throw new Error(result.error || "Nao consegui carregar o acervo.");
@@ -180,86 +236,136 @@ export function ImportTool() {
           : "Nao consegui carregar o acervo local.",
       );
     }
-  }
+  }, []);
 
   function resetForm() {
-    setFileName("");
-    setScoreXml("");
-    setMetadata(null);
+    bridgeClientRef.current?.cancel();
+    setPreImport(null);
     setEditorial(initialEditorial);
     setMessage(null);
     setSaveState("idle");
-    setOverwrite(false);
     setSuggestedId("");
-    setSelectedId(null);
-    setSelectedWorkId(null);
     setSelectedDossierWorkId(null);
+    setSelectedEditionId(null);
+    setCreatingNewWork(false);
+    setDestinationTouched(false);
+    setCaptureState("idle");
+    setIdentityConfirmed(false);
+    setPrivateCapture(null);
+    setConfirmedBy("");
+    setPromotedBy("");
+    setPromotionReceipt(null);
+    setPromotionState("idle");
   }
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
 
     setMessage(null);
-    setFileName(file.name);
 
     try {
       const xml = await file.text();
-      const nextMetadata = metadataFromMusicXml(xml, file.name);
-      setScoreXml(musicXmlWithDisplayMetadata(xml, file.name));
-      setMetadata(nextMetadata);
+      const nextPreImport = preImportFromMusicXml({
+        fileName: file.name,
+        source: "manual_file",
+        xml,
+      });
+      setPreImport(nextPreImport);
+      const nextMetadata = nextPreImport.metadata;
       setSuggestedId(nextMetadata.id);
       setEditorial(initialEditorial);
-      setSelectedId(null);
-      setSelectedWorkId(null);
       setSelectedDossierWorkId(null);
-      setOverwrite(false);
+      setSelectedEditionId(null);
+      setCreatingNewWork(false);
+      setDestinationTouched(false);
       setSaveState("idle");
+      setCaptureState("idle");
+      setIdentityConfirmed(false);
+      setPrivateCapture(null);
+      setPromotionReceipt(null);
+      setPromotionState("idle");
     } catch (error) {
       console.error(error);
-      setScoreXml("");
-      setMetadata(null);
+      setPreImport(null);
       setMessage("Nao consegui ler este arquivo como MusicXML completo.");
     }
   }
 
-  async function loadManagedSong(song: ManagedSong) {
+  async function captureFromMuseScore() {
     setMessage(null);
-    setSaveState("idle");
-    setDeleteState("idle");
+    setCaptureState("capturing");
 
     try {
-      const response = await fetch(publicUrl(song.musicxml));
-      if (!response.ok) {
-        throw new Error(`Nao consegui carregar ${song.musicxml}.`);
-      }
-
-      const xml = await response.text();
-      const filename = song.musicxml.split("/").pop() || `${song.id}.musicxml`;
-      const nextMetadata = metadataFromMusicXml(xml, filename);
-      setFileName(song.path);
-      setScoreXml(musicXmlWithDisplayMetadata(xml, filename));
-      setMetadata(nextMetadata);
-      setSuggestedId(song.id);
-      setEditorial(fieldsFromSong(song));
-      setOverwrite(true);
-      setSelectedId(song.id);
-      setSelectedWorkId(
-        managedDossiers.find((dossier) => dossier.publicCatalogId === song.id)
-          ?.workId ?? null,
-      );
+      const capture = await bridgeClientRef.current!.capture();
+      const nextPreImport = preImportFromMusicXml({
+        capture,
+        fileName: `musescore-${capture.captureId}.musicxml`,
+        source: "musescore_export",
+        xml: capture.xml,
+      });
+      setPreImport(nextPreImport);
+      setSuggestedId(nextPreImport.metadata.id);
+      setEditorial(initialEditorial);
       setSelectedDossierWorkId(null);
-    } catch (error) {
-      console.error(error);
+      setSelectedEditionId(null);
+      setCreatingNewWork(false);
+      setDestinationTouched(false);
+      setSaveState("idle");
+      setCaptureState("ready");
+      setIdentityConfirmed(false);
+      setPrivateCapture(null);
+      setPromotionReceipt(null);
+      setPromotionState("idle");
       setMessage(
-        error instanceof Error
-          ? error.message
-          : "Nao consegui carregar esta musica para edicao.",
+        "Captura recebida da partitura ativa. Revise identidade, escopo e destino antes de confirmar.",
+      );
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setCaptureState("idle");
+        return;
+      }
+      console.error(error);
+      setCaptureState("error");
+      setMessage(
+        error instanceof MuseScoreBridgeError
+          ? `${error.message} (${error.code})`
+          : "Nao consegui capturar a partitura do MuseScore.",
       );
     }
   }
 
+  function selectManagedDossier(dossier: ManagedDossier) {
+    setDestinationTouched(true);
+    setCreatingNewWork(false);
+    setSelectedDossierWorkId((current) =>
+      current === dossier.workId ? null : dossier.workId,
+    );
+    setSelectedEditionId(null);
+    setIdentityConfirmed(false);
+  }
+
+  function selectNewWork() {
+    if (newWorkConflict) return;
+    setDestinationTouched(true);
+    setCreatingNewWork((current) => !current);
+    setSelectedDossierWorkId(null);
+    setSelectedEditionId(null);
+    setIdentityConfirmed(false);
+  }
+
   async function saveImport() {
-    if (!metadata || !scoreXml) return;
+    if (!metadata || !preImport) return;
+
+    if (!destinationWorkId || !destinationEditionId) {
+      setSaveState("error");
+      setMessage("Escolha explicitamente o dossie e a edicao antes de confirmar.");
+      return;
+    }
+    if (identityDifferences.length > 0 && !identityConfirmed) {
+      setSaveState("error");
+      setMessage("Confirme as divergencias de identidade antes de continuar.");
+      return;
+    }
 
     setMessage(null);
     setSaveState("saving");
@@ -267,7 +373,6 @@ export function ImportTool() {
     try {
       const response = await fetch("/api/import", {
         body: JSON.stringify({
-          currentId: selectedId,
           editorial: {
             genre: editorial.genre,
             level: editorial.level,
@@ -275,29 +380,51 @@ export function ImportTool() {
             source: editorial.source,
             tags: splitTags(editorial.tags),
           },
-          dossierWorkId: selectedDossierWorkId,
+          captureId: preImport.capture?.captureId,
+          capturedAt: preImport.capture?.capturedAt,
+          captureRequestId: preImport.capture?.requestId,
+          confirmedBy: confirmedBy.trim(),
+          createDossier: canCreateNewWork,
+          musescoreVersion: preImport.capture?.musescoreVersion,
+          pluginVersion: preImport.capture?.pluginVersion,
+          dossierWorkId: destinationWorkId,
+          editionId: destinationEditionId,
           id: effectiveId,
-          overwrite,
-          xml: scoreXml,
+          identityConfirmed,
+          provenance: preImport.source,
+          protocol: preImport.capture?.protocol ?? bridgeStatus?.protocol,
+          rawSha256: preImport.capture?.sha256,
+          xml: preImport.rawXml,
         }),
         headers: { "Content-Type": "application/json" },
-        method: selectedId ? "PUT" : "POST",
+        method: "POST",
       });
       const result = (await response.json()) as {
+        capture?: PrivateCaptureReceipt;
         error?: string;
-        id?: string;
-        path?: string;
       };
 
       if (!response.ok) {
         throw new Error(result.error || "Nao consegui salvar a importacao.");
       }
 
+      if (!result.capture) {
+        throw new Error("A API nao retornou o comprovante da captura privada.");
+      }
+
+      setPrivateCapture(result.capture);
+      setPromotionReceipt(null);
+      setPromotionState("idle");
+      if (canCreateNewWork) {
+        setCreatingNewWork(false);
+        setSelectedDossierWorkId(result.capture.workId);
+        setSelectedEditionId(result.capture.editionId);
+      }
       setSaveState("saved");
-      setSelectedId(result.id || effectiveId);
-      setOverwrite(true);
       setMessage(
-        `${selectedId ? "Edicao" : selectedDossierWorkId ? "Vinculacao" : "Importacao"} gravada em ${result.path}. Catalogo atualizado com sucesso.`,
+        result.capture.created
+          ? `Captura privada confirmada para ${result.capture.workId} / ${result.capture.editionId}. Nenhum asset foi publicado.`
+          : `Esta captura privada ja estava confirmada para ${result.capture.workId} / ${result.capture.editionId}.`,
       );
       await refreshLibrary();
     } catch (error) {
@@ -311,47 +438,132 @@ export function ImportTool() {
     }
   }
 
-  async function deleteImport() {
-    if (!selectedId) return;
-    const title = metadata?.title || selectedId;
-
-    if (!window.confirm(`Excluir "${title}" do acervo local?`)) {
+  async function discardPrivateImport() {
+    if (!privateCapture) return;
+    if (
+      !window.confirm(
+        "Mover esta captura privada para o descarte recuperavel? Nenhum arquivo publico sera alterado.",
+      )
+    ) {
       return;
     }
 
-    setMessage(null);
     setDeleteState("saving");
-
+    setMessage(null);
     try {
       const response = await fetch("/api/import", {
-        body: JSON.stringify({ id: selectedId, workId: selectedWorkId }),
+        body: JSON.stringify({ captureId: privateCapture.captureId }),
         headers: { "Content-Type": "application/json" },
         method: "DELETE",
       });
       const result = (await response.json()) as {
-        deleted?: string;
         error?: string;
+        recoverable?: boolean;
       };
-
       if (!response.ok) {
-        throw new Error(result.error || "Nao consegui excluir a musica.");
+        throw new Error(result.error || "Nao consegui descartar a captura privada.");
       }
-
+      setPrivateCapture(null);
+      setPromotionReceipt(null);
+      setPromotionState("idle");
+      setSaveState("idle");
       setDeleteState("saved");
-      resetForm();
       setMessage(
-        selectedWorkId
-          ? `Asset ${selectedId} arquivado no dossie editorial.`
-          : `Musica ${result.deleted || selectedId} excluida do acervo local.`,
+        result.recoverable
+          ? "Captura movida para o descarte recuperavel. Nenhum asset publico foi alterado."
+          : "Captura descartada.",
       );
-      await refreshLibrary();
     } catch (error) {
       console.error(error);
       setDeleteState("error");
       setMessage(
         error instanceof Error
           ? error.message
-          : "Nao consegui excluir esta musica.",
+          : "Nao consegui descartar a captura privada.",
+      );
+    }
+  }
+
+  async function promoteConfirmedCapture() {
+    if (!privateCapture) return;
+    if (!promotedBy.trim()) {
+      setPromotionState("error");
+      setMessage("Informe quem esta promovendo esta versao.");
+      return;
+    }
+
+    setPromotionState("saving");
+    setMessage(null);
+    try {
+      const response = await fetch("/api/import/promote", {
+        body: JSON.stringify({
+          captureId: privateCapture.captureId,
+          promotedBy: promotedBy.trim(),
+          publicId: effectiveId,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const result = (await response.json()) as PromotionReceipt & { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error || "Nao consegui promover a captura.");
+      }
+      setPromotionReceipt(result);
+      setPromotionState("saved");
+      setMessage(
+        result.promoted
+          ? `Versao promovida para ${result.asset.path}. A versao anterior foi preservada.`
+          : result.historical
+            ? "Esta captura ja faz parte do historico e nao criou outra versao."
+            : "Esta captura ja era a versao publica vigente.",
+      );
+      await refreshLibrary();
+    } catch (error) {
+      console.error(error);
+      setPromotionState("error");
+      setMessage(
+        error instanceof Error ? error.message : "Nao consegui promover a captura.",
+      );
+    }
+  }
+
+  async function rollbackPromotedCapture() {
+    if (!promotionReceipt?.transactionId || !promotedBy.trim()) return;
+    if (
+      !window.confirm(
+        "Restaurar o catalogo, o dossie e o asset vigentes antes desta promocao?",
+      )
+    ) {
+      return;
+    }
+
+    setPromotionState("saving");
+    setMessage(null);
+    try {
+      const response = await fetch("/api/import/promote", {
+        body: JSON.stringify({
+          rolledBackBy: promotedBy.trim(),
+          transactionId: promotionReceipt.transactionId,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      });
+      const result = (await response.json()) as {
+        error?: string;
+        rolledBack?: boolean;
+      };
+      if (!response.ok || !result.rolledBack) {
+        throw new Error(result.error || "Nao consegui reverter a promocao.");
+      }
+      setPromotionReceipt(null);
+      setPromotionState("idle");
+      setMessage("Promocao revertida; catalogo, dossie e asset anteriores restaurados.");
+      await refreshLibrary();
+    } catch (error) {
+      console.error(error);
+      setPromotionState("error");
+      setMessage(
+        error instanceof Error ? error.message : "Nao consegui reverter a promocao.",
       );
     }
   }
@@ -359,6 +571,76 @@ export function ImportTool() {
   useEffect(() => {
     const timer = window.setTimeout(() => void refreshLibrary(), 0);
     return () => window.clearTimeout(timer);
+  }, [refreshLibrary]);
+
+  useEffect(() => {
+    if (!preImport || destinationTouched || privateCapture) return;
+    const timer = window.setTimeout(() => {
+      const suggestion = suggestImportDestination(
+        preImport.metadata.id,
+        managedDossiers,
+      );
+      setIdentityConfirmed(false);
+      if (suggestion.mode === "new") {
+        setCreatingNewWork(true);
+        setSelectedDossierWorkId(null);
+        setSelectedEditionId(null);
+        return;
+      }
+      setCreatingNewWork(false);
+      setSelectedDossierWorkId(suggestion.workId);
+      setSelectedEditionId(suggestion.editionId);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [destinationTouched, managedDossiers, preImport, privateCapture]);
+
+  useEffect(() => {
+    if (!privateCapture || promotionReceipt?.promoted) return;
+
+    let timer: number | null = null;
+    function scheduleRefresh() {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => void refreshLibrary(), 50);
+    }
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") scheduleRefresh();
+    }
+
+    window.addEventListener("focus", scheduleRefresh);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    scheduleRefresh();
+    return () => {
+      window.removeEventListener("focus", scheduleRefresh);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, [privateCapture, promotionReceipt?.promoted, refreshLibrary]);
+
+  useEffect(() => {
+    let disposed = false;
+
+    async function refreshBridgeStatus() {
+      try {
+        const status = await bridgeClientRef.current!.status();
+        if (!disposed) {
+          setBridgeStatus(status);
+          setBridgeAvailable(true);
+        }
+      } catch {
+        if (!disposed) {
+          setBridgeStatus(null);
+          setBridgeAvailable(false);
+        }
+      }
+    }
+
+    void refreshBridgeStatus();
+    const timer = window.setInterval(() => void refreshBridgeStatus(), 1_000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+      bridgeClientRef.current?.cancel();
+    };
   }, []);
 
   useEffect(() => {
@@ -421,33 +703,91 @@ export function ImportTool() {
               Ferramenta local
             </p>
             <h1 className="mt-2 text-4xl font-semibold tracking-normal">
-              Importar MusicXML
+              Capturar MusicXML
             </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#70695e]">
+              Receba a partitura ativa do MuseScore ou selecione um arquivo e
+              confirme seu destino editorial antes de qualquer promocao publica.
+            </p>
           </div>
 
-          <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-[#b99f8d] bg-[#fdfaf3] p-6 text-center transition hover:bg-[#f3efe5]">
-            <span className="text-base font-medium text-[#4d473d]">
-              Selecionar arquivo MusicXML
-            </span>
-            <span className="mt-1 text-sm text-[#70695e]">
-              {fileName || "Arraste mentalmente ate aqui: .musicxml ou .xml"}
-            </span>
-            <input
-              accept=".musicxml,.xml,application/xml,text/xml"
-              className="sr-only"
-              onChange={(event) => void handleFile(event.target.files?.[0])}
-              type="file"
-            />
-          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-[#b99f8d] bg-[#fdfaf3] p-6 text-center transition hover:bg-[#f3efe5]">
+              <span className="text-base font-medium text-[#4d473d]">
+                Selecionar arquivo MusicXML
+              </span>
+              <span className="mt-1 text-sm text-[#70695e]">
+                {fileName || ".musicxml ou .xml — fallback sempre disponivel"}
+              </span>
+              <input
+                accept=".musicxml,.xml,application/xml,text/xml"
+                className="sr-only"
+                onChange={(event) => void handleFile(event.target.files?.[0])}
+                type="file"
+              />
+            </label>
 
+            <div className="flex min-h-36 flex-col justify-between rounded-md border border-[#b99f8d] bg-[#fdfaf3] p-5">
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-base font-semibold text-[#4d473d]">
+                    Capturar do MuseScore
+                  </h2>
+                  <span
+                    className={`rounded-full border px-2 py-1 text-xs font-medium ${
+                      bridgeAvailable
+                        ? "border-[#8da27f] bg-[#edf5e9] text-[#3f5d35]"
+                        : "border-[#c9b8aa] bg-white text-[#70695e]"
+                    }`}
+                  >
+                    {bridgeAvailable ? "ponte online" : "ponte ausente"}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-[#70695e]">
+                  Plugin: {bridgeStatus?.plugin ?? "ausente"} · Captura:{" "}
+                  {captureState === "capturing"
+                    ? "aguardando MusicXML"
+                    : bridgeStatus?.capture ?? captureState}
+                </p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  className="rounded-md border border-[#8a4c2f] bg-[#8a4c2f] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#713b23] disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={
+                    captureState === "capturing" ||
+                    !bridgeAvailable ||
+                    bridgeStatus?.plugin !== "paired"
+                  }
+                  onClick={() => void captureFromMuseScore()}
+                  type="button"
+                >
+                  {captureState === "capturing" ? "Capturando..." : "Capturar partitura ativa"}
+                </button>
+                {captureState === "capturing" ? (
+                  <button
+                    className="rounded-md border border-[#b99f8d] bg-white px-3 py-2 text-sm font-medium text-[#4b3024]"
+                    onClick={() => {
+                      bridgeClientRef.current?.cancel();
+                      setCaptureState("idle");
+                    }}
+                    type="button"
+                  >
+                    Cancelar
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {preImport ? (
           <div className="rounded-md border border-[#d8d0c1] bg-[#fdfaf3] p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Acervo local</h2>
                 <p className="mt-1 text-sm text-[#70695e]">
                   {libraryState === "saving"
-                    ? "Carregando musicas..."
-                    : `${managedSongs.length} musica(s) no catalogo, ${managedDossiers.length} dossie(s) editoriais`}
+                    ? "Carregando destinos..."
+                    : `${managedDossiers.length} dossie(s) disponiveis · destino sugerido automaticamente`}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -468,101 +808,135 @@ export function ImportTool() {
               </div>
             </div>
 
-            {managedSongs.length > 0 ? (
-              <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                {managedSongs.map((song) => (
-                  <button
-                    className={`rounded-md border p-3 text-left transition ${
-                      selectedId === song.id
-                        ? "border-[#8a4c2f] bg-white"
-                        : "border-[#d8d0c1] bg-[#fffdf8] hover:border-[#b99f8d]"
-                    }`}
-                    key={song.id}
-                    onClick={() => void loadManagedSong(song)}
-                    type="button"
-                  >
-                    <span className="block truncate text-sm font-semibold">
-                      {song.title}
-                    </span>
-                    <span className="mt-1 block truncate text-xs text-[#70695e]">
-                      {song.composer}
-                    </span>
-                    <span className="mt-2 block truncate font-mono text-[11px] text-[#8a4c2f]">
-                      {song.id}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-4 rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-3 text-sm text-[#70695e]">
-                Nenhuma musica carregada pelo catalogo local.
-              </p>
-            )}
-
-            {managedDossiers.length > 0 ? (
-              <div className="mt-5 border-t border-[#d8d0c1] pt-4">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8a4c2f]">
-                  Modelo editorial
-                </h3>
-                <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                  {managedDossiers.map((dossier) => (
-                    <button
-                      className={`rounded-md border p-3 text-left transition ${
-                        selectedDossierWorkId === dossier.workId
-                          ? "border-[#8a4c2f] bg-white"
-                          : "border-[#d8d0c1] bg-[#fffdf8] hover:border-[#b99f8d]"
-                      }`}
-                      key={dossier.workId}
-                      onClick={() => {
-                        setSelectedDossierWorkId((current) =>
-                          current === dossier.workId ? null : dossier.workId,
-                        );
-                        setSelectedId(null);
-                        setSelectedWorkId(null);
-                        setOverwrite(true);
-                      }}
-                      type="button"
-                    >
-                      <span className="block truncate text-sm font-semibold">
-                        {dossier.title}
-                      </span>
-                      <span className="mt-1 block truncate font-mono text-[11px] text-[#8a4c2f]">
-                        {dossier.workId}
-                      </span>
-                      <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-[#5f5a50]">
-                        <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1">
-                          {dossier.status}
-                        </span>
-                        <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1">
-                          {dossier.editionCount} ed.
-                        </span>
-                        <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1">
-                          {dossier.assetCount} asset(s)
-                        </span>
-                      </div>
-                      <p className="mt-2 text-xs text-[#70695e]">
-                        {selectedDossierWorkId === dossier.workId
-                          ? "Dossie selecionado para vincular MusicXML"
-                          : dossier.publicable
-                            ? "Publicavel no catalogo legado"
-                            : dossier.projectionIssues[0] || "Pendente"}
-                      </p>
-                    </button>
-                  ))}
+            <div className="mt-4 rounded-md border border-[#8da27f] bg-[#edf5e9] p-4 text-sm text-[#3f5d35]">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <div>
+                  <h3 className="font-semibold">
+                    {canCreateNewWork
+                      ? "Nova obra preparada automaticamente"
+                      : selectedDossier
+                        ? "Obra existente encontrada"
+                        : "Destino editorial"}
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed">
+                    A sugestao usa o identificador do MusicXML. Revise ou altere o
+                    destino antes de confirmar; nada e criado nesta etapa.
+                  </p>
                 </div>
-                {selectedDossier ? (
+                <button
+                  aria-pressed={canCreateNewWork}
+                  className="shrink-0 rounded-md border border-[#3f5d35] bg-white px-3 py-2 text-sm font-semibold text-[#3f5d35] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={privateCapture !== null || newWorkConflict !== null}
+                  onClick={selectNewWork}
+                  type="button"
+                >
+                  {newWorkConflict
+                    ? "Obra ja existe no acervo"
+                    : canCreateNewWork
+                      ? "Nova obra selecionada"
+                      : "Criar nova obra"}
+                </button>
+              </div>
+              {newWorkConflict ? (
+                <p className="mt-2 text-xs font-medium">
+                  O identificador corresponde a {newWorkConflict.title}. Escolha
+                  esse dossie na lista abaixo.
+                </p>
+              ) : null}
+            </div>
+
+            <ImportLibraryPanel
+              destinationMode
+              dossiers={managedDossiers}
+              locked={privateCapture !== null}
+              onSelectDossier={selectManagedDossier}
+              selectedSongId={null}
+              selectedWorkId={canCreateNewWork ? null : selectedDossierWorkId}
+              songs={managedSongs}
+            />
+
+            {canCreateNewWork ? (
+              <div className="mt-4 rounded-md border border-[#8da27f] bg-white p-4 text-sm text-[#3f5d35]">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h4 className="font-semibold">{preImport.metadata.title}</h4>
+                    <p className="mt-1">{preImport.metadata.composer}</p>
+                    <p className="mt-2 font-mono text-[11px]">
+                      {suggestedNewWorkId} / {suggestedPrivateEditionId}
+                    </p>
+                  </div>
+                  <span className="rounded border border-[#8da27f] bg-[#edf5e9] px-2 py-1 text-xs font-medium">
+                    candidata · edicao em_revisao
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed">
+                  O dossie e a captura privada serao criados juntos ao confirmar.
+                  Nenhum arquivo sera escrito em public/musicxml.
+                </p>
+              </div>
+            ) : null}
+
+            {selectedDossier ? (
                   <div className="mt-4 rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-4 text-sm">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h4 className="font-semibold">{selectedDossier.title}</h4>
                         <p className="mt-1 font-mono text-[11px] text-[#8a4c2f]">
-                          {selectedDossier.filePath}
+                          {selectedDossier.workId}
                         </p>
                       </div>
                       <span className="rounded border border-[#d8d0c1] bg-[#fdfaf3] px-2 py-1 text-xs text-[#5f5a50]">
                         {selectedDossier.status}
                       </span>
                     </div>
+
+                    <label className="mt-4 flex flex-col gap-2 text-sm font-medium text-[#4d473d]">
+                      Edicao editorial obrigatoria
+                      <select
+                        className="h-10 rounded-md border border-[#cfc6b5] bg-white px-3"
+                        disabled={privateCapture !== null}
+                        onChange={(event) => {
+                          setSelectedEditionId(event.target.value || null);
+                          setIdentityConfirmed(false);
+                        }}
+                        value={selectedEditionId ?? ""}
+                      >
+                        <option value="">Selecione uma edicao</option>
+                        {selectedDossier.editions.map((edition) => (
+                          <option key={edition.id} value={edition.id}>
+                            {edition.title} — {edition.status}
+                          </option>
+                        ))}
+                        {!selectedDossier.editions.some(
+                          (edition) => edition.id === suggestedPrivateEditionId,
+                        ) ? (
+                          <option value={suggestedPrivateEditionId}>
+                            Criar {suggestedPrivateEditionId} — em_revisao
+                          </option>
+                        ) : null}
+                      </select>
+                    </label>
+
+                    {identityDifferences.length > 0 ? (
+                      <div className="mt-4 rounded-md border border-[#d3a36f] bg-[#fff8e9] p-3 text-sm text-[#70431f]">
+                        <p className="font-semibold">Divergencias de identidade</p>
+                        <ul className="mt-2 list-disc space-y-1 pl-5">
+                          {identityDifferences.map((difference) => (
+                            <li key={difference}>{difference}</li>
+                          ))}
+                        </ul>
+                        <label className="mt-3 flex items-start gap-2 font-medium">
+                          <input
+                            checked={identityConfirmed}
+                            className="mt-1 accent-[#8a4c2f]"
+                            onChange={(event) => setIdentityConfirmed(event.target.checked)}
+                            type="checkbox"
+                          />
+                          Confirmo que revisei a identidade desta captura para a
+                          obra e edicao selecionadas.
+                        </label>
+                      </div>
+                    ) : null}
 
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                       <div>
@@ -615,10 +989,9 @@ export function ImportTool() {
                       </div>
                     </div>
                   </div>
-                ) : null}
-              </div>
             ) : null}
           </div>
+          ) : null}
 
           {message ? (
             <p className="rounded-md border border-[#c78f8f] bg-[#fff8f6] p-3 text-sm text-[#8a2f2f]">
@@ -639,6 +1012,7 @@ export function ImportTool() {
                   ["Compositor", metadata.composer],
                   ["Tom", metadata.key],
                   ["Instrumentacao", metadata.instrumentation],
+                  ["Partes", String(preImport?.partCount ?? 0)],
                   ["Cifras", metadata.chords.join(" / ") || "Nao informado"],
                 ].map(([label, value]) => (
                   <div key={label}>
@@ -647,6 +1021,29 @@ export function ImportTool() {
                   </div>
                 ))}
               </dl>
+              {preImport?.capture ? (
+                <div className="mt-4 border-t border-[#d8d0c1] pt-3 text-xs text-[#5f5a50]">
+                  <p>
+                    Origem: <strong>captura do MuseScore</strong>
+                  </p>
+                  <p className="mt-1 break-all font-mono">
+                    SHA-256: {preImport.capture.sha256}
+                  </p>
+                  <p className="mt-1 font-mono">
+                    {preImport.capture.byteLength} bytes · {preImport.capture.captureId}
+                  </p>
+                </div>
+              ) : null}
+              {preImport && preImport.warnings.length > 0 ? (
+                <div className="mt-4 rounded-md border border-[#d3a36f] bg-[#fff8e9] p-3 text-sm text-[#70431f]">
+                  <p className="font-semibold">Revisar escopo de lead sheet</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {preImport.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-4">
@@ -695,83 +1092,175 @@ export function ImportTool() {
             </div>
 
             <div className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-4">
-              <h2 className="text-lg font-semibold">
-                {selectedId ? "Editar registro" : "Destino sugerido"}
-              </h2>
-              {selectedId ? (
+              <h2 className="text-lg font-semibold">Destino privado</h2>
+              {destinationWorkId ? (
                 <p className="mt-2 rounded border border-[#d8d0c1] bg-[#fdfaf3] p-3 font-mono text-xs">
-                  {selectedId}
-                </p>
-              ) : null}
-              {selectedDossierWorkId ? (
-                <p className="mt-2 rounded border border-[#d8d0c1] bg-[#fdfaf3] p-3 font-mono text-xs">
-                  {selectedDossierWorkId}
+                  {destinationWorkId}
+                  {destinationEditionId
+                    ? ` / ${destinationEditionId}`
+                    : " / edicao pendente"}
                 </p>
               ) : null}
               <p className="mt-3 rounded border border-[#d8d0c1] bg-[#fdfaf3] p-3 font-mono text-xs">
                 {suggestedPath}
               </p>
-              {!selectedId ? (
-                <label className="mt-4 flex items-center gap-2 text-sm font-medium text-[#4d473d]">
+              <div className="mt-4 rounded-md border border-[#8da27f] bg-[#edf5e9] p-3 text-sm text-[#3f5d35]">
+                <p>
+                  A confirmacao cria somente uma captura privada em revisao. A
+                  publicacao sera uma operacao separada.
+                </p>
+                <label className="mt-3 flex flex-col gap-2 font-medium">
+                  Responsavel pela confirmacao
                   <input
-                    checked={overwrite}
-                    className="accent-[#8a4c2f]"
-                    onChange={(event) => setOverwrite(event.target.checked)}
-                    type="checkbox"
+                    className="h-10 rounded-md border border-[#8da27f] bg-white px-3 text-[#1f1e1b]"
+                    disabled={privateCapture !== null}
+                    onChange={(event) => setConfirmedBy(event.target.value)}
+                    placeholder="Nome editorial explicito"
+                    value={confirmedBy}
                   />
-                  Sobrescrever MusicXML existente
                 </label>
+              </div>
+              {privateCapture ? (
+                <div className="mt-4 rounded-md border border-[#8da27f] bg-[#edf5e9] p-3 text-xs text-[#3f5d35]">
+                  <p className="font-semibold">Captura privada confirmada</p>
+                  <p className="mt-1 font-mono">{privateCapture.captureId}</p>
+                  <p className="mt-1 break-all font-mono">
+                    bruto: {privateCapture.rawSha256}
+                  </p>
+                  <p className="mt-1 break-all font-mono">
+                    canonico: {privateCapture.canonicalSha256}
+                  </p>
+                </div>
+              ) : null}
+              {privateCapture ? (
+                <div className="mt-4 rounded-md border border-[#d3a36f] bg-[#fff8e9] p-3 text-sm text-[#70431f]">
+                  <p className="font-semibold">Promocao publica separada</p>
+                  <p className="mt-1 text-xs leading-relaxed">
+                    Exige curadoria aceita, edicao valida e todas as permissoes
+                    de entrega. Falhar em qualquer gate preserva a versao atual.
+                  </p>
+                  <ul className="mt-3 space-y-1 rounded border border-[#d3a36f] bg-white p-3 text-xs">
+                    <li>
+                      {selectedEdition?.status === "valida" ? "✓" : "○"} Edicao valida
+                    </li>
+                    <li>
+                      {selectedDossier?.status === "aceita" ? "✓" : "○"} Curadoria aceita
+                    </li>
+                    <li>
+                      {selectedDossier?.blockedPromotionRights.length === 0 ? "✓" : "○"} Direitos de entrega permitidos
+                    </li>
+                  </ul>
+                  {!promotionReady && selectedDossier && selectedEdition ? (
+                    <div className="mt-3 rounded border border-[#d3a36f] bg-white p-3 text-xs">
+                      <p className="font-medium">
+                        Conclua os gates editoriais antes de assinar a promocao.
+                      </p>
+                      <p className="mt-1 leading-relaxed">
+                        Ao fechar a revisao, esta tela atualiza os gates automaticamente.
+                        Use a acao manual abaixo somente se a sincronizacao demorar.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <a
+                          className="font-semibold text-[#70431f] underline"
+                          href={`/import/obras/${encodeURIComponent(selectedDossier.workId)}/revisar?edition=${encodeURIComponent(selectedEdition.id)}`}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Abrir revisao editorial
+                        </a>
+                        <button
+                          className="font-semibold text-[#70431f] underline disabled:opacity-50"
+                          disabled={libraryState === "saving"}
+                          onClick={() => void refreshLibrary()}
+                          type="button"
+                        >
+                          {libraryState === "saving" ? "Atualizando..." : "Atualizar gates"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  <label className="mt-3 flex flex-col gap-2 font-medium">
+                    Responsavel pela promocao
+                    <input
+                      className="h-10 rounded-md border border-[#c7a77f] bg-white px-3"
+                      disabled={promotionReceipt?.promoted === true}
+                      onChange={(event) => setPromotedBy(event.target.value)}
+                      placeholder="Nome editorial explicito"
+                      value={promotedBy}
+                    />
+                  </label>
+                  <button
+                    className="mt-3 w-full rounded-md border border-[#70431f] bg-[#70431f] px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={
+                      promotionState === "saving" ||
+                      !promotedBy.trim() ||
+                      !promotionReady ||
+                      promotionReceipt?.promoted === true
+                    }
+                    onClick={() => void promoteConfirmedCapture()}
+                    type="button"
+                  >
+                    {promotionState === "saving"
+                      ? "Processando promocao..."
+                      : promotionReceipt?.promoted
+                        ? "Versao promovida"
+                        : "Promover versao validada"}
+                  </button>
+                  {promotionReceipt ? (
+                    <div className="mt-3 break-all rounded border border-[#d3a36f] bg-white p-2 font-mono text-[11px]">
+                      <p>{promotionReceipt.asset.id}</p>
+                      <p className="mt-1">{promotionReceipt.asset.path}</p>
+                      <p className="mt-1">{promotionReceipt.asset.checksum}</p>
+                    </div>
+                  ) : null}
+                  {promotionReceipt?.transactionId ? (
+                    <button
+                      className="mt-3 w-full rounded-md border border-[#a04a3c] bg-white px-3 py-2 text-sm font-semibold text-[#8a2f2f] disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={promotionState === "saving"}
+                      onClick={() => void rollbackPromotedCapture()}
+                      type="button"
+                    >
+                      Reverter esta promocao
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
               <button
                 className="mt-4 w-full rounded-md border border-[#8a4c2f] bg-[#8a4c2f] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#713b23] disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={saveState === "saving"}
+                aria-describedby={
+                  captureReadiness.guidance ? "capture-readiness-guidance" : undefined
+                }
+                disabled={captureReadiness.disabled}
                 onClick={() => void saveImport()}
                 type="button"
               >
-                {saveState === "saving"
-                  ? "Gravando..."
-                  : selectedId
-                    ? "Salvar edicao"
-                    : selectedDossierWorkId
-                      ? "Vincular ao dossie"
-                    : "Gravar no repositorio local"}
+                {captureReadiness.label}
               </button>
-              {selectedId ? (
+              {captureReadiness.guidance ? (
+                <p
+                  className="mt-2 text-sm font-medium text-[#70431f]"
+                  id="capture-readiness-guidance"
+                  role="status"
+                >
+                  Proximo passo: {captureReadiness.guidance}
+                </p>
+              ) : null}
+              {privateCapture ? (
                 <button
                   className="mt-3 w-full rounded-md border border-[#a04a3c] bg-white px-3 py-2 text-sm font-semibold text-[#8a2f2f] transition hover:bg-[#fff8f6] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={deleteState === "saving"}
-                  onClick={() => void deleteImport()}
+                  onClick={() => void discardPrivateImport()}
                   type="button"
                 >
-                  {deleteState === "saving" ? "Excluindo..." : "Excluir musica"}
+                  {deleteState === "saving"
+                    ? "Movendo..."
+                    : "Descartar captura de forma recuperavel"}
                 </button>
               ) : null}
             </div>
           </aside>
 
           <article className="min-w-0 rounded-md border border-[#d8d0c1] bg-[#fffdf8]">
-            <div className="border-b border-[#d8d0c1] p-4">
-              <h2 className="text-lg font-semibold">Saida para o acervo</h2>
-              <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                <div>
-                  <p className="mb-2 text-sm font-medium text-[#70695e]">
-                    Entrada para data/editorial.json
-                  </p>
-                  <pre className="max-h-80 overflow-auto rounded-md border border-[#d8d0c1] bg-[#fdfaf3] p-3 text-xs">
-                    {editorialSnippet(effectiveId, editorial)}
-                  </pre>
-                </div>
-                <div>
-                  <p className="mb-2 text-sm font-medium text-[#70695e]">
-                    Previa do catalogo gerado
-                  </p>
-                  <pre className="max-h-80 overflow-auto rounded-md border border-[#d8d0c1] bg-[#fdfaf3] p-3 text-xs">
-                    {catalogPreview}
-                  </pre>
-                </div>
-              </div>
-            </div>
-
             <div className="p-4">
               <h2 className="mb-3 text-lg font-semibold">Previa da partitura</h2>
               <div className="min-h-[520px] overflow-auto rounded-md border border-[#d8d0c1] bg-white p-4">
@@ -783,9 +1272,8 @@ export function ImportTool() {
       ) : (
         <section className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
           <div className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-6 text-sm leading-6 text-[#5f5a50]">
-            Selecione um MusicXML novo ou escolha uma musica do acervo local
-            para editar os metadados editoriais, substituir o arquivo ou excluir
-            o registro.
+            Selecione um MusicXML ou capture a partitura ativa no MuseScore. O
+            acervo aparecera em seguida apenas para escolher o destino editorial.
           </div>
         </section>
       )}

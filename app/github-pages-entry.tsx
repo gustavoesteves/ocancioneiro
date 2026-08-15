@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { AppRouter } from "./components/AppRouter";
+import { CancioneiroApp } from "./components/CancioneiroApp";
 import "./globals.css";
 
 const rootElement = document.getElementById("root");
@@ -11,6 +11,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <AppRouter />
+    <CancioneiroApp />
   </StrictMode>,
 );

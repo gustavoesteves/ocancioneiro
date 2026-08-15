@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  effectivePublicActions,
   legacyCatalogEntryFromDossier,
   legacyCatalogFromDossiers,
   legacyComposerFromWork,
   legacyProjectionIssues,
+  publicCatalogEntryFromDossier,
 } from "../lib/dossier-catalog-projection.mjs";
 import { decisionRecordHash } from "../lib/editorial-dossier.mjs";
 
@@ -200,4 +202,53 @@ test("falls back to attributed or unknown creators for legacy composer", () => {
     }),
     "Autoria desconhecida",
   );
+});
+
+test("publishes metadata while omitting a blocked score URL", () => {
+  const dossier = acceptedDossier({
+    rights: {
+      status: "em_analise",
+      actions: {
+        ...permittedActions,
+        exibir_partitura: "bloqueada",
+        reproduzir_playback: "bloqueada",
+        imprimir: "bloqueada",
+        distribuir_musicxml: "bloqueada",
+      },
+    },
+  });
+
+  const entry = publicCatalogEntryFromDossier(dossier);
+  assert.equal(entry.title, "Carinhoso");
+  assert.equal(entry.musicxml, undefined);
+  assert.equal(entry.availability.status, "bloqueada");
+  assert.deepEqual(entry.availability.actions, {
+    exibir_partitura: false,
+    reproduzir_playback: false,
+    imprimir: false,
+    distribuir_musicxml: false,
+    baixar_pdf: false,
+  });
+});
+
+test("fails closed when a rights action is omitted", () => {
+  const dossier = acceptedDossier({
+    rights: {
+      status: "em_analise",
+      actions: {
+        exibir_metadados: "permitida",
+        exibir_partitura: "permitida",
+        reproduzir_playback: "permitida",
+        imprimir: "permitida",
+      },
+    },
+  });
+
+  assert.deepEqual(effectivePublicActions(dossier), {
+    exibir_partitura: false,
+    reproduzir_playback: false,
+    imprimir: false,
+    distribuir_musicxml: false,
+    baixar_pdf: false,
+  });
 });

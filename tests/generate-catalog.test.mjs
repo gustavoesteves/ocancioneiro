@@ -336,7 +336,7 @@ test("reports editorial metadata still using defaults", () => {
   ]);
 });
 
-test("builds the legacy catalog unchanged when dossiers are not publicable", () => {
+test("omits ungoverned legacy files from the public catalog", () => {
   const generatedSongs = [
     {
       id: "asa-branca",
@@ -369,7 +369,7 @@ test("builds the legacy catalog unchanged when dossiers are not publicable", () 
     },
   ]);
 
-  assert.deepEqual(catalog.songs, generatedSongs);
+  assert.deepEqual(catalog.songs, []);
 });
 
 test("prefers publicable dossier projections over matching generated entries", () => {

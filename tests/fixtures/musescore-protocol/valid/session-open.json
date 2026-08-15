@@ -1,0 +1,13 @@
+{
+  "protocol": "cancioneiro.musescore.capture/1",
+  "messageType": "SESSION_OPEN",
+  "messageId": "msg_session_open_0001",
+  "sentAt": "2026-08-13T12:00:00.000Z",
+  "payload": {
+    "sessionId": "session_bridge_0001",
+    "pluginSessionId": "plugin_session_0001",
+    "pluginVersion": "1.0.0",
+    "musescoreVersion": "4.5.2",
+    "supportedProtocols": ["cancioneiro.musescore.capture/1"]
+  }
+}
