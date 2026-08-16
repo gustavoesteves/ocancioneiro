@@ -65,6 +65,8 @@ export type PromotionReviewResponse = {
     curationAccepted: boolean;
     editionValid: boolean;
     ready: boolean;
+    researchComplete: boolean;
+    researchPending: string[];
   };
   preferredEditionId?: string | null;
   rights?: {

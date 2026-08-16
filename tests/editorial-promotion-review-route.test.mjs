@@ -16,9 +16,39 @@ function candidateDossier() {
       id: "obra-fixture",
       preferredTitle: "Obra fixture",
     },
-    curation: { status: "candidata" },
-    sources: [],
-    evidence: [],
+    curation: {
+      canonicalClaims: [
+        {
+          centrality: "contextual",
+          context: "repertorio fixture",
+          evidenceIds: ["evidencia-fixture"],
+          justification: "A evidencia estruturada sustenta a candidatura.",
+          reach: "comunidade",
+        },
+      ],
+      status: "candidata",
+    },
+    sources: [
+      {
+        id: "fonte-fixture",
+        title: "Fonte fixture",
+        type: "catalogo_ou_acervo",
+      },
+    ],
+    evidence: [
+      {
+        assessedAt: "2026-08-15",
+        assessedBy: "Pesquisadora Fixture",
+        claim: "A obra tem circulacao documentada.",
+        criterion: "circulacao",
+        direction: "sustenta",
+        id: "evidencia-fixture",
+        justification: "Fonte estruturada e reencontravel.",
+        sources: [{ sourceId: "fonte-fixture" }],
+        strength: "moderada",
+        strengthJustification: "Fonte identificada.",
+      },
+    ],
     editions: [
       {
         genre: "Choro",
@@ -95,6 +125,42 @@ test("review endpoint rejects public hosts before filesystem access", async () =
     context(),
   );
   assert.equal(response.status, 403);
+});
+
+test("bloqueia conclusao dos gates sem pesquisa minima", async () => {
+  const projectRoot = await fixtureRoot();
+  const previousRoot = process.env.CANCIONEIRO_PROJECT_ROOT;
+  process.env.CANCIONEIRO_PROJECT_ROOT = projectRoot;
+  try {
+    const dossierPath = path.join(
+      projectRoot,
+      "data",
+      "dossiers",
+      "obra-fixture.json",
+    );
+    const dossier = JSON.parse(await fs.readFile(dossierPath, "utf8"));
+    dossier.curation = { status: "candidata" };
+    dossier.sources = [];
+    dossier.evidence = [];
+    await fs.writeFile(dossierPath, `${JSON.stringify(dossier, null, 2)}\n`);
+
+    const initialResponse = await GET(
+      new Request("http://localhost:3000/api/import/dossiers/obra-fixture/review?edition=edicao-fixture"),
+      context(),
+    );
+    const initial = await initialResponse.json();
+    assert.equal(initial.gates.researchComplete, false);
+    assert.ok(initial.gates.researchPending.includes("sem fontes estruturadas"));
+
+    const updateResponse = await PUT(putRequest(initial.fingerprint), context());
+    const updated = await updateResponse.json();
+    assert.equal(updateResponse.status, 400);
+    assert.equal(updated.code, "RESEARCH_INCOMPLETE");
+  } finally {
+    if (previousRoot === undefined) delete process.env.CANCIONEIRO_PROJECT_ROOT;
+    else process.env.CANCIONEIRO_PROJECT_ROOT = previousRoot;
+    await fs.rm(projectRoot, { recursive: true, force: true });
+  }
 });
 
 test("conclui gates com concorrencia otimista e sem criar asset publico", async () => {

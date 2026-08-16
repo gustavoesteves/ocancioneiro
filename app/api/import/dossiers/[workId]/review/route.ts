@@ -103,6 +103,8 @@ function responseBody(
         blockedRights: [],
         curationAccepted: false,
         editionValid: false,
+        researchComplete: false,
+        researchPending: ["sem edicao selecionada"],
         ready: false,
       };
   return {
@@ -117,6 +119,8 @@ function responseBody(
       blockedRights: gates.blockedRights,
       curationAccepted: gates.curationAccepted,
       editionValid: gates.editionValid,
+      researchComplete: gates.researchComplete,
+      researchPending: gates.researchPending,
       ready: gates.ready,
     },
     preferredEditionId: selectedEditionId,

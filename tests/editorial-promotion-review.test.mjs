@@ -15,9 +15,39 @@ function candidateDossier() {
       id: "obra-fixture",
       preferredTitle: "Obra fixture",
     },
-    curation: { status: "candidata" },
-    sources: [],
-    evidence: [],
+    curation: {
+      canonicalClaims: [
+        {
+          centrality: "contextual",
+          context: "repertorio fixture",
+          evidenceIds: ["evidencia-fixture"],
+          justification: "A evidencia estruturada sustenta a candidatura.",
+          reach: "comunidade",
+        },
+      ],
+      status: "candidata",
+    },
+    sources: [
+      {
+        id: "fonte-fixture",
+        title: "Fonte fixture",
+        type: "catalogo_ou_acervo",
+      },
+    ],
+    evidence: [
+      {
+        assessedAt: "2026-08-15",
+        assessedBy: "Pesquisadora Fixture",
+        claim: "A obra tem circulacao documentada.",
+        criterion: "circulacao",
+        direction: "sustenta",
+        id: "evidencia-fixture",
+        justification: "Fonte estruturada e reencontravel.",
+        sources: [{ sourceId: "fonte-fixture" }],
+        strength: "moderada",
+        strengthJustification: "Fonte identificada.",
+      },
+    ],
     editions: [
       {
         genre: "Choro",
@@ -108,6 +138,21 @@ test("nao infere direitos ou validacao sem confirmacoes explicitas", () => {
     (error) =>
       error instanceof PromotionReviewError &&
       error.code === "INVALID_PROMOTION_REVIEW",
+  );
+});
+
+test("rejeita aceitacao curatorial sem pesquisa minima", () => {
+  const dossier = candidateDossier();
+  dossier.curation = { status: "candidata" };
+  dossier.sources = [];
+  dossier.evidence = [];
+
+  assert.throws(
+    () => applyPromotionReview(dossier, review),
+    (error) =>
+      error instanceof PromotionReviewError &&
+      error.code === "RESEARCH_INCOMPLETE" &&
+      error.message.includes("sem fontes estruturadas"),
   );
 });
 

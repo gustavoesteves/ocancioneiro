@@ -78,7 +78,8 @@ export function PromotionReviewEditor({
   );
 
   const formComplete = Boolean(
-    editionReviewed &&
+    data?.gates?.researchComplete !== false &&
+      editionReviewed &&
       editionReviewedBy.trim() &&
       (notationKind === "lead_sheet" ||
         (notationInstrument && notationJustification.trim())) &&
@@ -278,8 +279,21 @@ export function PromotionReviewEditor({
             <p className="mt-2 text-sm text-[#70695e]">
               A decisao e a revisao independente ficam registradas e seladas no historico do dossie.
             </p>
+            {data.gates?.researchComplete === false ? (
+              <div className="mt-4 rounded-md border border-[#c78f8f] bg-[#fff8f6] p-4 text-sm text-[#8a2f2f]">
+                <p className="font-semibold">Pesquisa minima ainda incompleta</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {data.gates.researchPending.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <a className="mt-3 inline-block font-semibold underline" href={`/import/obras/${encodeURIComponent(workId)}/pesquisa`}>
+                  Registrar pesquisa editorial
+                </a>
+              </div>
+            ) : null}
             <label className="mt-4 flex items-start gap-3 text-sm">
-              <input checked={curationAccepted} className="mt-1" onChange={(event) => setCurationAccepted(event.target.checked)} type="checkbox" />
+              <input checked={curationAccepted} className="mt-1" disabled={data.gates?.researchComplete === false} onChange={(event) => setCurationAccepted(event.target.checked)} type="checkbox" />
               Aceito esta obra no recorte editorial do Cancioneiro.
             </label>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
