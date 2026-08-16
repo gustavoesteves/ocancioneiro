@@ -2,7 +2,11 @@ import path from "node:path";
 import { summarizeEditorialDossiers } from "../../../../lib/editorial-dossier-summary.mjs";
 import { listPrivateCaptures } from "../../../../lib/private-capture-store.mjs";
 import { resolveLocalProjectRoot } from "../../../../lib/local-project-root.mjs";
-import { loadEditorialDossiers } from "../../../../scripts/validate-dossiers.mjs";
+import {
+  dossierReviewReport,
+  evidenceCoverageMatrix,
+  loadEditorialDossiers,
+} from "../../../../scripts/validate-dossiers.mjs";
 import type { ManagedDossier } from "../../../import-types";
 
 const localHosts = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
@@ -57,6 +61,8 @@ export async function GET(request: Request) {
       dossiers: summarizeEditorialDossiers(dossierEntries).filter(
         (dossier: ManagedDossier) => !dossier.publicable,
       ),
+      coverage: evidenceCoverageMatrix(dossierEntries),
+      reviewReport: dossierReviewReport(dossierEntries),
     });
   } catch (error) {
     console.error(error);

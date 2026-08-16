@@ -33,6 +33,7 @@ e, quando existe, a decisao curatorial vigente.
 - [x] registro aditivo sem alteracao de MusicXML, direitos ou catalogo publico;
 - [x] fonte, evidencia e afirmacao criadas como conjunto ligado;
 - [x] historico aditivo para correcao ou substituicao de fonte/evidencia;
+- [x] cobertura e contradicoes exibidas na fila local de revisao;
 - [x] testes de contrato, seguranca e concorrencia otimista.
 
 ## Decisoes de seguranca editorial
@@ -47,7 +48,7 @@ editor pesquisador.
 
 - [x] reutilizar uma fonte existente em novas evidencias sem duplica-la;
 - [x] registrar substituicao ou correcao de fonte/evidencia preservando historico;
-- exibir cobertura e contradicoes na fila de revisao;
+- [x] exibir cobertura e contradicoes na fila de revisao;
 - exigir pesquisa minima antes de uma nova aceitacao curatorial;
 - preencher e revisar fontes reais de `Asa Branca` e `Atraente`;
 - demonstrar o fluxo com editor independente.
@@ -66,6 +67,11 @@ Na rodada seguinte, o dossie passou a aceitar `researchEvents` para registrar
 correcao ou substituicao de fonte/evidencia sem alterar nem apagar o registro
 original. A API local usa `PATCH` com o mesmo fingerprint e a mesma trava de
 escrita editorial, e a tela de pesquisa ganhou um bloco de historico.
+
+A fila local de revisao tambem passou a receber `reviewReport` e matriz de
+cobertura documental pela API `/api/import/review`. A interface destaca
+criterios sem evidencia, criterios com direcoes contraditorias e a primeira
+pendencia editorial de cada obra.
 
 Pendencia operacional: o deploy avisou que `actions/deploy-pages@v4` ainda
 referencia Node.js 20 e foi forcado pelo GitHub Actions a rodar em Node.js 24.

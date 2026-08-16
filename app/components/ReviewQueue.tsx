@@ -46,6 +46,12 @@ export function ReviewQueue() {
   }, [filter, result?.captures]);
 
   const pendingCount = result?.captures?.filter((capture) => !capture.promoted).length ?? 0;
+  const coverageRows = result?.coverage?.rows ?? [];
+  const emptyCriteria = coverageRows.filter((row) => row.evidenceCount === 0);
+  const contradictoryCriteria = coverageRows.filter(
+    (row) => row.sustenta > 0 && row.contradiz > 0,
+  );
+  const pendingReviewItems = result?.reviewReport ?? [];
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
@@ -74,7 +80,7 @@ export function ReviewQueue() {
         <p className="mt-6 rounded-md border border-[#c78f8f] bg-[#fff8f6] p-4 text-sm text-[#8a2f2f]">{error}</p>
       ) : null}
 
-      <section className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Capturas privadas</h2>
@@ -147,28 +153,82 @@ export function ReviewQueue() {
           ) : null}
         </div>
 
-        <aside className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-5 xl:sticky xl:top-5 xl:self-start">
-          <h2 className="text-lg font-semibold">Dossies com pendencias</h2>
-          <p className="mt-1 text-xs text-[#70695e]">{result?.dossiers?.length ?? 0} obra(s)</p>
-          <div className="mt-4 max-h-[640px] space-y-3 overflow-auto">
-            {result?.dossiers?.map((dossier) => (
-              <article className="rounded border border-[#e1dbcf] p-3" key={dossier.workId}>
-                <h3 className="text-sm font-semibold">{dossier.title}</h3>
-                <p className="mt-1 text-xs text-[#70695e]">{dossier.status}</p>
-                <p className="mt-2 text-xs leading-relaxed text-[#70431f]">
-                  {dossier.projectionIssues[0] || "Revisao editorial pendente."}
-                </p>
-                <a className="mt-3 inline-block text-xs font-semibold text-[#8a4c2f] underline" href={`/import/obras/${encodeURIComponent(dossier.workId)}`}>
-                  Abrir dossie
-                </a>
-                {dossier.editions.length ? (
-                  <a className="ml-4 mt-3 inline-block text-xs font-semibold text-[#8a4c2f] underline" href={`/import/obras/${encodeURIComponent(dossier.workId)}/revisar`}>
-                    Revisar gates
-                  </a>
-                ) : null}
-              </article>
-            ))}
-          </div>
+        <aside className="space-y-5 xl:sticky xl:top-5 xl:self-start">
+          <section className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-5">
+            <h2 className="text-lg font-semibold">Cobertura documental</h2>
+            <p className="mt-1 text-xs text-[#70695e]">
+              {result?.coverage?.method.counting ?? "Cada evidencia conta uma vez no criterio declarado."}
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded border border-[#e1dbcf] bg-white p-3">
+                <p className="text-2xl font-semibold">{emptyCriteria.length}</p>
+                <p className="mt-1 text-xs text-[#70695e]">criterio(s) sem evidencia</p>
+              </div>
+              <div className="rounded border border-[#e1dbcf] bg-white p-3">
+                <p className="text-2xl font-semibold">{contradictoryCriteria.length}</p>
+                <p className="mt-1 text-xs text-[#70695e]">criterio(s) contraditorio(s)</p>
+              </div>
+            </div>
+            <div className="mt-4 max-h-72 overflow-auto rounded border border-[#e1dbcf] bg-white">
+              <table className="w-full text-left text-xs">
+                <thead className="sticky top-0 bg-[#f6f1e8] text-[#4b3024]">
+                  <tr>
+                    <th className="p-2 font-semibold">Criterio</th>
+                    <th className="p-2 font-semibold">Ev.</th>
+                    <th className="p-2 font-semibold">Obras</th>
+                    <th className="p-2 font-semibold">S/C</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coverageRows.map((row) => (
+                    <tr className="border-t border-[#e1dbcf]" key={row.criterion}>
+                      <td className="p-2">{row.criterion.replaceAll("_", " ")}</td>
+                      <td className="p-2">{row.evidenceCount}</td>
+                      <td className="p-2">{row.workCount}</td>
+                      <td className="p-2">{row.sustenta}/{row.contradiz}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="rounded-md border border-[#d8d0c1] bg-[#fffdf8] p-5">
+            <h2 className="text-lg font-semibold">Dossies com pendencias</h2>
+            <p className="mt-1 text-xs text-[#70695e]">{result?.dossiers?.length ?? 0} obra(s)</p>
+            <div className="mt-4 max-h-[420px] space-y-3 overflow-auto">
+              {result?.dossiers?.map((dossier) => {
+                const review = pendingReviewItems.find((item) =>
+                  item.label.startsWith(`${dossier.workId} (`),
+                );
+                const contradictions = review?.pending.filter((item) =>
+                  item.startsWith("evidencias contraditorias:"),
+                ) ?? [];
+                return (
+                  <article className="rounded border border-[#e1dbcf] p-3" key={dossier.workId}>
+                    <h3 className="text-sm font-semibold">{dossier.title}</h3>
+                    <p className="mt-1 text-xs text-[#70695e]">{dossier.status}</p>
+                    {contradictions.length ? (
+                      <p className="mt-2 rounded border border-[#d3a36f] bg-[#fff8e9] p-2 text-xs font-semibold text-[#70431f]">
+                        {contradictions.join("; ")}
+                      </p>
+                    ) : null}
+                    <p className="mt-2 text-xs leading-relaxed text-[#70431f]">
+                      {review?.pending[0] || dossier.projectionIssues[0] || "Revisao editorial pendente."}
+                    </p>
+                    <a className="mt-3 inline-block text-xs font-semibold text-[#8a4c2f] underline" href={`/import/obras/${encodeURIComponent(dossier.workId)}`}>
+                      Abrir dossie
+                    </a>
+                    {dossier.editions.length ? (
+                      <a className="ml-4 mt-3 inline-block text-xs font-semibold text-[#8a4c2f] underline" href={`/import/obras/${encodeURIComponent(dossier.workId)}/revisar`}>
+                        Revisar gates
+                      </a>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         </aside>
       </section>
     </main>

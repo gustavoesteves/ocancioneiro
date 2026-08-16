@@ -108,8 +108,30 @@ export type ReviewCapture = {
 export type ImportReviewResponse = {
   captureIssues?: { captureId: string; code: string }[];
   captures?: ReviewCapture[];
+  coverage?: {
+    method: {
+      counting: string;
+      percentages: false;
+      workCount: string;
+      zeroRows: string;
+    };
+    rows: {
+      contextualiza: number;
+      contradiz: number;
+      criterion: string;
+      evidenceCount: number;
+      sustenta: number;
+      workCount: number;
+      workIds: string[];
+    }[];
+  };
   dossiers?: ManagedDossier[];
   error?: string;
+  reviewReport?: {
+    filePath: string;
+    label: string;
+    pending: string[];
+  }[];
 };
 
 export type EditableEdition = {
