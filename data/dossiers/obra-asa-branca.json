@@ -5,6 +5,10 @@
       {
         "name": "Luiz Gonzaga",
         "role": "composer"
+      },
+      {
+        "name": "Humberto Teixeira",
+        "role": "composer"
       }
     ],
     "id": "obra-asa-branca",
@@ -32,10 +36,83 @@
         "status": "aceita",
         "recordHash": "8dc27a0d5dc808df85446fd6efe2849b65f53e81c9661c996033c6f66ae54050"
       }
+    ],
+    "canonicalClaims": [
+      {
+        "centrality": "nuclear",
+        "context": "baiao e repertorio brasileiro",
+        "decisionId": "decisao-promocao-b1a95c8f-dcf6-4503-8ec7-7e0f43b62c70",
+        "evidenceIds": [
+          "evidencia-asa-branca-autoria-discografica",
+          "evidencia-asa-branca-circulacao-discografica"
+        ],
+        "justification": "Asa Branca aparece documentada como obra de Luiz Gonzaga e Humberto Teixeira e permanece como referencia central do baiao e do repertorio brasileiro.",
+        "reach": "nacional"
+      }
     ]
   },
-  "sources": [],
-  "evidence": [],
+  "sources": [
+    {
+      "accessedAt": "2026-08-16",
+      "id": "fonte-asa-branca-discografia-fonograma-76280",
+      "persistentId": "discografiabrasileira:fonograma:76280",
+      "reference": "Registro do fonograma ASA BRANCA, RCA Victor 80-0510, gravacao de 1952.",
+      "responsible": "Instituto Moreira Salles / Discografia Brasileira",
+      "title": "Discografia Brasileira: fonograma ASA BRANCA",
+      "type": "catalogo_ou_acervo",
+      "url": "https://discografiabrasileira.com.br/fonograma/76280/-"
+    },
+    {
+      "accessedAt": "2026-08-16",
+      "id": "fonte-asa-branca-discografia-meus-sucessos",
+      "persistentId": "discografia.discosdobrasil:discos:meus-sucessos-com-humberto-teixeira",
+      "reference": "Ficha do LP Meus sucessos com Humberto Teixeira, RCA, 1968.",
+      "responsible": "Discografia Brasileira / Discos do Brasil",
+      "title": "Discografia Brasileira: Meus sucessos com Humberto Teixeira",
+      "type": "catalogo_ou_acervo",
+      "url": "https://discografia.discosdobrasil.com.br/discos/meus-sucessos-com-humberto-teixeira"
+    }
+  ],
+  "evidence": [
+    {
+      "assessedAt": "2026-08-16",
+      "assessedBy": "Codex",
+      "claim": "Asa Branca e documentada em acervo discografico como obra de Luiz Gonzaga e Humberto Teixeira.",
+      "criterion": "valor_historico",
+      "direction": "sustenta",
+      "id": "evidencia-asa-branca-autoria-discografica",
+      "justification": "O registro do fonograma identifica o titulo, interprete, genero, gravadora e autoria em fonte discografica reencontravel.",
+      "sources": [
+        {
+          "locator": "Autor (cache): Luiz Gonzaga; Humberto Teixeira",
+          "sourceId": "fonte-asa-branca-discografia-fonograma-76280"
+        }
+      ],
+      "strength": "forte",
+      "strengthJustification": "Fonte institucional especializada em discografia brasileira, com identificador de fonograma e metadados especificos."
+    },
+    {
+      "assessedAt": "2026-08-16",
+      "assessedBy": "Codex",
+      "claim": "Asa Branca circula como peca central em repertorio associado a Luiz Gonzaga e Humberto Teixeira.",
+      "criterion": "circulacao",
+      "direction": "sustenta",
+      "id": "evidencia-asa-branca-circulacao-discografica",
+      "justification": "A faixa aparece em coletanea dedicada aos sucessos da parceria Gonzaga-Teixeira, alem de constar em reeditagens no registro de fonograma.",
+      "sources": [
+        {
+          "locator": "Faixa 2: Asa Branca; observacao de reeditagens no fonograma",
+          "sourceId": "fonte-asa-branca-discografia-meus-sucessos"
+        },
+        {
+          "locator": "Descricao e re-edicoes do fonograma",
+          "sourceId": "fonte-asa-branca-discografia-fonograma-76280"
+        }
+      ],
+      "strength": "moderada",
+      "strengthJustification": "A evidencia documenta circulacao fonografica e editorial, mas nao substitui levantamento amplo de regravacoes."
+    }
+  ],
   "editions": [
     {
       "chords": [

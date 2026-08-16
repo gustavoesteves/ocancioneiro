@@ -3,7 +3,7 @@
   "work": {
     "creators": [
       {
-        "name": "Francisca Gonzaga (1847-1935)",
+        "name": "Chiquinha Gonzaga (Francisca Edwiges Neves Gonzaga)",
         "role": "composer"
       }
     ],
@@ -32,10 +32,79 @@
         "status": "aceita",
         "recordHash": "e9f515cc18b4b6b79c8ee489bcbadcbc68a79354ddd20c6223a297b33384e50e"
       }
+    ],
+    "canonicalClaims": [
+      {
+        "centrality": "nuclear",
+        "context": "choro e musica instrumental brasileira",
+        "decisionId": "decisao-promocao-00d1ee84-e445-4baa-a19c-a57117c23a40",
+        "evidenceIds": [
+          "evidencia-atraente-acervo-digital",
+          "evidencia-atraente-discografia"
+        ],
+        "justification": "Atraente e documentada como polca para piano de 1877, associada posteriormente ao repertorio do choro e presente em registros discograficos.",
+        "reach": "nacional"
+      }
     ]
   },
-  "sources": [],
-  "evidence": [],
+  "sources": [
+    {
+      "accessedAt": "2026-08-16",
+      "id": "fonte-atraente-acervo-digital-chiquinha",
+      "persistentId": "acervo-digital-chiquinha-gonzaga:atraente",
+      "reference": "Verbete e partituras de Atraente no Acervo Digital Chiquinha Gonzaga.",
+      "responsible": "Acervo Digital Chiquinha Gonzaga",
+      "title": "Acervo Digital Chiquinha Gonzaga: Atraente",
+      "type": "fonte_digital",
+      "url": "https://chiquinhagonzaga.com/acervo/?musica=atraente"
+    },
+    {
+      "accessedAt": "2026-08-16",
+      "id": "fonte-atraente-discografia-composicao-12824",
+      "persistentId": "discografiabrasileira:composicao:12824",
+      "reference": "Registro da composicao ATRAENTE na Discografia Brasileira.",
+      "responsible": "Instituto Moreira Salles / Discografia Brasileira",
+      "title": "Discografia Brasileira: composicao ATRAENTE",
+      "type": "catalogo_ou_acervo",
+      "url": "https://discografiabrasileira.com.br/composicao/12824/atraente"
+    }
+  ],
+  "evidence": [
+    {
+      "assessedAt": "2026-08-16",
+      "assessedBy": "Codex",
+      "claim": "Atraente e documentada como composicao de Chiquinha Gonzaga de 1877, publicada para piano em F maior como polca.",
+      "criterion": "valor_historico",
+      "direction": "sustenta",
+      "id": "evidencia-atraente-acervo-digital",
+      "justification": "O acervo digital informa composicao, publicacao, tonalidade, genero e disponibiliza a partitura de piano.",
+      "sources": [
+        {
+          "locator": "ATRAENTE - piano: composicao 1877, publicacao 1881, tonalidade F, genero polca",
+          "sourceId": "fonte-atraente-acervo-digital-chiquinha"
+        }
+      ],
+      "strength": "forte",
+      "strengthJustification": "Fonte especializada na obra de Chiquinha Gonzaga, com verbete e acesso a partituras."
+    },
+    {
+      "assessedAt": "2026-08-16",
+      "assessedBy": "Codex",
+      "claim": "Atraente integra repertorio gravado e reencontravel na discografia brasileira.",
+      "criterion": "regravacao_relevante",
+      "direction": "sustenta",
+      "id": "evidencia-atraente-discografia",
+      "justification": "A Discografia Brasileira registra a composicao ATRAENTE, autoria de Chiquinha Gonzaga e total de gravacoes catalogadas.",
+      "sources": [
+        {
+          "locator": "Composicao ATRAENTE; Autor cache: Chiquinha Gonzaga; Total de Gravacoes cache: 8",
+          "sourceId": "fonte-atraente-discografia-composicao-12824"
+        }
+      ],
+      "strength": "moderada",
+      "strengthJustification": "Fonte institucional de discografia confirma autoria e registros, mas a avaliacao de relevancia das regravacoes ainda requer revisao humana."
+    }
+  ],
   "editions": [
     {
       "chords": [

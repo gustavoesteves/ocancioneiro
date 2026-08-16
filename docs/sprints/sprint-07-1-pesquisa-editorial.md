@@ -35,6 +35,7 @@ e, quando existe, a decisao curatorial vigente.
 - [x] historico aditivo para correcao ou substituicao de fonte/evidencia;
 - [x] cobertura e contradicoes exibidas na fila local de revisao;
 - [x] pesquisa minima exigida antes de nova aceitacao curatorial;
+- [x] primeira passada de fontes reais para `Asa Branca` e `Atraente`;
 - [x] testes de contrato, seguranca e concorrencia otimista.
 
 ## Decisoes de seguranca editorial
@@ -51,7 +52,7 @@ editor pesquisador.
 - [x] registrar substituicao ou correcao de fonte/evidencia preservando historico;
 - [x] exibir cobertura e contradicoes na fila de revisao;
 - [x] exigir pesquisa minima antes de uma nova aceitacao curatorial;
-- preencher e revisar fontes reais de `Asa Branca` e `Atraente`;
+- [x] preencher e revisar fontes reais de `Asa Branca` e `Atraente`;
 - demonstrar o fluxo com editor independente.
 
 O gate obrigatorio so sera ativado depois que a interface conseguir satisfaze-lo
@@ -78,6 +79,13 @@ O fechamento dos gates editoriais agora bloqueia nova aceitacao curatorial
 quando a obra ainda nao tem fonte estruturada, evidencia ligada a fonte e
 afirmacao canonica ligada a evidencia. A tela de revisao mostra esse bloqueio
 e encaminha para a pesquisa editorial.
+
+A primeira passada documental de `Asa Branca` e `Atraente` preencheu fontes,
+evidencias e afirmacoes canonicas ligadas. `Asa Branca` ganhou autoria
+Gonzaga-Teixeira a partir de registros discograficos; `Atraente` ganhou fontes
+do Acervo Digital Chiquinha Gonzaga e da Discografia Brasileira. Ainda cabe
+revisao humana das escolhas de criterio e forca antes de tratar isso como
+fechamento musicologico.
 
 Pendencia operacional: o deploy avisou que `actions/deploy-pages@v4` ainda
 referencia Node.js 20 e foi forcado pelo GitHub Actions a rodar em Node.js 24.
